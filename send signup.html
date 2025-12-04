@@ -1,0 +1,18 @@
+<?php
+if (isset($_POST['email'])) {
+    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+
+    $to = "c29er@dalton.org"; // Your email
+    $subject = "New Newsletter Signup";
+    $message = "A new user subscribed with the email: $email";
+    $headers = "From: no-reply@yourdomain.com";
+
+    mail($to, $subject, $message, $headers);
+}
+?>
+<!DOCTYPE html>
+<html>
+<body>
+<p>Thank you for subscribing!</p>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	
+	<style type="text/css">
+
+		#background{background-image: url(https://i.insider.com/560ebbe8dd0895325c8b4597?width=600&format=jpeg&auto=webp);
+			height:1000px;
+	width: 100%;
+	background-position:center;
+	background-size:contain;
+	background-repeat:no-repeat;
+position: relative;
+	top:-600px;
+	z-index: -2;
+
+		}
+
+
+		
+
+#ball{
+background-image:url(https://marketplace.canva.com/MAB0iVAYAVk/2/thumbnail_large-1/canva-baseball-MAB0iVAYAVk.png);
+height:20px;
+	width: 20px;
+	background-position:center;
+	background-size:contain;
+	background-repeat:no-repeat;
+	position: relative;
+	top: 500px;
+	animation-name:pitch;
+	animation-duration: 2s;
+	animation-iteration-count: infinite;
+	
+	}
+
+	@keyframes pitch{
+		0%{
+			left:0px;
+			transform: rotate(0deg);
+
+		}
+
+
+		20%{
+			transform: 36px;
+		}
+		40%{
+			transform: 72px;
+		}
+		60%{
+			transform: 108px;
+		}
+		80%{
+			transform: 144px;
+		}
+
+100%{
+			left:1000px;
+			transform: rotate(180deg)
+
+
+		}
+
+
+
+	}
+
+	#yoshi{background-image: url(https://a.espncdn.com/photo/2024/0608/r1343185_1296x729_16-9.jpg);
+			height: 500px;
+			width: 250px;
+			background-position:center;
+	background-size:contain;
+	background-repeat:no-repeat;
+	position: relative;
+	z-index: -1;
+	top: 270px;
+
+		}
+			
+
+		</style>
+
+	
+</head>
+<body>
+
+	<div id="ball">
+		
+
+
+	</div>
+<div id="yoshi">
+	
+
+</div>
+
+
+<div id="background">
+	
+
+</div>
+
+</body>
+</html>
