@@ -2,83 +2,254 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Newsletter Signup</title>
+<title>Scoreboard with Timeouts</title>
 
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f4f4f9;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
+body {
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: white;
+}
 
-    .newsletter-box {
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        width: 350px;
-        text-align: center;
-    }
+.scoreboard {
+  background: #111;
+  border: 4px solid #00ffcc;
+  border-radius: 18px;
+  padding: 30px;
+  width: 520px;
+  text-align: center;
+  box-shadow: 0 0 30px #00ffcc;
+}
 
-    .newsletter-box h2 {
-        margin-bottom: 15px;
-    }
+.time {
+  font-size: 56px;
+}
 
-    .newsletter-box p {
-        color: #555;
-        font-size: 14px;
-        margin-bottom: 20px;
-    }
+.leading {
+  color: #00ffcc;
+  text-shadow: 0 0 12px #00ffcc;
+}
 
-    .newsletter-box input[type="email"] {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        outline: none;
-        font-size: 14px;
-        margin-bottom: 15px;
-        transition: 0.3s;
-    }
+.teams {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
 
-    .newsletter-box input[type="email"]:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 5px rgba(59,130,246,0.4);
-    }
+.team {
+  width: 45%;
+}
 
-    .newsletter-box button {
-        width: 100%;
-        padding: 12px;
-        background: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        transition: 0.3s;
-    }
+.score {
+  font-size: 64px;
+}
 
-    .newsletter-box button:hover {
-        background: #1e63d5;
-    }
+button {
+  margin: 4px;
+  padding: 6px 12px;
+  background: #222;
+  color: #00ffcc;
+  border: 2px solid #00ffcc;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.controls {
+  margin-top: 20px;
+}
+
+input {
+  width: 90%;
+  padding: 6px;
+  margin: 4px 0;
+  text-align: center;
+}
 </style>
 </head>
 
 <body>
 
-<div class="newsletter-box">
-    <h2>Join Our Daily Newsletter</h2>
-    <p>Stay updated with the latest news delivered to your inbox.</p>
+<div class="scoreboard">
 
-    <form>
-        <input type="email" placeholder="Enter your email" required>
-        <button type="submit">Subscribe</button>
-    </form>
+  <div class="time" id="timeDisplay">12:00</div>
+
+  <input id="timeInput" placeholder="Set time (mm:ss)">
+  <button onclick="setTime()">Set Time</button>
+
+  <div class="teams">
+
+    <div class="team">
+      <input id="teamAInput" placeholder="Team A Name">
+      <div id="teamAName">Team A</div>
+      <div>Timeouts: <span id="timeoutsA">2</span></div>
+      <button id="timeoutBtnA" onclick="useTimeout('A')">Timeout</button>
+      <div class="score" id="scoreA">0</div>
+      <button onclick="addScore('A',1)">+1</button>
+      <button onclick="addScore('A',3)">+3</button>
+      <button onclick="addScore('A',6)">+6</button>
+    </div>
+
+    <div class="team">
+      <input id="teamBInput" placeholder="Team B Name">
+      <div id="teamBName">Team B</div>
+      <div>Timeouts: <span id="timeoutsB">2</span></div>
+      <button id="timeoutBtnB" onclick="useTimeout('B')">Timeout</button>
+      <div class="score" id="scoreB">0</div>
+      <button onclick="addScore('B',1)">+1</button>
+      <button onclick="addScore('B',3)">+3</button>
+      <button onclick="addScore('B',6)">+6</button>
+    </div>
+
+  </div>
+
+  <div class="controls">
+    <button onclick="toggleTimer()">Start / Pause</button>
+    <button onclick="resetTimer()">Reset Timer</button>
+    <button onclick="resetScores()">Reset Scores</button>
+  </div>
+
 </div>
+
+<audio id="buzzer">
+  <source src="https://actions.google.com/sounds/v1/alarms/buzzer.ogg">
+</audio>
+
+<script>
+/* STATE */
+let scoreA = 0;
+let scoreB = 0;
+let time = "12:00";
+let timeoutsA = 2;
+let timeoutsB = 2;
+let timer = null;
+
+/* ELEMENTS */
+const scoreAEl = document.getElementById("scoreA");
+const scoreBEl = document.getElementById("scoreB");
+const timeDisplay = document.getElementById("timeDisplay");
+const timeoutsAEl = document.getElementById("timeoutsA");
+const timeoutsBEl = document.getElementById("timeoutsB");
+const timeoutBtnA = document.getElementById("timeoutBtnA");
+const timeoutBtnB = document.getElementById("timeoutBtnB");
+const buzzer = document.getElementById("buzzer");
+
+/* SCORE */
+function addScore(team, pts) {
+  team === "A" ? scoreA += pts : scoreB += pts;
+  scoreAEl.textContent = scoreA;
+  scoreBEl.textContent = scoreB;
+  highlightLeader();
+}
+
+function resetScores() {
+  scoreA = scoreB = 0;
+  scoreAEl.textContent = scoreBEl.textContent = 0;
+  highlightLeader();
+}
+
+/* TIMEOUT */
+function useTimeout(team) {
+  if (team === "A" && timeoutsA === 0) return;
+  if (team === "B" && timeoutsB === 0) return;
+
+  // STOP CLOCK
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  // ADD 5 SECONDS
+  addSeconds(5);
+
+  // REMOVE TIMEOUT
+  if (team === "A") {
+    timeoutsA--;
+    timeoutsAEl.textContent = timeoutsA;
+    if (timeoutsA === 0) timeoutBtnA.disabled = true;
+  } else {
+    timeoutsB--;
+    timeoutsBEl.textContent = timeoutsB;
+    if (timeoutsB === 0) timeoutBtnB.disabled = true;
+  }
+}
+
+/* TIMER */
+function toggleTimer() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+    return;
+  }
+
+  timer = setInterval(() => {
+    let [m, s] = time.split(":").map(Number);
+
+    if (m === 0 && s === 0) {
+      clearInterval(timer);
+      timer = null;
+      buzzer.play();
+      return;
+    }
+
+    if (s === 0) {
+      m--;
+      s = 59;
+    } else {
+      s--;
+    }
+
+    time = `${m}:${s.toString().padStart(2,"0")}`;
+    timeDisplay.textContent = time;
+  }, 1000);
+}
+
+function resetTimer() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+  time = "12:00";
+  timeDisplay.textContent = time;
+}
+
+function setTime() {
+  const val = document.getElementById("timeInput").value;
+  if (val.includes(":")) {
+    time = val;
+    timeDisplay.textContent = time;
+  }
+}
+
+function addSeconds(sec) {
+  let [m, s] = time.split(":").map(Number);
+  s += sec;
+  m += Math.floor(s / 60);
+  s %= 60;
+  time = `${m}:${s.toString().padStart(2,"0")}`;
+  timeDisplay.textContent = time;
+}
+
+/* LEADER */
+function highlightLeader() {
+  scoreAEl.classList.remove("leading");
+  scoreBEl.classList.remove("leading");
+  if (scoreA > scoreB) scoreAEl.classList.add("leading");
+  if (scoreB > scoreA) scoreBEl.classList.add("leading");
+}
+
+/* TEAM NAMES */
+teamAInput.oninput = e => teamAName.textContent = e.target.value || "Team A";
+teamBInput.oninput = e => teamBName.textContent = e.target.value || "Team B";
+</script>
 
 </body>
 </html>

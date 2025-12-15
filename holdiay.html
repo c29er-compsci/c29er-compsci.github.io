@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style type="text/css">
+
+	
+div{
+
+width: 300px;
+height: 300px;
+opacity: 0;
+
+}
+		
+
+#snowman{
+	background-image: url(snowman.png);
+	background-size:contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	display: inline-block;
+
+	
+	
+}
+#tree{
+	background-image: url(tree.png);
+	background-size:contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	display: inline-block;
+
+	
+}
+#present{
+	background-image: url(gift.png);
+	background-size:contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	display: inline-block;
+
+	
+}
+
+body{
+	background-image: url(snow.jpg);
+	background-size:cover;
+	/*background-repeat: no-repeat;*/
+	background-position: center;
+}
+
+	</style>
+</head>
+<body>
+	
+
+<div id="snowman"></div>
+<div id="present"></div>
+<div id="tree"></div>
+<script type="text/javascript">
+let clickcounter=0
+document.addEventListener("click",function(){
+	clickcounter=clickcounter+1
+
+	console.log(clickcounter)
+	if(clickcounter==1){
+
+		snowman.style.opacity="1"
+	}
+	if(clickcounter==2){
+
+	present.style.opacity="1"}
+
+	if(clickcounter==3){
+
+	tree.style.opacity="1"}
+
+	if(clickcounter==4){
+		clickcounter=0
+		tree.style.opacity=0
+		present.style.opacity=0
+		snowman.style.opacity=0
+
+	}
+})
+
+
+
+
+</script>
+</body>
+</html>
