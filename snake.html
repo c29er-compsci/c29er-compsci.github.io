@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Scoreboard with Timeouts</title>
+<title>Scoreboard</title>
 
 <style>
 body {
@@ -20,7 +20,7 @@ body {
   border: 4px solid #00ffcc;
   border-radius: 18px;
   padding: 30px;
-  width: 520px;
+  width: 540px;
   text-align: center;
   box-shadow: 0 0 30px #00ffcc;
 }
@@ -115,6 +115,7 @@ input {
     <button onclick="toggleTimer()">Start / Pause</button>
     <button onclick="resetTimer()">Reset Timer</button>
     <button onclick="resetScores()">Reset Scores</button>
+    <button onclick="resetTimeouts()">Reset Timeouts</button>
   </div>
 
 </div>
@@ -180,6 +181,16 @@ function useTimeout(team) {
     timeoutsBEl.textContent = timeoutsB;
     if (timeoutsB === 0) timeoutBtnB.disabled = true;
   }
+}
+
+/* RESET TIMEOUTS */
+function resetTimeouts() {
+  timeoutsA = 2;
+  timeoutsB = 2;
+  timeoutsAEl.textContent = timeoutsA;
+  timeoutsBEl.textContent = timeoutsB;
+  timeoutBtnA.disabled = false;
+  timeoutBtnB.disabled = false;
 }
 
 /* TIMER */
