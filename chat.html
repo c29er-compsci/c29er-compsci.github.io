@@ -2,328 +2,104 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Scoreboard</title>
-
+<title>Snake Game</title>
 <style>
-body {
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  font-family: Arial, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  color: white;
-}
-
-.container { width: 600px; }
-
-.tabs {
-  display: flex;
-  margin-bottom: 10px;
-}
-
-.tabs button {
-  flex: 1;
-  padding: 10px;
-  background: #111;
-  border: 2px solid #00ffcc;
-  color: #00ffcc;
-  cursor: pointer;
-}
-
-.tabs button.active {
-  background: #00ffcc;
-  color: #111;
-}
-
-.scoreboard, .history {
-  background: #111;
-  border: 4px solid #00ffcc;
-  border-radius: 18px;
-  padding: 20px;
-  box-shadow: 0 0 30px #00ffcc;
-}
-
-.hidden { display: none; }
-
-.time {
-  font-size: 56px;
-  text-align: center;
-}
-
-.leading {
-  color: #00ffcc;
-  text-shadow: 0 0 12px #00ffcc;
-}
-
-.teams {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.team {
-  width: 45%;
-  text-align: center;
-}
-
-.score { font-size: 64px; }
-
-button {
-  margin: 4px;
-  padding: 6px 12px;
-  background: #222;
-  color: #00ffcc;
-  border: 2px solid #00ffcc;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.controls {
-  margin-top: 15px;
-  text-align: center;
-}
-
-input {
-  width: 90%;
-  padding: 6px;
-  margin: 4px 0;
-  text-align: center;
-}
-
-.history-item {
-  border-bottom: 1px solid #00ffcc;
-  padding: 8px 0;
-}
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #222;
+    color: #fff;
+    font-family: Arial, sans-serif;
+  }
+  canvas {
+    background-color: #000;
+    display: block;
+  }
+  #score {
+    position: absolute;
+    top: 20px;
+    font-size: 24px;
+  }
 </style>
 </head>
-
 <body>
-
-<div class="container">
-
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="active" onclick="showTab('score', this)">Scoreboard</button>
-    <button onclick="showTab('history', this)">Game History</button>
-  </div>
-
-  <!-- SCOREBOARD -->
-  <div class="scoreboard" id="scoreTab">
-
-    <div class="time" id="timeDisplay">12:00</div>
-
-    <input id="timeInput" placeholder="Set time (mm:ss)">
-    <button onclick="setTime()">Set Time</button>
-
-    <div class="teams">
-
-      <div class="team">
-        <input id="teamAInput" placeholder="Team A Name">
-        <div id="teamAName">Team A</div>
-        <div>Timeouts: <span id="timeoutsA">2</span></div>
-        <button id="timeoutBtnA" onclick="useTimeout('A')">Timeout</button>
-        <div class="score" id="scoreA">0</div>
-        <button onclick="addScore('A',1)">+1</button>
-        <button onclick="addScore('A',3)">+3</button>
-        <button onclick="addScore('A',6)">+6</button>
-      </div>
-
-      <div class="team">
-        <input id="teamBInput" placeholder="Team B Name">
-        <div id="teamBName">Team B</div>
-        <div>Timeouts: <span id="timeoutsB">2</span></div>
-        <button id="timeoutBtnB" onclick="useTimeout('B')">Timeout</button>
-        <div class="score" id="scoreB">0</div>
-        <button onclick="addScore('B',1)">+1</button>
-        <button onclick="addScore('B',3)">+3</button>
-        <button onclick="addScore('B',6)">+6</button>
-      </div>
-
-    </div>
-
-    <div class="controls">
-      <button onclick="toggleTimer()">Start / Pause</button>
-      <button onclick="resetTimer()">Reset Timer</button>
-      <button onclick="resetScores()">Reset Scores</button>
-      <button onclick="resetTimeouts()">Reset Timeouts</button>
-      <button onclick="recordGame()">📼 Record Game</button>
-    </div>
-
-  </div>
-
-  <!-- HISTORY -->
-  <div class="history hidden" id="historyTab">
-    <h2>Recorded Games</h2>
-    <div id="historyList"></div>
-    <button onclick="clearHistory()">Clear History</button>
-  </div>
-
-</div>
+<div id="score">Score: 0</div>
+<canvas id="gameCanvas" width="400" height="400"></canvas>
 
 <script>
-/* STATE */
-let scoreA = 0, scoreB = 0;
-let time = "12:00";
-let timer = null;
-let timeoutsA = 2, timeoutsB = 2;
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-/* ELEMENTS */
-const scoreAEl = document.getElementById("scoreA");
-const scoreBEl = document.getElementById("scoreB");
-const timeDisplay = document.getElementById("timeDisplay");
-const teamAInput = document.getElementById("teamAInput");
-const teamBInput = document.getElementById("teamBInput");
-const teamAName = document.getElementById("teamAName");
-const teamBName = document.getElementById("teamBName");
-const timeoutsAEl = document.getElementById("timeoutsA");
-const timeoutsBEl = document.getElementById("timeoutsB");
-const timeoutBtnA = document.getElementById("timeoutBtnA");
-const timeoutBtnB = document.getElementById("timeoutBtnB");
-const historyList = document.getElementById("historyList");
+const box = 20;
+const canvasSize = 400;
+let snake = [{x: 8*box, y: 8*box}];
+let direction = "RIGHT";
+let food = {x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box};
+let score = 0;
 
-/* TEAM NAMES */
-teamAInput.oninput = e => teamAName.textContent = e.target.value || "Team A";
-teamBInput.oninput = e => teamBName.textContent = e.target.value || "Team B";
+// Control
+document.addEventListener("keydown", event => {
+  if(event.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+  if(event.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+  if(event.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+  if(event.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+});
 
-/* SCORE */
-function addScore(team, pts) {
-  team === "A" ? scoreA += pts : scoreB += pts;
-  scoreAEl.textContent = scoreA;
-  scoreBEl.textContent = scoreB;
-  highlightLeader();
-}
+// Draw
+function draw(){
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0,0,canvasSize,canvasSize);
 
-function resetScores() {
-  scoreA = scoreB = 0;
-  scoreAEl.textContent = scoreBEl.textContent = 0;
-  highlightLeader();
-}
-
-/* TIMEOUTS */
-function useTimeout(team) {
-  if (team === "A" && timeoutsA === 0) return;
-  if (team === "B" && timeoutsB === 0) return;
-
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
+  // Draw snake
+  for(let i=0; i<snake.length; i++){
+    ctx.fillStyle = (i===0) ? "#0f0" : "#0a0";
+    ctx.fillRect(snake[i].x, snake[i].y, box, box);
   }
 
-  addSeconds(5);
+  // Draw food
+  ctx.fillStyle = "#f00";
+  ctx.fillRect(food.x, food.y, box, box);
+}
 
-  if (team === "A") {
-    timeoutsA--;
-    timeoutsAEl.textContent = timeoutsA;
-    if (timeoutsA === 0) timeoutBtnA.disabled = true;
+// Move snake
+function moveSnake(){
+  let head = {x: snake[0].x, y: snake[0].y};
+  if(direction==="LEFT") head.x -= box;
+  if(direction==="RIGHT") head.x += box;
+  if(direction==="UP") head.y -= box;
+  if(direction==="DOWN") head.y += box;
+
+  // Check collision with food
+  if(head.x === food.x && head.y === food.y){
+    score++;
+    document.getElementById("score").innerText = "Score: "+score;
+    food = {x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box};
   } else {
-    timeoutsB--;
-    timeoutsBEl.textContent = timeoutsB;
-    if (timeoutsB === 0) timeoutBtnB.disabled = true;
+    snake.pop();
   }
-}
 
-function resetTimeouts() {
-  timeoutsA = timeoutsB = 2;
-  timeoutsAEl.textContent = timeoutsBEl.textContent = 2;
-  timeoutBtnA.disabled = timeoutBtnB.disabled = false;
-}
-
-/* TIMER */
-function toggleTimer() {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
+  // Check collision with wall or itself
+  if(head.x < 0 || head.x >= canvasSize || head.y < 0 || head.y >= canvasSize || snake.some(seg => seg.x===head.x && seg.y===head.y)){
+    alert("Game Over! Score: "+score);
+    snake = [{x:8*box, y:8*box}];
+    direction = "RIGHT";
+    score = 0;
+    document.getElementById("score").innerText = "Score: 0";
     return;
   }
 
-  timer = setInterval(() => {
-    let [m, s] = time.split(":").map(Number);
-    if (m === 0 && s === 0) return;
-    if (s === 0) { m--; s = 59; } else s--;
-    time = `${m}:${s.toString().padStart(2,"0")}`;
-    timeDisplay.textContent = time;
-  }, 1000);
+  snake.unshift(head);
 }
 
-function resetTimer() {
-  if (timer) clearInterval(timer);
-  timer = null;
-  time = "12:00";
-  timeDisplay.textContent = time;
+// Game loop
+function gameLoop(){
+  draw();
+  moveSnake();
 }
 
-function setTime() {
-  const val = document.getElementById("timeInput").value;
-  if (/^\d+:\d{2}$/.test(val)) {
-    time = val;
-    timeDisplay.textContent = time;
-  }
-}
-
-function addSeconds(sec) {
-  let [m, s] = time.split(":").map(Number);
-  s += sec;
-  m += Math.floor(s / 60);
-  s %= 60;
-  time = `${m}:${s.toString().padStart(2,"0")}`;
-  timeDisplay.textContent = time;
-}
-
-/* RECORD GAME */
-function recordGame() {
-  const games = JSON.parse(localStorage.getItem("games") || "[]");
-
-  games.push({
-    teamA: teamAName.textContent,
-    teamB: teamBName.textContent,
-    scoreA,
-    scoreB,
-    date: new Date().toLocaleString()
-  });
-
-  localStorage.setItem("games", JSON.stringify(games));
-  alert("Game recorded!");
-}
-
-/* HISTORY */
-function loadHistory() {
-  historyList.innerHTML = "";
-  const games = JSON.parse(localStorage.getItem("games") || "[]");
-
-  games.forEach(g => {
-    const div = document.createElement("div");
-    div.className = "history-item";
-    div.textContent = `${g.date} — ${g.teamA} ${g.scoreA} : ${g.scoreB} ${g.teamB}`;
-    historyList.appendChild(div);
-  });
-}
-
-function clearHistory() {
-  localStorage.removeItem("games");
-  loadHistory();
-}
-
-/* LEADER */
-function highlightLeader() {
-  scoreAEl.classList.toggle("leading", scoreA > scoreB);
-  scoreBEl.classList.toggle("leading", scoreB > scoreA);
-}
-
-/* TABS */
-function showTab(tab, btn) {
-  document.getElementById("scoreTab").classList.toggle("hidden", tab !== "score");
-  document.getElementById("historyTab").classList.toggle("hidden", tab !== "history");
-  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  if (tab === "history") loadHistory();
-}
+setInterval(gameLoop, 100);
 </script>
-
 </body>
 </html>

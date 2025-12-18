@@ -1,0 +1,166 @@
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script>
+/* ---------- CONFIG ---------- */
+const BOARD_SIZE = 40;
+const SEGMENT_SIZE = 1;
+const SPEED = 0.15;
+const SPACING = 8; // distance between segments (in frames)
+
+/* ---------- SCENE ---------- */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbbeeff);
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+/* ---------- LIGHT ---------- */
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const sun = new THREE.DirectionalLight(0xffffff, 1);
+sun.position.set(10,20,10);
+scene.add(sun);
+
+/* ---------- FLOOR ---------- */
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(BOARD_SIZE, BOARD_SIZE),
+  new THREE.MeshStandardMaterial({ color: 0xdddddd })
+);
+floor.rotation.x = -Math.PI/2;
+scene.add(floor);
+
+/* ---------- WALLS ---------- */
+function wall(x,z,w,d) {
+  const m = new THREE.Mesh(
+    new THREE.BoxGeometry(w,3,d),
+    new THREE.MeshStandardMaterial({ color:0x555555 })
+  );
+  m.position.set(x,1.5,z);
+  scene.add(m);
+}
+wall(0,-BOARD_SIZE/2,BOARD_SIZE,1);
+wall(0, BOARD_SIZE/2,BOARD_SIZE,1);
+wall(-BOARD_SIZE/2,0,1,BOARD_SIZE);
+wall( BOARD_SIZE/2,0,1,BOARD_SIZE);
+
+/* ---------- SNAKE ---------- */
+const snake = [];
+const history = [];
+
+function segment(color) {
+  return new THREE.Mesh(
+    new THREE.BoxGeometry(SEGMENT_SIZE,SEGMENT_SIZE,SEGMENT_SIZE),
+    new THREE.MeshStandardMaterial({ color })
+  );
+}
+
+const head = segment(0x00ff00);
+head.position.set(0,0.5,0);
+scene.add(head);
+snake.push(head);
+
+/* ---------- FOOD ---------- */
+const food = segment(0xff3333);
+scene.add(food);
+spawnFood();
+
+function spawnFood() {
+  food.position.set(
+    (Math.random()-0.5)*(BOARD_SIZE-4),
+    0.5,
+    (Math.random()-0.5)*(BOARD_SIZE-4)
+  );
+}
+
+/* ---------- INPUT ---------- */
+const keys = {};
+addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+document.body.onclick = () => document.body.requestPointerLock();
+
+addEventListener("mousemove", e => {
+  if (document.pointerLockElement === document.body) {
+    camera.rotation.y -= e.movementX * 0.002;
+    camera.rotation.x -= e.movementY * 0.002;
+    camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+  }
+});
+
+/* ---------- GAME STATE ---------- */
+let dir = new THREE.Vector3(0,0,-1);
+let score = 0;
+let gameOver = false;
+
+/* ---------- LOOP ---------- */
+function animate() {
+  requestAnimationFrame(animate);
+  if (gameOver) return;
+
+  if (keys["a"]) head.rotation.y += 0.05;
+  if (keys["d"]) head.rotation.y -= 0.05;
+
+  dir.set(0,0,-1).applyEuler(head.rotation);
+  head.position.add(dir.clone().multiplyScalar(SPEED));
+
+  /* SAVE HEAD HISTORY */
+  history.unshift(head.position.clone());
+  if (history.length > snake.length * SPACING)
+    history.pop();
+
+  /* MOVE BODY */
+  for (let i = 1; i < snake.length; i++) {
+    const index = i * SPACING;
+    if (history[index])
+      snake[i].position.copy(history[index]);
+  }
+
+  /* CAMERA */
+  camera.position.copy(head.position);
+  camera.rotation.copy(head.rotation);
+
+  /* WALL COLLISION */
+  if (
+    Math.abs(head.position.x) > BOARD_SIZE/2-0.5 ||
+    Math.abs(head.position.z) > BOARD_SIZE/2-0.5
+  ) endGame();
+
+  /* SELF COLLISION */
+  for (let i = 3; i < snake.length; i++) {
+    if (head.position.distanceTo(snake[i].position) < 0.6)
+      endGame();
+  }
+
+  /* FOOD */
+  if (head.position.distanceTo(food.position) < 1) {
+    const s = segment(0x00cc00);
+    s.position.copy(snake[snake.length-1].position);
+    snake.push(s);
+    scene.add(s);
+    score++;
+    document.getElementById("score").textContent = score;
+    spawnFood();
+  }
+
+  renderer.render(scene,camera);
+}
+animate();
+
+/* ---------- GAME OVER ---------- */
+function endGame() {
+  gameOver = true;
+  document.exitPointerLock();
+  document.getElementById("gameover").style.display = "flex";
+}
+
+addEventListener("keydown", e => {
+  if (e.key.toLowerCase()==="r" && gameOver) location.reload();
+});
+
+/* ---------- RESIZE ---------- */
+addEventListener("resize",()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
