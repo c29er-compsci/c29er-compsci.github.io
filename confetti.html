@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style type="text/css">
+		
+.box{
+	width: 50px;
+	height: 50px;
+	border:5px solid;
+	display: inline-block;
+	background-image: url(https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/3934672.png&w=350&h=254);
+background-position: center;
+background-size: contain;
+background-repeat: no-repeat;
+display: inline-block;
+position: absolute;
+
+}
+
+	</style>
+</head>
+<body>
+
+	<div style="box">
+		
+
+	</div>
+
+<script type="text/javascript">
+	
+function makeConfetti (){
+
+let square = document.createElement("div")
+square.classList.add("box")
+document.body.appendChild(square)
+
+
+let r = Math.round(Math.random()*255)
+let g = Math.round(Math.random()*255)
+let b = Math.round(Math.random()*255)
+
+square.style.borderColor = "rgb("+r+","+g+","+b+")"
+
+square.style.top=Math.random()*1000+"px"
+square.style.left=Math.random()*2000+"px"
+}
+
+setInterval(makeConfetti, 10)
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+</body>
+</html>

@@ -1,114 +1,328 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<style type="text/css">
-	body{
-		background-color:rgb(0, 90, 156);
-		font-size: 50px;
-		font-family: sans-serif;
-		color:ghostwhite;
-	}
-	
-	a{
-		color: ghostwhite;
-		text-decoration: none;
-	}
-	
-	#back{
-		background-image: url(arrow.png);
-		width: 80px;
-		height: 80px;
-		background-position: center;
-		background-size: contain;
-		background-repeat: no-repeat;
-		position: absolute;
-		top: 20px;
-		left: 20px;
-	}
-	
-	/* Container for all project images */
-	.projects-container {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 30px;
-		margin-top: 100px;
-		padding: 20px;
-		justify-content: center;
-	}
-	
-	/* Style for each project box */
-	.project-box {
-		width: 150px;
-		height: 150px;
-		background-position: center;
-		background-size: contain;
-		background-repeat: no-repeat;
-	}
-	
-	#square{
-		background-image:url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgUWa5Pe2xsJkqWkIBHk4IriQtIzlFEpAsoA&s);
-	}
-	
-	#an{
-		background-image:url(https://i.ytimg.com/vi/818_M8gOnqQ/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDyq4CNZEnMVTU-URH39DalyYE-Fw);
-	}
-	
-	#maze{
-		background-image:url(https://i.ytimg.com/vi/UMnCDNcjfDo/hq720.jpg?sqp=-oaymwE7CK4FEIIDSFryq4qpAy0IARUAAAAAGAElAADIQj0AgKJD8AEB-AH-CYAC0AWKAgwIABABGGUgXChOMA8=&rs=AOn4CLBDwJdzi0M7_zF-Kf6hmCiOEBwIsw);
-	}
-	
-	#yoshi{
-		background-image:url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1XGlUt1_2fI_jrvaqX6LERELBdJ079UFiWg&s);
-	}
-	
-	#mod{
-		background-image:url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0rjEx1mtjziBtbbP0rVczauMQ3toRcKxiGw&s);
-	}
-	
-	#holiday{
-		background-image:url(https://sample5.planetart.com/preview/15-62654-3-663-663-2025-dcpScallops-re0.jpg);
-	}
-	#color{
-		background-image: url(https://dl4jz3rbrsfum.cloudfront.net/images/feature-focus/Color-Glow_Animated-Icon.gif);
-	}
+<meta charset="UTF-8">
+<title>Peggle – Polished Grid</title>
+
+<style>
+html,body{
+  margin:0;padding:0;overflow:hidden;
+  background:linear-gradient(180deg,#1a1a2e,#16213e,#0f3460);
+  font-family:Arial,sans-serif;
+}
+canvas{display:block}
+
+#menu,#gameOver,#levelComplete{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+}
+#menu{background:linear-gradient(135deg,#667eea,#764ba2)}
+#menu h1{color:white;font-size:64px}
+
+#levelComplete{
+  display:none;
+  background:rgba(0,0,0,.85);
+  color:white;
+  z-index:5;
+}
+
+.btn{
+  padding:15px 40px;font-size:24px;border:none;
+  border-radius:50px;cursor:pointer;
+  background:linear-gradient(135deg,#f093fb,#f5576c);
+  color:white;
+}
+
+#ui{
+  position:fixed;top:10px;left:10px;
+  background:rgba(255,255,255,.9);
+  padding:12px;border-radius:8px;font-weight:bold;
+}
+
+#bucketText{
+  position:fixed;bottom:60px;left:50%;
+  transform:translateX(-50%) scale(0);
+  font-size:32px;font-weight:bold;
+  color:gold;opacity:0;transition:.4s;
+}
 </style>
 </head>
-<body>
-	<h1>This is the projects page</h1>
-	<p>This is a link to my home page <a href="index.html">🏀</a></p>
-	
-	<a href="index.html">
-		<div id="back"></div>
-	</a>
-	
-	<div class="projects-container">
-		<a href="evren_tile.html">
-			<div id="square" class="project-box"></div>
-		</a>
-		
-		<a href="animation.html">
-			<div id="an" class="project-box"></div>
-		</a>
-		
-		<a href="maze.html">
-			<div id="maze" class="project-box"></div>
-		</a>
-		
-		<a href="yoshi.html">
-			<div id="yoshi" class="project-box"></div>
-		</a>
-		
-		<a href="mod.html">
-			<div id="mod" class="project-box"></div>
-		</a>
-		
-		<a href="holdiay.html">
-			<div id="holiday" class="project-box"></div>
-		</a>
-		<a href="mathRandom.html">
-			<div id="color" class="project-box"></div>
-		</a>
 
-	</div>
+<body>
+
+<div id="menu">
+  <h1>🎯 PEGGLE 🎯</h1>
+  <button class="btn" onclick="startGame()">START</button>
+</div>
+
+<div id="ui">
+  Score: <span id="score">0</span><br>
+  Balls: <span id="balls">10</span><br>
+  Orange: <span id="orange">0</span><br>
+  Level: <span id="level">1</span>
+</div>
+
+<div id="bucketText">BUCKET SAVE!</div>
+
+<div id="levelComplete">
+  <h1>LEVEL COMPLETE!</h1>
+  <p style="font-size:24px">Score: <span id="levelScore">0</span></p>
+  <button class="btn" onclick="nextLevel()">CONTINUE</button>
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+/* ========== SETUP ========== */
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
+resize();addEventListener("resize",resize);
+
+/* ========== CONSTANTS ========== */
+const gravity=.28,restitution=.98,SHOT_POWER=11;
+
+/* ========== UI ========== */
+const ui={
+  score:scoreEl=document.getElementById("score"),
+  balls:document.getElementById("balls"),
+  orange:document.getElementById("orange"),
+  level:document.getElementById("level")
+};
+const bucketText=document.getElementById("bucketText");
+const levelComplete=document.getElementById("levelComplete");
+
+/* ========== STATE ========== */
+let running=false,score=0,ballsLeft=10,level=1;
+let balls=[],pegs=[],particles=[];
+let mouse={x:0,y:0};
+let slowmo=0; // slow motion timer
+
+/* ========== FIELD ========== */
+const field={
+  left:()=>canvas.width/2-450,
+  right:()=>canvas.width/2+450,
+  top:100
+};
+
+/* ========== BUCKET ========== */
+const bucket={x:0,w:140,vx:2.8};
+
+/* ========== SOUND ========== */
+const audio=new AudioContext();
+function beep(freq){
+  const o=audio.createOscillator(),g=audio.createGain();
+  o.frequency.value=freq;o.connect(g);g.connect(audio.destination);
+  g.gain.value=.1;o.start();o.stop(audio.currentTime+.05);
+}
+
+/* ========== LEVEL ========== */
+function generateLevel(){
+  pegs=[];balls=[];particles=[];
+  bucket.x=field.left();
+  const cols=10,rows=9,dx=75,dy=60;
+
+  for(let r=0;r<rows;r++)
+    for(let c=0;c<cols;c++)
+      pegs.push({
+        x:field.left()+80+c*dx+(r%2)*dx/2,
+        y:field.top+r*dy,
+        r:10,type:"blue",wobble:0
+      });
+
+  shuffle(pegs).slice(0,10).forEach(p=>p.type="orange");
+  pegs.forEach(p=>{
+    if(p.type==="blue"&&Math.random()<.1)p.type="explode";
+  });
+
+  updateUI();
+}
+
+/* ========== INPUT ========== */
+canvas.addEventListener("mousemove",e=>{
+  const r=canvas.getBoundingClientRect();
+  mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;
+});
+canvas.addEventListener("click",()=>{
+  if(!running||balls.length||ballsLeft<=0)return;
+  ballsLeft--;
+  const a=Math.atan2(mouse.y-40,mouse.x-canvas.width/2);
+  balls.push({x:canvas.width/2,y:40,
+    vx:Math.cos(a)*SHOT_POWER,
+    vy:Math.sin(a)*SHOT_POWER,r:8});
+  updateUI();
+});
+
+/* ========== COLLISION ========== */
+function collide(ball,peg,i){
+  const dx=ball.x-peg.x,dy=ball.y-peg.y;
+  const d=Math.hypot(dx,dy);
+  if(d<ball.r+peg.r){
+    pegs.splice(i,1);
+    pegHit(peg);
+    const nx=dx/d,ny=dy/d;
+    const dot=ball.vx*nx+ball.vy*ny;
+    ball.vx-=2*dot*nx;ball.vy-=2*dot*ny;
+    return true;
+  }
+  return false;
+}
+
+function pegHit(peg){
+  peg.wobble=.5;
+  score+=peg.type==="orange"?100:10;
+  beep(peg.type==="orange"?800:500);
+
+  for(let i=0;i<12;i++)
+    particles.push({
+      x:peg.x,y:peg.y,
+      vx:(Math.random()-.5)*4,
+      vy:(Math.random()-.5)*4,
+      life:30
+    });
+
+  if(peg.type==="explode")
+    pegs=pegs.filter(p=>Math.hypot(p.x-peg.x,p.y-peg.y)>80);
+
+  // SLOW MOTION FOR FINAL ORANGE
+  if(peg.type==="orange"){
+    const remainingOrange = pegs.filter(p=>p.type==="orange").length;
+    if(remainingOrange===0){
+      slowmo=60; // slow motion for 60 frames
+    }
+  }
+
+  updateUI();
+}
+
+/* ========== UI UPDATE ========== */
+function updateUI(){
+  ui.score.textContent=Math.floor(score);
+  ui.balls.textContent=ballsLeft;
+  ui.orange.textContent=pegs.filter(p=>p.type==="orange").length;
+  ui.level.textContent=level;
+}
+
+/* ========== ARC ========== */
+function drawArc(){
+  if(balls.length||ballsLeft<=0)return;
+  let a=Math.atan2(mouse.y-40,mouse.x-canvas.width/2);
+  let px=canvas.width/2,py=40;
+  let vx=Math.cos(a)*SHOT_POWER,vy=Math.sin(a)*SHOT_POWER;
+  ctx.beginPath();
+  for(let i=0;i<60;i++){
+    vx*=restitution;vy+=gravity;
+    px+=vx;py+=vy;
+    i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+  }
+  ctx.strokeStyle="rgba(255,255,255,.35)";
+  ctx.setLineDash([5,8]);ctx.stroke();ctx.setLineDash([]);
+}
+
+/* ========== LOOP ========== */
+function loop(){
+  if(!running)return;
+
+  // SLOW MOTION
+  const dt = slowmo>0?0.2:1;
+  if(slowmo>0) slowmo--;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawArc();
+
+  // walls
+  ctx.fillStyle="#333";
+  ctx.fillRect(field.left()-12,field.top,12,canvas.height);
+  ctx.fillRect(field.right(),field.top,12,canvas.height);
+
+  // pegs
+  pegs.forEach(p=>{
+    p.wobble*=.9;
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(p.wobble);
+    ctx.beginPath();
+    ctx.arc(0,0,p.r,0,Math.PI*2);
+    if(p.type==="orange"){
+      ctx.shadowColor="orange";
+      ctx.shadowBlur=15;
+    }
+    ctx.fillStyle=p.type==="orange"?"orange":
+                  p.type==="explode"?"red":"#1e90ff";
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // particles
+  particles=particles.filter(pt=>{
+    pt.life--;pt.x+=pt.vx*dt;pt.y+=pt.vy*dt;
+    ctx.fillStyle="white";
+    ctx.fillRect(pt.x,pt.y,2,2);
+    return pt.life>0;
+  });
+
+  // bucket
+  bucket.x+=bucket.vx*dt;
+  if(bucket.x<field.left()||bucket.x>field.right()-bucket.w)
+    bucket.vx*=-1;
+  ctx.fillStyle="lime";
+  ctx.fillRect(bucket.x,canvas.height-28,bucket.w,12);
+
+  // balls
+  balls=balls.filter(b=>{
+    b.vy+=gravity*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;
+    b.vx*=Math.pow(restitution, dt);b.vy*=Math.pow(restitution, dt);
+    if(b.x<field.left()+b.r||b.x>field.right()-b.r)b.vx*=-1;
+    if(b.y<b.r)b.vy*=-1;
+    for(let i=pegs.length-1;i>=0;i--)
+      if(collide(b,pegs[i],i))break;
+    ctx.beginPath();
+    ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    ctx.fillStyle="red";ctx.fill();
+
+    if(b.y>canvas.height-28&&b.x>bucket.x&&b.x<bucket.x+bucket.w){
+      ballsLeft++;
+      bucketText.style.opacity=1;
+      bucketText.style.transform="translateX(-50%) scale(1)";
+      setTimeout(()=>{bucketText.style.opacity=0;
+        bucketText.style.transform="translateX(-50%) scale(0)"},600);
+      updateUI();return false;
+    }
+    return b.y<canvas.height;
+  });
+
+  // level complete
+  if(pegs.every(p=>p.type!=="orange")){
+    running=false;
+    document.getElementById("levelScore").textContent=Math.floor(score);
+    levelComplete.style.display="flex";
+  }
+
+  requestAnimationFrame(loop);
+}
+
+/* ========== HELPERS ========== */
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }return a;
+}
+
+/* ========== FLOW ========== */
+function startGame(){
+  document.getElementById("menu").style.display="none";
+  running=true;score=0;ballsLeft=10;level=1;
+  generateLevel();loop();
+}
+function nextLevel(){
+  level++;ballsLeft+=2;
+  levelComplete.style.display="none";
+  running=true;
+  generateLevel();
+  loop();
+}
+</script>
 </body>
 </html>
