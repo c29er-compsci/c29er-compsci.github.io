@@ -19,6 +19,7 @@ canvas{display:block}
   font-weight:bold;font-size:16px;
   box-shadow:0 8px 32px rgba(0,0,0,.3);
   border:2px solid rgba(255,255,255,.3);
+  z-index:10;
 }
 #ui div{margin:4px 0}
 
@@ -29,6 +30,7 @@ canvas{display:block}
   display:flex;gap:8px;
   box-shadow:0 8px 32px rgba(0,0,0,.3);
   border:2px solid rgba(255,255,255,.3);
+  z-index:10;
 }
 .ballIcon{
   width:18px;height:18px;border-radius:50%;
@@ -42,6 +44,7 @@ canvas{display:block}
   position:fixed;inset:0;
   display:flex;align-items:center;justify-content:center;
   flex-direction:column;
+  z-index:100;
 }
 #menu{
   background:linear-gradient(135deg,#667eea,#764ba2,#f093fb);
@@ -60,7 +63,6 @@ canvas{display:block}
   display:none;
   background:rgba(0,0,0,.9);
   color:white;
-  z-index:10;
 }
 
 .btn{
@@ -86,16 +88,7 @@ canvas{display:block}
   color:#ffd700;opacity:0;
   transition:.4s;
   text-shadow:0 0 20px rgba(255,215,0,.8),0 0 40px rgba(255,215,0,.5);
-}
-
-#portalInfo{
-  position:fixed;bottom:20px;left:50%;
-  transform:translateX(-50%);
-  background:rgba(160,32,240,.2);
-  padding:10px 20px;border-radius:20px;
-  color:#fff;font-size:14px;
-  border:2px solid rgba(160,32,240,.5);
-  backdrop-filter:blur(10px);
+  z-index:50;
 }
 </style>
 </head>
@@ -115,7 +108,6 @@ canvas{display:block}
 
 <div id="ballsDisplay"></div>
 <div id="bucketText">FREE BALL!</div>
-<div id="portalInfo">🌀 Portals active! Ball teleports between them!</div>
 
 <div id="overlay">
   <h1 id="overlayTitle"></h1>
@@ -126,15 +118,14 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
-resize(); addEventListener("resize",resize);
+resize();
+addEventListener("resize",resize);
 
-/* ================= CONSTANTS ================= */
-const GRAVITY=.35, REST=.985, POWER=18;
+const GRAVITY=.35,REST=.985,POWER=18;
 
-/* ================= UI ================= */
 const uiScore=document.getElementById("score");
 const uiOrange=document.getElementById("orange");
 const uiLevel=document.getElementById("level");
@@ -144,29 +135,23 @@ const overlayTitle=document.getElementById("overlayTitle");
 const finalScore=document.getElementById("finalScore");
 const bucketText=document.getElementById("bucketText");
 
-/* ================= STATE ================= */
 let running=false;
-let score=0, ballsLeft=10, level=1;
-let pegs=[], balls=[], particles=[];
-let portals=[];
+let score=0,ballsLeft=10,level=1;
+let pegs=[],balls=[],particles=[],portals=[];
 let canShoot=true;
 let multiballActive=false;
 let pegsHitThisTurn=0;
-let bucketExpanded=false, bucketTimer=0;
-let slowmo=0;
-let bgTime=0;
+let bucketExpanded=false,bucketTimer=0;
+let slowmo=0,bgTime=0;
 
-/* ================= FIELD ================= */
 const field={
   left:()=>canvas.width/2-400,
   right:()=>canvas.width/2+400,
   top:120
 };
 
-/* ================= BUCKET ================= */
 const bucket={x:0,w:120,vx:4};
 
-/* ================= INPUT ================= */
 let mouse={x:0,y:0};
 canvas.addEventListener("mousemove",e=>{
   const r=canvas.getBoundingClientRect();
@@ -175,20 +160,21 @@ canvas.addEventListener("mousemove",e=>{
 });
 canvas.addEventListener("click",shoot);
 
-/* ================= AUDIO ================= */
 let audio;
 addEventListener("click",()=>{if(!audio)audio=new AudioContext()},{once:true});
 function beep(f,d=.06,type="sine"){
   if(!audio)return;
   const o=audio.createOscillator(),g=audio.createGain();
   o.type=type;
-  o.frequency.value=f;o.connect(g);g.connect(audio.destination);
+  o.frequency.value=f;
+  o.connect(g);
+  g.connect(audio.destination);
   g.gain.setValueAtTime(.15,audio.currentTime);
   g.gain.exponentialRampToValueAtTime(.01,audio.currentTime+d);
-  o.start();o.stop(audio.currentTime+d);
+  o.start();
+  o.stop(audio.currentTime+d);
 }
 
-/* ================= BACKGROUND ================= */
 function drawBackground(){
   bgTime++;
   const grad=ctx.createLinearGradient(0,0,0,canvas.height);
@@ -209,14 +195,14 @@ function drawBackground(){
   }
 }
 
-/* ================= LEVEL GENERATION ================= */
 function generateLevel(){
-  pegs=[];balls=[];particles=[];
+  pegs=[];
+  balls=[];
+  particles=[];
   bucket.x=field.left();
   multiballActive=false;
   slowmo=0;
   
-  // Generate 2 portals at random positions
   const padding=80;
   const spawnPortal=()=>({
     x:field.left()+padding+Math.random()*(800-padding*2),
@@ -227,7 +213,6 @@ function generateLevel(){
   const p1=spawnPortal();
   const p2=spawnPortal();
   
-  // Ensure portals aren't too close
   while(Math.hypot(p1.x-p2.x,p1.y-p2.y)<200){
     p2.x=field.left()+padding+Math.random()*(800-padding*2);
     p2.y=field.top+100+Math.random()*(canvas.height-field.top-300);
@@ -238,7 +223,6 @@ function generateLevel(){
     {x:p2.x,y:p2.y,tx:p1.x,ty:p1.y,r:p2.r,pulse:Math.PI}
   ];
   
-  // Generate pegs avoiding portal areas
   for(let r=0;r<9;r++){
     for(let c=0;c<10;c++){
       if(Math.random()<.1)continue;
@@ -272,7 +256,8 @@ function generateLevel(){
 
 function shoot(){
   if(!running||!canShoot||balls.length||ballsLeft<=0)return;
-  ballsLeft--;canShoot=false;
+  ballsLeft--;
+  canShoot=false;
   pegsHitThisTurn=0;
   
   const a=Math.atan2(mouse.y-60,mouse.x-canvas.width/2);
@@ -334,7 +319,6 @@ function endTurn(){
   },100);
 }
 
-/* ================= COLLISION ================= */
 function collide(b,p){
   if(p.hit)return;
   const dx=b.x-p.x,dy=b.y-p.y,d=Math.hypot(dx,dy);
@@ -348,10 +332,12 @@ function collide(b,p){
     
     const nx=dx/(d||1),ny=dy/(d||1);
     const dot=b.vx*nx+b.vy*ny;
-    b.vx-=2.2*dot*nx;b.vy-=2.2*dot*ny;
+    b.vx-=2.2*dot*nx;
+    b.vy-=2.2*dot*ny;
     
     const overlap=b.r+p.r-d;
-    b.x+=nx*overlap;b.y+=ny*overlap;
+    b.x+=nx*overlap;
+    b.y+=ny*overlap;
     
     if(p.type==="orange")beep(900,.12,"sine");
     else if(p.type==="green")beep(1100,.12,"triangle");
@@ -408,7 +394,6 @@ function collide(b,p){
   }
 }
 
-/* ================= LOOP ================= */
 function loop(){
   if(!running)return;
   
@@ -417,7 +402,6 @@ function loop(){
   
   drawBackground();
 
-  // Aim guide
   if(canShoot&&!balls.length){
     let a=Math.atan2(mouse.y-60,mouse.x-canvas.width/2);
     let px=canvas.width/2,py=60;
@@ -429,7 +413,8 @@ function loop(){
       if(py<8)vy*=-1;
       if(i%3===0){
         ctx.globalAlpha=.5*(1-i/60);
-        ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);
+        ctx.beginPath();
+        ctx.arc(px,py,3,0,Math.PI*2);
         ctx.fillStyle="rgba(255,255,255,.8)";
         ctx.shadowColor="rgba(255,255,255,.5)";
         ctx.shadowBlur=5;
@@ -440,7 +425,6 @@ function loop(){
     ctx.globalAlpha=1;
   }
 
-  // Cannon
   if(!balls.length&&ballsLeft>0){
     const a=Math.atan2(mouse.y-60,mouse.x-canvas.width/2);
     ctx.save();
@@ -467,7 +451,6 @@ function loop(){
     ctx.restore();
   }
 
-  // Walls
   const wallGrad=ctx.createLinearGradient(field.left()-15,0,field.left()+5,0);
   wallGrad.addColorStop(0,"#1a1a3e");
   wallGrad.addColorStop(1,"#2a2a4e");
@@ -478,7 +461,6 @@ function loop(){
   ctx.fillRect(field.right(),field.top,15,canvas.height);
   ctx.shadowBlur=0;
 
-  // Portals
   portals.forEach(p=>{
     p.pulse+=.05;
     const pulseSize=p.r+(Math.sin(p.pulse)*3);
@@ -501,19 +483,8 @@ function loop(){
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.shadowBlur=0;
-    
-    // Connection line
-    ctx.beginPath();
-    ctx.moveTo(portals[0].x,portals[0].y);
-    ctx.lineTo(portals[1].x,portals[1].y);
-    ctx.strokeStyle="rgba(160,32,240,.2)";
-    ctx.lineWidth=2;
-    ctx.setLineDash([10,10]);
-    ctx.stroke();
-    ctx.setLineDash([]);
   });
 
-  // Pegs
   pegs.forEach(p=>{
     if(p.hit&&p.wobble<.05)return;
     p.wobble*=.88;
@@ -583,10 +554,12 @@ function loop(){
     ctx.restore();
   });
 
-  // Particles
   particles=particles.filter(pt=>{
-    pt.life--;pt.x+=pt.vx*dt;pt.y+=pt.vy*dt;
-    pt.vy+=GRAVITY*.3*dt;pt.vx*=.98;
+    pt.life--;
+    pt.x+=pt.vx*dt;
+    pt.y+=pt.vy*dt;
+    pt.vy+=GRAVITY*.3*dt;
+    pt.vx*=.98;
     ctx.globalAlpha=pt.life/50;
     ctx.fillStyle=pt.color;
     ctx.shadowColor=pt.color;
@@ -599,7 +572,6 @@ function loop(){
     return pt.life>0;
   });
 
-  // Bucket
   bucket.x+=bucket.vx*dt;
   if(bucket.x<field.left()||bucket.x>field.right()-bucket.w)bucket.vx*=-1;
   const by=canvas.height-35;
@@ -631,11 +603,12 @@ function loop(){
   ctx.fillRect(bucketLeft+currentBucketW-10,by,10,28);
   ctx.shadowBlur=0;
 
-  // Balls
   balls.forEach(b=>{
     b.vy+=GRAVITY*dt;
-    b.x+=b.vx*dt;b.y+=b.vy*dt;
-    b.vx*=Math.pow(REST,dt);b.vy*=Math.pow(REST,dt);
+    b.x+=b.vx*dt;
+    b.y+=b.vy*dt;
+    b.vx*=Math.pow(REST,dt);
+    b.vy*=Math.pow(REST,dt);
 
     if(b.portalCooldown>0)b.portalCooldown--;
 
@@ -646,7 +619,6 @@ function loop(){
     if(b.x>field.right()-b.r){b.x=field.right()-b.r;b.vx*=-1;beep(450,.04,"square");}
     if(b.y<b.r){b.y=b.r;b.vy*=-1;beep(450,.04,"square");}
 
-    // Portal teleportation
     portals.forEach(p=>{
       if(b.portalCooldown===0&&Math.hypot(b.x-p.x,b.y-p.y)<p.r){
         b.x=p.tx;
@@ -654,7 +626,6 @@ function loop(){
         b.portalCooldown=30;
         beep(1500,.15,"sine");
         
-        // Portal particle burst
         for(let i=0;i<15;i++){
           particles.push({
             x:p.tx,y:p.ty,
@@ -692,7 +663,6 @@ function loop(){
       }
     });
 
-    // Bucket catch
     if(!b.bucketed&&b.y>=by&&b.y<=by+30&&b.x>=bucketLeft&&b.x<=bucketLeft+currentBucketW){
       b.bucketed=true;
       ballsLeft++;
@@ -744,7 +714,6 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-/* ================= UI ================= */
 function updateUI(){
   uiScore.textContent=Math.floor(score);
   uiOrange.textContent=pegs.filter(p=>p.type==="orange"&&!p.hit).length;
@@ -758,7 +727,6 @@ function updateUI(){
   }
 }
 
-/* ================= OVERLAY ================= */
 function showOverlay(title){
   running=false;
   score+=ballsLeft*1000;
@@ -775,10 +743,10 @@ function overlayAction(){
   overlay.style.display="none";
   if(overlayTitle.textContent.includes("COMPLETE")){
     level++;
-    ballsLeft=Math.min(10,ballsLeft+3);
+    ballsLeft=10;
     running=true;
     canShoot=true;
-    generateLevel(); // NEW LEVEL WITH NEW PORTALS!
+    generateLevel();
     loop();
   }else{
     score=0;
@@ -786,21 +754,21 @@ function overlayAction(){
     level=1;
     running=true;
     canShoot=true;
-    generateLevel(); // RESTART WITH NEW PORTALS!
+    generateLevel();
     loop();
   }
 }
 
-/* ================= FLOW ================= */
 function startGame(){
   menu.style.display="none";
-  score=0;ballsLeft=10;level=1;
+  score=0;
+  ballsLeft=10;
+  level=1;
   running=true;
   generateLevel();
   loop();
 }
 
-/* ================= UTIL ================= */
 function shuffle(a){
   for(let i=a.length-1;i>0;i--){
     const j=Math.random()*(i+1)|0;
