@@ -294,6 +294,7 @@ let pegsHitThisTurn=0;
 let bucketExpanded=false,bucketTimer=0;
 let slowmo=0,bgTime=0;
 let zoomActive=false,zoomLevel=1,zoomTargetY=0;
+let firstPegTypeThisTurn = null;
 
 // NEW TRACKING VARIABLES
 let shotStartTime=0;
@@ -465,6 +466,7 @@ function shoot(){
   // RESET SHOT STATS
   shotStartTime=Date.now();
   pegsHitThisTurn=0;
+  firstPegTypeThisTurn = null;
   portalUsesThisTurn=0;
   orangeHitsThisTurn=0;
   greenHitsThisTurn=0;
@@ -559,6 +561,15 @@ function collide(b,p){
     p.hit=true;
     p.wobble=.7;
     pegsHitThisTurn++;
+    // FIRST PEG HIT CHECK
+if (firstPegTypeThisTurn === null) {
+  firstPegTypeThisTurn = p.type;
+
+  if (p.type === "orange") {
+    unlockAchievement("clean_start"); // 🎯 First peg is orange
+  }
+}
+
     
     // ACH 2: BULLSEYE
     if(Date.now() - shotStartTime < 500) unlockAchievement("ach_2");
