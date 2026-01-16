@@ -90,6 +90,75 @@ canvas{display:block}
   text-shadow:0 0 20px rgba(255,215,0,.8),0 0 40px rgba(255,215,0,.5);
   z-index:50;
 }
+
+#achievement{
+  position:fixed;top:100px;right:-400px;
+  background:linear-gradient(135deg,#ffd700,#ffed4e);
+  padding:20px 25px;border-radius:15px;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  border:3px solid #fff;
+  transition:right .5s cubic-bezier(.68,-.55,.265,1.55);
+  z-index:150;
+  min-width:320px;
+}
+#achievement.show{right:15px}
+#achievement h3{
+  margin:0 0 8px 0;
+  font-size:22px;
+  color:#7b2cbf;
+  text-shadow:0 2px 4px rgba(0,0,0,.2);
+}
+#achievement p{
+  margin:0;
+  font-size:16px;
+  color:#333;
+}
+
+#achievements{
+  max-width:800px;
+  margin:30px auto;
+  padding:20px;
+  background:rgba(255,255,255,.1);
+  border-radius:15px;
+  max-height:400px;
+  overflow-y:auto;
+}
+#achievements h2{
+  color:white;
+  margin:0 0 20px 0;
+  text-align:center;
+}
+.achievement-item{
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(240,240,255,.9));
+  padding:15px;
+  margin:10px 0;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  gap:15px;
+  opacity:.4;
+  border:2px solid rgba(255,255,255,.3);
+}
+.achievement-item.unlocked{
+  opacity:1;
+  border-color:#ffd700;
+  box-shadow:0 4px 15px rgba(255,215,0,.3);
+}
+.achievement-icon{
+  font-size:32px;
+  min-width:40px;
+  text-align:center;
+}
+.achievement-info h4{
+  margin:0 0 5px 0;
+  color:#7b2cbf;
+  font-size:16px;
+}
+.achievement-info p{
+  margin:0;
+  color:#666;
+  font-size:13px;
+}
 </style>
 </head>
 
@@ -98,6 +167,8 @@ canvas{display:block}
 <div id="menu">
   <h1>🎯 PEGGLE PORTAL 🎯</h1>
   <button class="btn" onclick="startGame()">START GAME</button>
+  <button class="btn" onclick="showAchievements()" style="margin-top:15px;font-size:20px;padding:12px 35px">🏆 ACHIEVEMENTS</button>
+  <div id="achievements" style="display:none"></div>
 </div>
 
 <div id="ui">
@@ -108,6 +179,11 @@ canvas{display:block}
 
 <div id="ballsDisplay"></div>
 <div id="bucketText">FREE BALL!</div>
+
+<div id="achievement">
+  <h3 id="achievementTitle"></h3>
+  <p id="achievementDesc"></p>
+</div>
 
 <div id="overlay">
   <h1 id="overlayTitle"></h1>
@@ -134,7 +210,32 @@ const overlay=document.getElementById("overlay");
 const overlayTitle=document.getElementById("overlayTitle");
 const finalScore=document.getElementById("finalScore");
 const bucketText=document.getElementById("bucketText");
+const achievementEl=document.getElementById("achievement");
+const achievementTitle=document.getElementById("achievementTitle");
+const achievementDesc=document.getElementById("achievementDesc");
+const menu = document.getElementById("menu");
 
+const ACHIEVEMENTS=[
+  {id:"10k", icon:"💰", name:"Big Spender", desc:"Reach 10,000 points", unlocked:false},
+  {id:"100k", icon:"👑", name:"Peggle Royalty", desc:"Reach 100,000 points", unlocked:false},
+  {id:"perfect", icon:"💯", name:"Perfectionist", desc:"Clear every single peg in a level", unlocked:false},
+  {id:"ach_2", icon:"🎯", name:"Bullseye", desc:"Hit a peg within 0.5s of firing", unlocked:false},
+  {id:"ach_5", icon:"✌️", name:"Double Tap", desc:"Hit two orange pegs in a row", unlocked:false},
+  {id:"ach_8", icon:"🌀", name:"Infinite Loop", desc:"Use portals 5 times in one shot", unlocked:false},
+  {id:"ach_9", icon:"✨", name:"Interdimensional", desc:"Hit an orange peg right after a portal", unlocked:false},
+  {id:"ach_12", icon:"🎒", name:"The Tourist", desc:"Visit both portals and the bucket in one turn", unlocked:false},
+  {id:"ach_14", icon:"🔥", name:"Pyromaniac", desc:"Clear 15 pegs with one fireball", unlocked:false},
+  {id:"ach_15", icon:"💜", name:"Chain Reaction", desc:"Purple explosion hits 5+ pegs", unlocked:false},
+  {id:"ach_16", icon:"👐", name:"Crowd Control", desc:"Catch 3 balls in one level with Big Bucket", unlocked:false},
+  {id:"ach_18", icon:"☢️", name:"Nuclear Option", desc:"Clear 30% of the board in one shot", unlocked:false},
+  {id:"ach_19", icon:"☯️", name:"Efficient Energy", desc:"Hit Green and Orange in one shot", unlocked:false},
+  {id:"ach_23", icon:"🆘", name:"Clutch", desc:"Get a Free Ball with 0 balls remaining", unlocked:false},
+  {id:"ach_26", icon:"🏃", name:"Speedrunner", desc:"Complete level in under 5 shots", unlocked:false},
+  {id:"ach_27", icon:"🧹", name:"Clean Sweep", desc:"Clear every single peg on the board", unlocked:false}
+  
+];
+
+let unlockedAchievements=[];
 let running=false;
 let score=0,ballsLeft=10,level=1;
 let pegs=[],balls=[],particles=[],portals=[];
@@ -143,6 +244,20 @@ let multiballActive=false;
 let pegsHitThisTurn=0;
 let bucketExpanded=false,bucketTimer=0;
 let slowmo=0,bgTime=0;
+let zoomActive=false,zoomLevel=1,zoomTargetY=0;
+
+// NEW TRACKING VARIABLES
+let shotStartTime=0;
+let lastPegType="";
+let orangeHitsThisTurn=0;
+let portalUsesThisTurn=0;
+let justExitedPortal=false;
+let bucketVisitsThisTurn=0;
+let greenHitsThisTurn=0;
+let fireballHitsThisTurn=0;
+let bigBucketCatches=0;
+let shotsThisLevel=0;
+let specialTypesHitThisLevel=new Set();
 
 const field={
   left:()=>canvas.width/2-400,
@@ -159,6 +274,19 @@ canvas.addEventListener("mousemove",e=>{
   mouse.y=e.clientY-r.top;
 });
 canvas.addEventListener("click",shoot);
+
+addEventListener("keydown",e=>{
+  if(e.code==="Space"&&running&&canShoot&&!balls.length){
+    e.preventDefault();
+    zoomActive=true;
+  }
+});
+
+addEventListener("keyup",e=>{
+  if(e.code==="Space"){
+    zoomActive=false;
+  }
+});
 
 let audio;
 addEventListener("click",()=>{if(!audio)audio=new AudioContext()},{once:true});
@@ -202,6 +330,9 @@ function generateLevel(){
   bucket.x=field.left();
   multiballActive=false;
   slowmo=0;
+  specialTypesHitThisLevel.clear();
+  shotsThisLevel=0;
+  bigBucketCatches=0;
   
   const padding=80;
   const spawnPortal=()=>({
@@ -258,7 +389,18 @@ function shoot(){
   if(!running||!canShoot||balls.length||ballsLeft<=0)return;
   ballsLeft--;
   canShoot=false;
+  
+  // RESET SHOT STATS
+  shotStartTime=Date.now();
   pegsHitThisTurn=0;
+  portalUsesThisTurn=0;
+  orangeHitsThisTurn=0;
+  greenHitsThisTurn=0;
+  fireballHitsThisTurn=0;
+  bucketVisitsThisTurn=0;
+  lastPegType="";
+  justExitedPortal=false;
+  shotsThisLevel++;
   
   const a=Math.atan2(mouse.y-60,mouse.x-canvas.width/2);
   balls.push({
@@ -288,30 +430,25 @@ function shoot(){
 }
 
 function endTurn(){
+  // TRIGGER END-OF-TURN ACHIEVEMENTS
+  if(portalUsesThisTurn >= 5) unlockAchievement("ach_8");
+  if(portalUsesThisTurn > 0 && bucketVisitsThisTurn > 0) unlockAchievement("ach_12");
+  if(ballsLeft === 0 && bucketVisitsThisTurn > 0) unlockAchievement("ach_23");
+  
+  const initialTotal = pegs.length;
+  const boardClearPercent = pegsHitThisTurn / (pegs.length + pegsHitThisTurn);
+  if(boardClearPercent >= 0.3) unlockAchievement("ach_18");
+
   canShoot=true;
+  const hitAllPegs=pegs.every(p=>p.hit);
   pegs=pegs.filter(p=>!p.hit);
   balls=[];
 
-  if(pegsHitThisTurn===0){
-    if(Math.random()<0.5){
-      ballsLeft++;
-      bucketText.textContent="EXTREME FEVER!";
-      bucketText.style.color="#ff00ff";
-      bucketText.style.opacity=1;
-      bucketText.style.transform="translateX(-50%) scale(1.2)";
-      setTimeout(()=>{
-        bucketText.style.opacity=0;
-        bucketText.style.transform="translateX(-50%) scale(0)";
-        bucketText.textContent="FREE BALL!";
-        bucketText.style.color="#ffd700";
-      },1000);
-      beep(1400,.25,"triangle");
-      updateUI();
-    }
-  }
-
   setTimeout(()=>{
     if(!pegs.some(p=>p.type==="orange")){
+      if(shotsThisLevel <= 5) unlockAchievement("ach_26");
+      if(pegs.length === 0) unlockAchievement("ach_27");
+      if(hitAllPegs) unlockAchievement("perfect");
       showOverlay("🎊 LEVEL COMPLETE! 🎊");
     }else if(ballsLeft<=0){
       showOverlay("💀 GAME OVER 💀");
@@ -326,6 +463,26 @@ function collide(b,p){
     p.hit=true;
     p.wobble=.7;
     pegsHitThisTurn++;
+    
+    // ACH 2: BULLSEYE
+    if(Date.now() - shotStartTime < 500) unlockAchievement("ach_2");
+
+    // ACH 9: INTERDIMENSIONAL
+    if(justExitedPortal && p.type === "orange") unlockAchievement("ach_9");
+    justExitedPortal = false;
+
+    // ACH 5: DOUBLE TAP
+    if(p.type === "orange") {
+        if(lastPegType === "orange") unlockAchievement("ach_5");
+        orangeHitsThisTurn++;
+    }
+    lastPegType = p.type;
+
+    // ACH 19: EFFICIENT ENERGY
+    if(p.type === "green") greenHitsThisTurn++;
+    if(greenHitsThisTurn > 0 && orangeHitsThisTurn > 0) unlockAchievement("ach_19");
+
+    if(p.type!=="blue") specialTypesHitThisLevel.add(p.type);
     
     const pts=p.type==="orange"?100:p.type==="green"?500:p.type==="purple"?1000:p.type==="multiball"?250:p.type==="fireball"?250:10;
     score+=pts;
@@ -363,9 +520,12 @@ function collide(b,p){
     
     if(p.type==="purple"){
       const nearPegs=pegs.filter(np=>!np.hit&&Math.hypot(np.x-p.x,np.y-p.y)<120);
+      // ACH 15: CHAIN REACTION
+      if(nearPegs.length >= 5) unlockAchievement("ach_15");
       nearPegs.forEach(np=>{
         np.hit=true;
         pegsHitThisTurn++;
+        if(np.type!=="blue") specialTypesHitThisLevel.add(np.type);
         score+=np.type==="orange"?100:10;
         for(let i=0;i<20;i++){
           particles.push({
@@ -385,9 +545,7 @@ function collide(b,p){
     
     if(p.type==="orange"){
       const remainingOrange=pegs.filter(pg=>pg.type==="orange"&&!pg.hit).length;
-      if(remainingOrange===0){
-        slowmo=120;
-      }
+      if(remainingOrange===0) slowmo=120;
     }
     
     updateUI();
@@ -396,9 +554,16 @@ function collide(b,p){
 
 function loop(){
   if(!running)return;
-  
   const dt=slowmo>0?.25:1;
   if(slowmo>0)slowmo--;
+  const targetZoom=zoomActive?2:1;
+  zoomLevel+=(targetZoom-zoomLevel)*.15;
+  if(zoomActive){ zoomTargetY+=(200-zoomTargetY)*.15; }else{ zoomTargetY+=(0-zoomTargetY)*.15; }
+  
+  ctx.save();
+  ctx.translate(canvas.width/2,zoomTargetY);
+  ctx.scale(zoomLevel,zoomLevel);
+  ctx.translate(-canvas.width/2,-zoomTargetY);
   
   drawBackground();
 
@@ -430,13 +595,11 @@ function loop(){
     ctx.save();
     ctx.translate(canvas.width/2,60);
     ctx.rotate(a);
-    
     const cannonGrad=ctx.createLinearGradient(0,-10,0,10);
     cannonGrad.addColorStop(0,"#666");
     cannonGrad.addColorStop(1,"#333");
     ctx.fillStyle=cannonGrad;
     ctx.fillRect(-15,-10,45,20);
-    
     const baseGrad=ctx.createRadialGradient(0,0,5,0,0,22);
     baseGrad.addColorStop(0,"#888");
     baseGrad.addColorStop(1,"#444");
@@ -447,7 +610,6 @@ function loop(){
     ctx.strokeStyle="#222";
     ctx.lineWidth=2;
     ctx.stroke();
-    
     ctx.restore();
   }
 
@@ -464,17 +626,14 @@ function loop(){
   portals.forEach(p=>{
     p.pulse+=.05;
     const pulseSize=p.r+(Math.sin(p.pulse)*3);
-    
     ctx.beginPath();
     ctx.arc(p.x,p.y,pulseSize,0,Math.PI*2);
-    
     const portalGrad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,pulseSize);
     portalGrad.addColorStop(0,"rgba(160,32,240,.3)");
     portalGrad.addColorStop(.5,"rgba(160,32,240,.1)");
     portalGrad.addColorStop(1,"rgba(160,32,240,0)");
     ctx.fillStyle=portalGrad;
     ctx.fill();
-    
     ctx.strokeStyle="#a020f0";
     ctx.lineWidth=4;
     ctx.shadowColor="#a020f0";
@@ -489,65 +648,44 @@ function loop(){
     if(p.hit&&p.wobble<.05)return;
     p.wobble*=.88;
     p.pulse+=.05;
-    
     ctx.save();
     ctx.translate(p.x,p.y);
     ctx.rotate(p.wobble);
-    
     if(p.hit)ctx.globalAlpha=Math.max(.3,p.wobble*2);
-    
     const pulseSize=p.r+(Math.sin(p.pulse)*.5);
     ctx.beginPath();
     ctx.arc(0,0,pulseSize,0,Math.PI*2);
     
     if(p.type==="orange"){
-      ctx.shadowColor="#ff8800";
-      ctx.shadowBlur=15;
+      ctx.shadowColor="#ff8800"; ctx.shadowBlur=15;
       const grad=ctx.createRadialGradient(-3,-3,0,0,0,pulseSize);
-      grad.addColorStop(0,"#ffaa44");
-      grad.addColorStop(.5,"#ff8800");
-      grad.addColorStop(1,"#ff6600");
+      grad.addColorStop(0,"#ffaa44"); grad.addColorStop(.5,"#ff8800"); grad.addColorStop(1,"#ff6600");
       ctx.fillStyle=grad;
     }else if(p.type==="green"){
-      ctx.shadowColor="#00ff66";
-      ctx.shadowBlur=15;
+      ctx.shadowColor="#00ff66"; ctx.shadowBlur=15;
       const grad=ctx.createRadialGradient(-3,-3,0,0,0,pulseSize);
-      grad.addColorStop(0,"#88ff88");
-      grad.addColorStop(.5,"#00ff66");
-      grad.addColorStop(1,"#00cc00");
+      grad.addColorStop(0,"#88ff88"); grad.addColorStop(.5,"#00ff66"); grad.addColorStop(1,"#00cc00");
       ctx.fillStyle=grad;
     }else if(p.type==="purple"){
-      ctx.shadowColor="#9d4edd";
-      ctx.shadowBlur=18;
+      ctx.shadowColor="#9d4edd"; ctx.shadowBlur=18;
       const grad=ctx.createRadialGradient(-3,-3,0,0,0,pulseSize);
-      grad.addColorStop(0,"#e0aaff");
-      grad.addColorStop(.5,"#c77dff");
-      grad.addColorStop(1,"#7b2cbf");
+      grad.addColorStop(0,"#e0aaff"); grad.addColorStop(.5,"#c77dff"); grad.addColorStop(1,"#7b2cbf");
       ctx.fillStyle=grad;
     }else if(p.type==="multiball"){
-      ctx.shadowColor="#00d9ff";
-      ctx.shadowBlur=15;
+      ctx.shadowColor="#00d9ff"; ctx.shadowBlur=15;
       const grad=ctx.createRadialGradient(-3,-3,0,0,0,pulseSize);
-      grad.addColorStop(0,"#88e0ff");
-      grad.addColorStop(.5,"#00d9ff");
-      grad.addColorStop(1,"#0099cc");
+      grad.addColorStop(0,"#88e0ff"); grad.addColorStop(.5,"#00d9ff"); grad.addColorStop(1,"#0099cc");
       ctx.fillStyle=grad;
     }else if(p.type==="fireball"){
-      ctx.shadowColor="#ff3300";
-      ctx.shadowBlur=18;
+      ctx.shadowColor="#ff3300"; ctx.shadowBlur=18;
       const grad=ctx.createRadialGradient(-3,-3,0,0,0,pulseSize);
-      grad.addColorStop(0,"#ff9966");
-      grad.addColorStop(.5,"#ff6633");
-      grad.addColorStop(1,"#cc0000");
+      grad.addColorStop(0,"#ff9966"); grad.addColorStop(.5,"#ff6633"); grad.addColorStop(1,"#cc0000");
       ctx.fillStyle=grad;
     }else{
       const grad=ctx.createRadialGradient(-3,-3,0,0,0,pulseSize);
-      grad.addColorStop(0,"#6db3ff");
-      grad.addColorStop(.5,"#4da6ff");
-      grad.addColorStop(1,"#1e70dd");
+      grad.addColorStop(0,"#6db3ff"); grad.addColorStop(.5,"#4da6ff"); grad.addColorStop(1,"#1e70dd");
       ctx.fillStyle=grad;
     }
-    
     ctx.fill();
     ctx.shadowBlur=0;
     ctx.globalAlpha=1;
@@ -575,28 +713,21 @@ function loop(){
   bucket.x+=bucket.vx*dt;
   if(bucket.x<field.left()||bucket.x>field.right()-bucket.w)bucket.vx*=-1;
   const by=canvas.height-35;
-  
   if(bucketExpanded){
     bucketTimer--;
     if(bucketTimer<=0)bucketExpanded=false;
   }
-  
   const currentBucketW=bucketExpanded?bucket.w+80:bucket.w;
   const bucketLeft=bucketExpanded?bucket.x-40:bucket.x;
   
   const bucketGrad=ctx.createLinearGradient(0,by,0,by+25);
   if(bucketExpanded){
-    bucketGrad.addColorStop(0,"#88ff88");
-    bucketGrad.addColorStop(1,"#00cc00");
-    ctx.shadowColor="#00ff00";
-    ctx.shadowBlur=25;
+    bucketGrad.addColorStop(0,"#88ff88"); bucketGrad.addColorStop(1,"#00cc00");
+    ctx.shadowColor="#00ff00"; ctx.shadowBlur=25;
   }else{
-    bucketGrad.addColorStop(0,"#66ff66");
-    bucketGrad.addColorStop(1,"#00aa00");
-    ctx.shadowColor="#00ff00";
-    ctx.shadowBlur=12;
+    bucketGrad.addColorStop(0,"#66ff66"); bucketGrad.addColorStop(1,"#00aa00");
+    ctx.shadowColor="#00ff00"; ctx.shadowBlur=12;
   }
-  
   ctx.fillStyle=bucketGrad;
   ctx.fillRect(bucketLeft,by,currentBucketW,15);
   ctx.fillRect(bucketLeft,by,10,28);
@@ -609,9 +740,7 @@ function loop(){
     b.y+=b.vy*dt;
     b.vx*=Math.pow(REST,dt);
     b.vy*=Math.pow(REST,dt);
-
     if(b.portalCooldown>0)b.portalCooldown--;
-
     b.trail.push({x:b.x,y:b.y});
     if(b.trail.length>12)b.trail.shift();
 
@@ -621,19 +750,15 @@ function loop(){
 
     portals.forEach(p=>{
       if(b.portalCooldown===0&&Math.hypot(b.x-p.x,b.y-p.y)<p.r){
-        b.x=p.tx;
-        b.y=p.ty;
+        b.x=p.tx; b.y=p.ty;
         b.portalCooldown=30;
+        portalUsesThisTurn++;
+        justExitedPortal = true; // FOR ACH 9
         beep(1500,.15,"sine");
-        
         for(let i=0;i<15;i++){
           particles.push({
-            x:p.tx,y:p.ty,
-            vx:(Math.random()-.5)*8,
-            vy:(Math.random()-.5)*8,
-            life:30,
-            color:"#a020f0",
-            size:3
+            x:p.tx,y:p.ty, vx:(Math.random()-.5)*8, vy:(Math.random()-.5)*8,
+            life:30, color:"#a020f0", size:3
           });
         }
       }
@@ -645,28 +770,29 @@ function loop(){
         if(!p.hit&&d<50){
           p.hit=true;
           pegsHitThisTurn++;
+          fireballHitsThisTurn++; // ACH 14
+          if(fireballHitsThisTurn >= 15) unlockAchievement("ach_14");
+          if(p.type!=="blue") specialTypesHitThisLevel.add(p.type);
           score+=p.type==="orange"?100:10;
           for(let i=0;i<20;i++){
             particles.push({
-              x:p.x,y:p.y,
-              vx:(Math.random()-.5)*8,
-              vy:(Math.random()-.5)*8-2,
-              life:45,
-              color:"#ff3300",
-              size:2
+              x:p.x,y:p.y, vx:(Math.random()-.5)*8, vy:(Math.random()-.5)*8-2,
+              life:45, color:"#ff3300", size:2
             });
           }
           updateUI();
         }
-      }else{
-        collide(b,p);
-      }
+      }else{ collide(b,p); }
     });
 
     if(!b.bucketed&&b.y>=by&&b.y<=by+30&&b.x>=bucketLeft&&b.x<=bucketLeft+currentBucketW){
       b.bucketed=true;
       ballsLeft++;
-      pegsHitThisTurn++;
+      bucketVisitsThisTurn++;
+      if(bucketExpanded) {
+          bigBucketCatches++; // ACH 16
+          if(bigBucketCatches >= 3) unlockAchievement("ach_16");
+      }
       beep(1400,.2,"sine");
       bucketText.textContent="FREE BALL!";
       bucketText.style.color="#ffd700";
@@ -681,36 +807,23 @@ function loop(){
 
     b.trail.forEach((t,i)=>{
       ctx.globalAlpha=(i+1)/b.trail.length*.6;
-      ctx.beginPath();
-      ctx.arc(t.x,t.y,b.r,0,Math.PI*2);
+      ctx.beginPath(); ctx.arc(t.x,t.y,b.r,0,Math.PI*2);
       ctx.fillStyle=b.fireball?"#ff6633":"#ff6b6b";
       ctx.shadowColor=b.fireball?"#ff3300":"#ff0000";
-      ctx.shadowBlur=10;
-      ctx.fill();
-      ctx.shadowBlur=0;
+      ctx.shadowBlur=10; ctx.fill(); ctx.shadowBlur=0;
     });
     ctx.globalAlpha=1;
-
-    if(b.fireball){
-      ctx.shadowColor="#ff3300";
-      ctx.shadowBlur=25;
-    }
-    
+    if(b.fireball){ ctx.shadowColor="#ff3300"; ctx.shadowBlur=25; }
     const grad=ctx.createRadialGradient(b.x-3,b.y-3,0,b.x,b.y,b.r);
     grad.addColorStop(0,b.fireball?"#ffaa66":"#ff8888");
     grad.addColorStop(.5,b.fireball?"#ff6633":"#ff4444");
     grad.addColorStop(1,b.fireball?"#ff0000":"#cc2222");
-    ctx.beginPath();
-    ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-    ctx.fillStyle=grad;
-    ctx.fill();
-    ctx.shadowBlur=0;
+    ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    ctx.fillStyle=grad; ctx.fill(); ctx.shadowBlur=0;
   });
 
-  if(balls.length&&balls[0].y>canvas.height+50){
-    endTurn();
-  }
-
+  if(balls.length&&balls[0].y>canvas.height+50){ endTurn(); }
+  ctx.restore();
   requestAnimationFrame(loop);
 }
 
@@ -718,13 +831,14 @@ function updateUI(){
   uiScore.textContent=Math.floor(score);
   uiOrange.textContent=pegs.filter(p=>p.type==="orange"&&!p.hit).length;
   uiLevel.textContent=level;
-
   ballsDisplay.innerHTML="";
   for(let i=0;i<10;i++){
     const d=document.createElement("div");
     d.className="ballIcon"+(i>=ballsLeft?" used":"");
     ballsDisplay.appendChild(d);
   }
+  if(score>=10000)unlockAchievement("10k");
+  if(score>=100000)unlockAchievement("100k");
 }
 
 function showOverlay(title){
@@ -733,40 +847,52 @@ function showOverlay(title){
   overlayTitle.textContent=title;
   finalScore.textContent=Math.floor(score);
   overlay.style.display="flex";
-  
-  if(title.includes("COMPLETE")){
-    beep(1500,.3,"triangle");
-  }
+  if(title.includes("COMPLETE")){ beep(1500,.3,"triangle"); }
 }
 
 function overlayAction(){
   overlay.style.display="none";
   if(overlayTitle.textContent.includes("COMPLETE")){
-    level++;
-    ballsLeft=10;
-    running=true;
-    canShoot=true;
-    generateLevel();
-    loop();
+    level++; ballsLeft=10; running=true; canShoot=true; generateLevel(); loop();
   }else{
-    score=0;
-    ballsLeft=10;
-    level=1;
-    running=true;
-    canShoot=true;
-    generateLevel();
-    loop();
+    score=0; ballsLeft=10; level=1; running=true; canShoot=true; generateLevel(); loop();
   }
 }
 
 function startGame(){
   menu.style.display="none";
-  score=0;
-  ballsLeft=10;
-  level=1;
-  running=true;
-  generateLevel();
-  loop();
+  score=0; ballsLeft=10; level=1; running=true; generateLevel(); loop();
+}
+
+function unlockAchievement(id){
+  const ach=ACHIEVEMENTS.find(a=>a.id===id);
+  if(!ach||ach.unlocked)return;
+  ach.unlocked=true;
+  unlockedAchievements.push(id);
+  try{ localStorage.setItem("peggle-achievements",JSON.stringify(unlockedAchievements)); }catch(e){}
+  achievementTitle.textContent=ach.icon+" "+ach.name;
+  achievementDesc.textContent=ach.desc;
+  achievementEl.classList.add("show");
+  beep(1600,.3,"triangle");
+  setTimeout(()=>{ achievementEl.classList.remove("show"); },3500);
+}
+
+function showAchievements(){
+  const achDiv=document.getElementById("achievements");
+  if(achDiv.style.display==="block"){ achDiv.style.display="none"; return; }
+  achDiv.innerHTML="<h2>🏆 ACHIEVEMENTS 🏆</h2>";
+  ACHIEVEMENTS.forEach(a=>{
+    const item=document.createElement("div");
+    item.className="achievement-item"+(a.unlocked?" unlocked":"");
+    item.innerHTML=`
+      <div class="achievement-icon">${a.unlocked?a.icon:"🔒"}</div>
+      <div class="achievement-info">
+        <h4>${a.name}</h4>
+        <p>${a.desc}</p>
+      </div>`;
+    achDiv.appendChild(item);
+  });
+  achDiv.style.display="block";
 }
 
 function shuffle(a){
@@ -775,6 +901,15 @@ function shuffle(a){
     [a[i],a[j]]=[a[j],a[i]];
   }
 }
+
+try{
+  const saved=localStorage.getItem("peggle-achievements");
+  if(saved){
+    const ids=JSON.parse(saved);
+    ACHIEVEMENTS.forEach(a=>{if(ids.includes(a.id))a.unlocked=true});
+    unlockedAchievements=ids;
+  }
+}catch(e){}
 </script>
 </body>
 </html>
