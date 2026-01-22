@@ -3,9 +3,9 @@
 <head>
 	<style type="text/css">
 
-			body{
+		/*	body{
  		background-color: rgb(r, g, b);
- 	}
+ 	}*/
 		
 .box{
 	/*width: 50px;
@@ -18,8 +18,20 @@ background-size: contain;
 background-repeat: no-repeat;
 display: inline-block;
 position: absolute;
+animation-name: swing;
+animation-duration: 3s;
+animation-iteration-count: infinite;
+animation-direction: alternate;
 
+}
 
+	@keyframes swing { 
+	from{
+		transform: rotate(-30deg);
+	} 
+	to {
+		transform: rotate(30deg);
+	}
 }
 
 	</style>
@@ -34,15 +46,15 @@ position: absolute;
 <script type="text/javascript">
 
 
-	function changeColor () {
-let r1 = Math.round(Math.random()*255)
-let g2 = Math.round(Math.random()*255)
-let b3 = Math.round(Math.random()*255)
+// 	function changeColor () {
+// let r1 = Math.round(Math.random()*255)
+// let g2 = Math.round(Math.random()*255)
+// let b3 = Math.round(Math.random()*255)
 
-document.body.style.backgroundColor ="rgb("+ r1 + "," +g2 +","+ b3+")"
-}
+// document.body.style.backgroundColor ="rgb("+ r1 + "," +g2 +","+ b3+")"
+// }
 
- setInterval(changeColor, 1000)
+//  setInterval(changeColor, 1000)
 
 
 function makeConfetti (){

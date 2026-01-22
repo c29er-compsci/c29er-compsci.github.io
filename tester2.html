@@ -992,22 +992,45 @@ function unlockAchievement(id){
 }
 
 function showAchievements(){
-  const achDiv=document.getElementById("achievements");
-  if(achDiv.style.display==="block"){ achDiv.style.display="none"; return; }
-  achDiv.innerHTML="<h2>🏆 ACHIEVEMENTS 🏆</h2>";
+  const achDiv = document.getElementById("achievements");
+
+  if (achDiv.style.display === "block") {
+    achDiv.style.display = "none";
+    return;
+  }
+
+  const unlockedCount = ACHIEVEMENTS.filter(a => a.unlocked).length;
+  const totalCount = ACHIEVEMENTS.length;
+
+  achDiv.innerHTML = `
+    <h2>🏆 ACHIEVEMENTS 🏆</h2>
+    <div style="
+      text-align:center;
+      margin-bottom:15px;
+      font-size:18px;
+      color:#ffd700;
+      font-weight:bold;
+    ">
+      Unlocked: ${unlockedCount} / ${totalCount}
+    </div>
+  `;
+
   ACHIEVEMENTS.forEach(a=>{
-    const item=document.createElement("div");
-    item.className="achievement-item"+(a.unlocked?" unlocked":"");
-    item.innerHTML=`
-      <div class="achievement-icon">${a.unlocked?a.icon:"🔒"}</div>
+    const item = document.createElement("div");
+    item.className = "achievement-item" + (a.unlocked ? " unlocked" : "");
+    item.innerHTML = `
+      <div class="achievement-icon">${a.unlocked ? a.icon : "🔒"}</div>
       <div class="achievement-info">
         <h4>${a.name}</h4>
         <p>${a.desc}</p>
-      </div>`;
+      </div>
+    `;
     achDiv.appendChild(item);
   });
-  achDiv.style.display="block";
+
+  achDiv.style.display = "block";
 }
+
 
 function shuffle(a){
   for(let i=a.length-1;i>0;i--){
@@ -1022,6 +1045,10 @@ try{
     const ids=JSON.parse(saved);
     ACHIEVEMENTS.forEach(a=>{if(ids.includes(a.id))a.unlocked=true});
     unlockedAchievements=ids;
+    if (document.getElementById("achievements").style.display === "block") {
+  showAchievements();
+}
+
   }
 }catch(e){}
 </script>
