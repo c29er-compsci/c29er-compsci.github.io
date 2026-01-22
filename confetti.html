@@ -3,6 +3,18 @@
 <head>
 	<style type="text/css">
 
+		#dude{
+			width: 100px;
+			height: 100px;
+	display: inline-block;
+	background-video: url(https://giphy.com/explore/family-guy-dancing);
+background-position: center;
+background-size: contain;
+background-repeat: no-repeat;
+
+
+		}
+
 		/*	body{
  		background-color: rgb(r, g, b);
  	}*/
@@ -18,26 +30,39 @@ background-size: contain;
 background-repeat: no-repeat;
 display: inline-block;
 position: absolute;
-animation-name: swing;
+animation-name: swing3d;
 animation-duration: 3s;
 animation-iteration-count: infinite;
 animation-direction: alternate;
+
 
 }
 
 	@keyframes swing { 
 	from{
-		transform: rotate(-30deg);
+		transform: rotate(var(--startrot));
 	} 
 	to {
-		transform: rotate(30deg);
+		transform: rotate(var(--endrot));
 	}
+}
+
+@keyframes swing3d {
+from{
+	transform: rotateX(-45deg)rotateZ(-25deg)rotateY(-180deg);
+}
+to {
+	transform:rotateZ(25deg)rotateX(45deg)rotateY(180deg) ;
+}
 }
 
 	</style>
 </head>
 <body>
+<div id="dude">
+	
 
+</div>
 	<div style="box">
 		
 
@@ -45,16 +70,20 @@ animation-direction: alternate;
 
 <script type="text/javascript">
 
+	
 
-// 	function changeColor () {
-// let r1 = Math.round(Math.random()*255)
-// let g2 = Math.round(Math.random()*255)
-// let b3 = Math.round(Math.random()*255)
 
-// document.body.style.backgroundColor ="rgb("+ r1 + "," +g2 +","+ b3+")"
-// }
 
-//  setInterval(changeColor, 1000)
+
+	function changeColor () {
+let r1 = Math.round(Math.random()*255)
+let g2 = Math.round(Math.random()*255)
+let b3 = Math.round(Math.random()*255)
+
+document.body.style.backgroundColor ="rgb("+ r1 + "," +g2 +","+ b3+")"
+}
+
+ setInterval(changeColor, 1000)
 
 
 function makeConfetti (){
@@ -70,6 +99,11 @@ let b = Math.round(Math.random()*255)
 
 let rotation = Math.random() * 360
 
+let startrot = Math.random() * -360 + "deg"
+let endrot = Math.random() * 360 + "deg"
+
+square.style.setProperty("--startrot", startrot)
+square.style.setProperty("--endrot", endrot)
 
 square.style.borderColor = "rgb("+r+","+g+","+b+")"
 
