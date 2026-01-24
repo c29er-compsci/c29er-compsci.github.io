@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Peggle – Portal Edition</title>
+patch notes
 
 <style>
 html,body{
@@ -159,6 +160,16 @@ canvas{display:block}
   color:#666;
   font-size:13px;
 }
+#patchnotes{
+  background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkjEXMNlMhCPOJdQ62X8hg_Mv85yqXc4GvnQ&s);
+   position:fixed;top:15px;left:15px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(240,240,255,.9));
+  padding:16px 20px;border-radius:12px;
+  font-weight:bold;font-size:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+  border:2px solid rgba(255,255,255,.3);
+  z-index:10;
+}
 </style>
 </head>
 
@@ -168,7 +179,10 @@ canvas{display:block}
   <h1>🎯 PEGGLE PORTAL 🎯</h1>
   <button class="btn" onclick="startGame()">START GAME</button>
   <button class="btn" onclick="showAchievements()" style="margin-top:15px;font-size:20px;padding:12px 35px">🏆 ACHIEVEMENTS</button>
+  <button class="btn" onclick="toggleSkinMenu()" style="margin-top:15px; font-size:20px;">🎨 SKINS</button>
+<div id="skinMenu" style="display:none; background:rgba(0,0,0,0.8); padding:20px; border-radius:15px; margin-top:10px; flex-wrap:wrap; gap:10px; justify-content:center; max-width:500px;"></div>
   <div id="achievements" style="display:none"></div>
+  <a href="notes.html"><div id="patchnotes"></div></a>
 </div>
 
 <div id="ui">
@@ -185,11 +199,15 @@ canvas{display:block}
   <p id="achievementDesc"></p>
 </div>
 
+
+
 <div id="overlay">
   <h1 id="overlayTitle"></h1>
   <p style="font-size:32px;margin:25px">Score: <span id="finalScore"></span></p>
   <button class="btn" onclick="overlayAction()">CONTINUE</button>
 </div>
+
+
 
 <canvas id="game"></canvas>
 
@@ -201,6 +219,21 @@ resize();
 addEventListener("resize",resize);
 
 const GRAVITY=.35,REST=.985,POWER=18;
+// --- SKIN SYSTEM ---
+const SKINS = {
+  default: { name: "Red Classic", color: "#ff4444", glow: "#ff0000", locked: false },
+  perfectionist: { name: "Golden Orb", color: "#ffd700", glow: "#ffffff", locked: true, ach: "perfect" },
+  royalty: { name: "Crown Jewel", color: "#7b2cbf", glow: "#f093fb", locked: true, ach: "100k" },
+  blue: { name: "Aperture Blue", color: "#00d9ff", glow: "#0099cc", locked: false },
+  orange: { name: "Aperture Orange", color: "#ff8800", glow: "#ff4400", locked: false },
+  ghost: { name: "Ghost", color: "rgba(255,255,255,0.5)", glow: "#ffffff", locked: false },
+  toxic: { name: "Toxic", color: "#39ff14", glow: "#00ff00", locked: false },
+  eightBall: { name: "8-Ball", color: "#222222", glow: "#ffffff", locked: false },
+  nebula: { name: "Nebula", color: "#480ca8", glow: "#7209b7", locked: false },
+  bubble: { name: "Bubblegum", color: "#ffafcc", glow: "#ffc8dd", locked: false }
+};
+
+let currentSkin = "default";
 
 const uiScore=document.getElementById("score");
 const uiOrange=document.getElementById("orange");
@@ -276,9 +309,9 @@ const ACHIEVEMENTS=[
 // --- META ---
 {id:"comeback", icon:"💀➡️😎", name:"Comeback", desc:"Win level with 1 ball remaining", unlocked:false},
 {id:"collector", icon:"📦", name:"Collector", desc:"Unlock 20 achievements", unlocked:false},
-{id:"completionist", icon:"🏆", name:"Completionist", desc:"Unlock 50 achievements", unlocked:false},
 {id:"marathon", icon:"🏃", name:"Marathon", desc:"Reach level 10", unlocked:false},
 {id:"immortal", icon:"♾️", name:"Immortal", desc:"Score 250,000 points", unlocked:false},
+{id:"completionist", icon:"🏆", name:"Get Pegged", desc:"Unlock all achievements", unlocked:false},
 
   
 
@@ -354,6 +387,34 @@ function beep(f,d=.06,type="sine"){
   g.gain.exponentialRampToValueAtTime(.01,audio.currentTime+d);
   o.start();
   o.stop(audio.currentTime+d);
+}
+function toggleSkinMenu() {
+    const menu = document.getElementById('skinMenu');
+    menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+    menu.innerHTML = ''; // Clear and rebuild
+    
+    for (let key in SKINS) {
+        const s = SKINS[key];
+        const btn = document.createElement('div');
+        btn.style.cssText = `
+            width: 40px; height: 40px; border-radius: 50%; 
+            background: ${s.locked ? '#333' : s.color}; 
+            cursor: pointer; border: 3px solid ${currentSkin === key ? 'white' : 'transparent'};
+            display: flex; align-items: center; justify-content:center; font-size: 10px; color: white;
+        `;
+        btn.title = s.name;
+        if (s.locked) btn.innerHTML = "🔒";
+        
+        btn.onclick = () => {
+            if (!s.locked) {
+                currentSkin = key;
+                toggleSkinMenu(); // Refresh border
+            } else {
+                alert("Unlock this skin by completing: " + s.ach);
+            }
+        };
+        menu.appendChild(btn);
+    }
 }
 
 function drawBackground(){
@@ -698,6 +759,27 @@ function loop(){
   }
 
   if(!balls.length&&ballsLeft>0){
+    // Find this inside balls.forEach
+const skin = SKINS[currentSkin];
+const grad = ctx.createRadialGradient(b.x - 3, b.y - 3, 0, b.x, b.y, b.r);
+
+if (b.fireball) {
+    grad.addColorStop(0, "#ffaa66");
+    grad.addColorStop(1, "#cc0000");
+    ctx.shadowColor = "#ff3300";
+    ctx.shadowBlur = 25;
+} else {
+    grad.addColorStop(0, skin.glow);
+    grad.addColorStop(1, skin.color);
+    ctx.shadowColor = skin.glow;
+    ctx.shadowBlur = 15;
+}
+
+ctx.beginPath();
+ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+ctx.fillStyle = grad;
+ctx.fill();
+ctx.shadowBlur = 0; // Always reset shadow blur!
     const a=Math.atan2(mouse.y-60,mouse.x-canvas.width/2);
     ctx.save();
     ctx.translate(canvas.width/2,60);
@@ -979,6 +1061,14 @@ function startGame(){
 }
 
 function unlockAchievement(id){
+  // Check for Skin Unlocks
+for (let s in SKINS) {
+  if (SKINS[s].ach === id) {
+    SKINS[s].locked = false;
+    // Optional: show a special alert
+    console.log("Skin Unlocked: " + SKINS[s].name);
+  }
+}
   const ach=ACHIEVEMENTS.find(a=>a.id===id);
   if(!ach||ach.unlocked)return;
   ach.unlocked=true;

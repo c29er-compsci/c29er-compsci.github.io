@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patch Notes v1.01</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .version {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .card h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .achievement-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .counter-number {
+            font-weight: bold;
+            font-size: 1.3em;
+            color: #ffd700;
+        }
+
+        #patchNotesContent {
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+
+        #patchNotesContent p {
+            margin-bottom: 15px;
+        }
+
+        .people-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .person-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .person-card:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .person-name {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .person-title {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .badge {
+            display: inline-block;
+            background: #ffd700;
+            color: #333;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <a href="#" class="back-button" id="backButton">
+        <span>←</span>
+        <span>Back</span>
+    </a>
+    
+    <div class="container">
+        <header>
+            <h1>🎮 Patch Notes</h1>
+            <div class="version" id="version"></div>
+        </header>
+
+        <div class="card">
+            <h2>📝 Patch Notes</h2>
+            <div id="patchNotesContent"></div>
+        </div>
+
+        <div class="card">
+            <h2>👥 100k Club</h2>
+            <div class="people-list" id="peopleList"></div>
+        </div>
+    </div>
+
+    <script>
+        // ===== EASY UPDATE SECTION - EDIT THESE VALUES =====
+        
+        const VERSION = "1.01";
+        
+        const BACK_BUTTON_LINK = "peggle.html";  // Change this to your link
+        
+        const PATCH_NOTES = `
+           NEW UPDATE
+
+           Added Patch Notes 
+            Acheivments Counter
+            NEW UPDATE
+            
+            Custom Skins
+            Two locked skins that you must earn
+        `;
+        
+        const PEOPLE = [
+            { name: "Evren", title: "(The First)" },
+            { name: "Timmy", title: "2x" },
+            { name: "Jamie", title: "" }
+        ];
+        
+        // ===== END OF EASY UPDATE SECTION =====
+
+        // Render the page
+        document.getElementById('backButton').href = BACK_BUTTON_LINK;
+        document.getElementById('version').textContent = `Version ${VERSION}`;
+        document.getElementById('patchNotesContent').innerHTML = PATCH_NOTES.trim().split('\n').map(line => `<p>${line.trim()}</p>`).join('');
+        
+        const peopleList = document.getElementById('peopleList');
+        PEOPLE.forEach(person => {
+            const card = document.createElement('div');
+            card.className = 'person-card';
+            card.innerHTML = `
+                <div class="person-name">${person.name}</div>
+                ${person.title ? `<div class="person-title">${person.title}</div>` : ''}
+            `;
+            peopleList.appendChild(card);
+        });
+    </script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Peggle – Portal Edition</title>
+patch notes
 
 <style>
 html,body{
@@ -57,6 +58,53 @@ canvas{display:block}
 @keyframes titleFloat{
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(-10px)}
+}
+#skinSelector{
+  margin-top:20px;
+  background:rgba(255,255,255,.1);
+  padding:20px;
+  border-radius:15px;
+  max-width:600px;
+}
+#skinSelector h3{
+  color:white;
+  margin:0 0 15px 0;
+  text-align:center;
+}
+#skinGrid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+}
+.skin-option{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  cursor:pointer;
+  border:3px solid transparent;
+  transition:all .2s;
+  position:relative;
+}
+.skin-option:hover:not(.locked){
+  transform:scale(1.1);
+  border-color:white;
+}
+.skin-option.selected{
+  border-color:#ffd700;
+  box-shadow:0 0 20px rgba(255,215,0,.6);
+}
+.skin-option.locked{
+  opacity:.3;
+  cursor:not-allowed;
+  filter:grayscale(1);
+}
+.skin-option.locked::after{
+  content:"🔒";
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-size:24px;
 }
 
 #overlay{
@@ -159,6 +207,16 @@ canvas{display:block}
   color:#666;
   font-size:13px;
 }
+#patchnotes{
+  background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkjEXMNlMhCPOJdQ62X8hg_Mv85yqXc4GvnQ&s);
+   position:fixed;top:15px;left:15px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(240,240,255,.9));
+  padding:16px 20px;border-radius:12px;
+  font-weight:bold;font-size:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+  border:2px solid rgba(255,255,255,.3);
+  z-index:10;
+}
 </style>
 </head>
 
@@ -168,7 +226,12 @@ canvas{display:block}
   <h1>🎯 PEGGLE PORTAL 🎯</h1>
   <button class="btn" onclick="startGame()">START GAME</button>
   <button class="btn" onclick="showAchievements()" style="margin-top:15px;font-size:20px;padding:12px 35px">🏆 ACHIEVEMENTS</button>
+  <div id="skinSelector">
+    <h3>🎨 BALL SKINS</h3>
+    <div id="skinGrid"></div>
+  </div>
   <div id="achievements" style="display:none"></div>
+  <a href="notes.html"><div id="patchnotes"></div></a>
 </div>
 
 <div id="ui">
@@ -184,6 +247,8 @@ canvas{display:block}
   <h3 id="achievementTitle"></h3>
   <p id="achievementDesc"></p>
 </div>
+
+
 
 <div id="overlay">
   <h1 id="overlayTitle"></h1>
@@ -311,6 +376,21 @@ let totalPortalUses = 0;
 let totalBucketCatches = 0;
 let orangeShotsInRow = 0;
 let specialTypesHitThisLevel=new Set();
+
+const BALL_SKINS = [
+  {id:"classic", name:"Classic", unlocked:true, gradient:["#ff8888","#ff4444","#cc2222"]},
+  {id:"ocean", name:"Ocean", unlocked:true, gradient:["#88d4ff","#44a6ff","#2288dd"]},
+  {id:"emerald", name:"Emerald", unlocked:true, gradient:["#88ffaa","#44ff88","#22cc66"]},
+  {id:"sunset", name:"Sunset", unlocked:true, gradient:["#ffaa66","#ff6633","#dd4411"]},
+  {id:"grape", name:"Grape", unlocked:true, gradient:["#cc88ff","#aa44ff","#8822dd"]},
+  {id:"rose", name:"Rose", unlocked:true, gradient:["#ff88cc","#ff4499","#dd2277"]},
+  {id:"midnight", name:"Midnight", unlocked:true, gradient:["#6688aa","#334466","#112233"]},
+  {id:"lava", name:"Lava", unlocked:true, gradient:["#ff6600","#cc3300","#990000"]},
+  {id:"gold", name:"Golden", unlocked:false, gradient:["#ffee88","#ffd700","#ffaa00"], unlock:"100k"},
+  {id:"rainbow", name:"Rainbow", unlocked:false, gradient:["#ff0000","#00ff00","#0000ff"], unlock:"perfect"}
+];
+
+let selectedSkin = "classic";
 
 const field={
   left:()=>canvas.width/2-400,
@@ -544,7 +624,10 @@ function endTurn(){
     if(!pegs.some(p=>p.type==="orange")){
       if(shotsThisLevel <= 5) unlockAchievement("ach_26");
       if(pegs.length === 0) unlockAchievement("ach_27");
-      if(hitAllPegs) unlockAchievement("perfect");
+      if(hitAllPegs) {
+  unlockAchievement("perfect");
+  unlockSkin("rainbow");
+}
       evaluateExtraAchievements(false);
       evaluateExtraAchievements(true);
       showOverlay("🎊 LEVEL COMPLETE! 🎊");
@@ -860,7 +943,7 @@ function loop(){
         b.x=p.tx; b.y=p.ty;
         b.portalCooldown=30;
         portalUsesThisTurn++;
-        justExitedPortal = true; // FOR ACH 9
+        justExitedPortal = true;
         beep(1500,.15,"sine");
         for(let i=0;i<15;i++){
           particles.push({
@@ -877,7 +960,7 @@ function loop(){
         if(!p.hit&&d<50){
           p.hit=true;
           pegsHitThisTurn++;
-          fireballHitsThisTurn++; // ACH 14
+          fireballHitsThisTurn++;
           if(fireballHitsThisTurn >= 15) unlockAchievement("ach_14");
           if(p.type!=="blue") specialTypesHitThisLevel.add(p.type);
           score+=p.type==="orange"?100:10;
@@ -897,7 +980,7 @@ function loop(){
       ballsLeft++;
       bucketVisitsThisTurn++;
       if(bucketExpanded) {
-          bigBucketCatches++; // ACH 16
+          bigBucketCatches++;
           if(bigBucketCatches >= 3) unlockAchievement("ach_16");
       }
       beep(1400,.2,"sine");
@@ -912,30 +995,59 @@ function loop(){
       updateUI();
     }
 
+    // Draw ball trail with skin
     b.trail.forEach((t,i)=>{
       ctx.globalAlpha=(i+1)/b.trail.length*.6;
-      ctx.beginPath(); ctx.arc(t.x,t.y,b.r,0,Math.PI*2);
-      ctx.fillStyle=b.fireball?"#ff6633":"#ff6b6b";
-      ctx.shadowColor=b.fireball?"#ff3300":"#ff0000";
-      ctx.shadowBlur=10; ctx.fill(); ctx.shadowBlur=0;
+      ctx.beginPath(); 
+      ctx.arc(t.x,t.y,b.r,0,Math.PI*2);
+      const skin = BALL_SKINS.find(s => s.id === selectedSkin) || BALL_SKINS[0];
+      const trailGrad = ctx.createRadialGradient(t.x-3,t.y-3,0,t.x,t.y,b.r);
+      trailGrad.addColorStop(0, b.fireball ? "#ffaa66" : skin.gradient[0]);
+      trailGrad.addColorStop(.5, b.fireball ? "#ff6633" : skin.gradient[1]);
+      trailGrad.addColorStop(1, b.fireball ? "#ff0000" : skin.gradient[2]);
+      ctx.fillStyle=trailGrad;
+      ctx.shadowColor=b.fireball?"#ff3300":skin.gradient[2];
+      ctx.shadowBlur=10; 
+      ctx.fill(); 
+      ctx.shadowBlur=0;
     });
+    
     ctx.globalAlpha=1;
     if(b.fireball){ ctx.shadowColor="#ff3300"; ctx.shadowBlur=25; }
+    
+    // Draw main ball with skin
+    const skin = BALL_SKINS.find(s => s.id === selectedSkin) || BALL_SKINS[0];
     const grad=ctx.createRadialGradient(b.x-3,b.y-3,0,b.x,b.y,b.r);
-    grad.addColorStop(0,b.fireball?"#ffaa66":"#ff8888");
-    grad.addColorStop(.5,b.fireball?"#ff6633":"#ff4444");
-    grad.addColorStop(1,b.fireball?"#ff0000":"#cc2222");
-    ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-    ctx.fillStyle=grad; ctx.fill(); ctx.shadowBlur=0;
+    
+    // Rainbow skin animation
+    if(selectedSkin === "rainbow" && !b.fireball){
+      const t = Date.now() * 0.003;
+      const r = Math.floor(127 * Math.sin(t) + 128);
+      const g = Math.floor(127 * Math.sin(t + 2) + 128);
+      const bl = Math.floor(127 * Math.sin(t + 4) + 128);
+      grad.addColorStop(0,`rgb(${Math.min(255,r+50)},${Math.min(255,g+50)},${Math.min(255,bl+50)})`);
+      grad.addColorStop(.5,`rgb(${r},${g},${bl})`);
+      grad.addColorStop(1,`rgb(${Math.max(0,r-50)},${Math.max(0,g-50)},${Math.max(0,bl-50)})`);
+    } else {
+      grad.addColorStop(0,b.fireball?"#ffaa66":skin.gradient[0]);
+      grad.addColorStop(.5,b.fireball?"#ff6633":skin.gradient[1]);
+      grad.addColorStop(1,b.fireball?"#ff0000":skin.gradient[2]);
+    }
+    
+    ctx.beginPath(); 
+    ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    ctx.fillStyle=grad; 
+    ctx.fill(); 
+    ctx.shadowBlur=0;
   });
 
   // Remove balls that are finished
-balls = balls.filter(b => !b.bucketed && b.y <= canvas.height + 50);
+  balls = balls.filter(b => !b.bucketed && b.y <= canvas.height + 50);
 
-// End turn when all balls are gone
-if (balls.length === 0 && !canShoot) {
-  endTurn();
-}
+  // End turn when all balls are gone
+  if (balls.length === 0 && !canShoot) {
+    endTurn();
+  }
 
   ctx.restore();
   requestAnimationFrame(loop);
@@ -952,7 +1064,25 @@ function updateUI(){
     ballsDisplay.appendChild(d);
   }
   if(score>=10000)unlockAchievement("10k");
-  if(score>=100000)unlockAchievement("100k");
+  if(score>=100000){
+    unlockAchievement("100k");
+    unlockSkin("gold");
+  }
+}
+
+function unlockSkin(skinId){
+  const skin = BALL_SKINS.find(s => s.id === skinId);
+  if(skin && !skin.unlocked){
+    skin.unlocked = true;
+    try{ 
+      const savedSkins = JSON.parse(localStorage.getItem("peggle-skins") || "[]");
+      if(!savedSkins.includes(skinId)){
+        savedSkins.push(skinId);
+        localStorage.setItem("peggle-skins", JSON.stringify(savedSkins));
+      }
+    }catch(e){}
+    renderSkinSelector();
+  }
 }
 
 function showOverlay(title){
@@ -971,6 +1101,36 @@ function overlayAction(){
   }else{
     score=0; ballsLeft=10; level=1; running=true; canShoot=true; generateLevel(); loop();
   }
+}
+function renderSkinSelector(){
+  const grid = document.getElementById("skinGrid");
+  grid.innerHTML = "";
+  
+  BALL_SKINS.forEach(skin => {
+    const div = document.createElement("div");
+    div.className = "skin-option" + 
+      (skin.unlocked ? "" : " locked") +
+      (selectedSkin === skin.id ? " selected" : "");
+    
+    if(skin.unlocked){
+      const grad = `radial-gradient(circle at 30% 30%, ${skin.gradient[0]}, ${skin.gradient[1]}, ${skin.gradient[2]})`;
+      div.style.background = grad;
+      div.title = skin.name;
+      
+      div.onclick = () => {
+        selectedSkin = skin.id;
+        try{ localStorage.setItem("peggle-selected-skin", skin.id); }catch(e){}
+        renderSkinSelector();
+      };
+    } else {
+      div.style.background = "#333";
+      const unlockText = skin.unlock === "100k" ? "Unlock at 100k points" : 
+                        skin.unlock === "perfect" ? "Unlock by getting Perfectionist" : "";
+      div.title = `${skin.name} - ${unlockText}`;
+    }
+    
+    grid.appendChild(div);
+  });
 }
 
 function startGame(){
@@ -1046,11 +1206,26 @@ try{
     ACHIEVEMENTS.forEach(a=>{if(ids.includes(a.id))a.unlocked=true});
     unlockedAchievements=ids;
     if (document.getElementById("achievements").style.display === "block") {
-  showAchievements();
-}
-
+      showAchievements();
+    }
   }
+  
+  const savedSkins = localStorage.getItem("peggle-skins");
+  if(savedSkins){
+    const skinIds = JSON.parse(savedSkins);
+    BALL_SKINS.forEach(s => {
+      if(skinIds.includes(s.id)) s.unlocked = true;
+    });
+  }
+  
+  const savedSelectedSkin = localStorage.getItem("peggle-selected-skin");
+  if(savedSelectedSkin){
+    selectedSkin = savedSelectedSkin;
+  }
+  
+  renderSkinSelector();
 }catch(e){}
+
 </script>
 </body>
 </html>
