@@ -224,10 +224,11 @@ canvas{display:block}
 
 <div id="menu">
   <h1>🎯 PEGGLE PORTAL 🎯</h1>
-  <button class="btn" onclick="startGame()">START GAME</button>
+  <button class="btn" onclick="startGame(false)">START GAME</button>
+  <button class="btn" onclick="startGame(true)" style="margin-top:15px;background:linear-gradient(135deg,#ff4444,#cc0000)">🔥 OG MODE</button>
   <button class="btn" onclick="showAchievements()" style="margin-top:15px;font-size:20px;padding:12px 35px">🏆 ACHIEVEMENTS</button>
   <div id="skinSelector">
-    <h3>🎨 BALL SKINS</h3>
+    <h3>🎨 SKINS</h3>
     <div id="skinGrid"></div>
   </div>
   <div id="achievements" style="display:none"></div>
@@ -282,8 +283,8 @@ const menu = document.getElementById("menu");
 
 const ACHIEVEMENTS=[
   {id:"10k", icon:"💰", name:"Big Spender", desc:"Reach 10,000 points", unlocked:false},
-  {id:"100k", icon:"👑", name:"Peggle Royalty", desc:"Reach 100,000 points", unlocked:false},
-  {id:"perfect", icon:"💯", name:"Perfectionist", desc:"Clear every single peg in a level", unlocked:false},
+  {id:"100k", icon:"👑", name:"Peggle Royalty", desc:"Reach 100,000 points (Unlocks Skin)", unlocked:false},
+  {id:"perfect", icon:"💯", name:"Perfectionist", desc:"Clear every single peg in a level (Unlocks Skin)", unlocked:false},
   {id:"ach_2", icon:"🎯", name:"Bullseye", desc:"Hit a peg within 0.5s of firing", unlocked:false},
   {id:"ach_5", icon:"✌️", name:"Double Tap", desc:"Hit two orange pegs in a row", unlocked:false},
   {id:"ach_8", icon:"🌀", name:"Infinite Loop", desc:"Use portals 5 times in one shot", unlocked:false},
@@ -354,6 +355,7 @@ let running=false;
 let score=0,ballsLeft=10,level=1;
 let pegs=[],balls=[],particles=[],portals=[];
 let canShoot=true;
+let hardMode=false;
 let multiballActive=false;
 let pegsHitThisTurn=0;
 let bucketExpanded=false,bucketTimer=0;
@@ -361,7 +363,6 @@ let slowmo=0,bgTime=0;
 let zoomActive=false,zoomLevel=1,zoomTargetY=0;
 let firstPegTypeThisTurn = null;
 
-// NEW TRACKING VARIABLES
 let shotStartTime=0;
 let lastPegType="";
 let orangeHitsThisTurn=0;
@@ -376,6 +377,15 @@ let totalPortalUses = 0;
 let totalBucketCatches = 0;
 let orangeShotsInRow = 0;
 let specialTypesHitThisLevel=new Set();
+let bounceCount=0;
+let lastPortalEntered=null;
+let purpleExplosionsThisTurn=0;
+let multiballPegsHit=0;
+let ballsInMultiball=false;
+let levelStartTime=0;
+let totalOrangePegsThisLevel=0;
+let orangePegsHitWithoutMiss=0;
+let lastBallY=0;
 
 const BALL_SKINS = [
   {id:"classic", name:"Classic", unlocked:true, gradient:["#ff8888","#ff4444","#cc2222"]},
@@ -466,6 +476,10 @@ function generateLevel(){
   specialTypesHitThisLevel.clear();
   shotsThisLevel=0;
   bigBucketCatches=0;
+  totalBucketCatches=0;
+  levelStartTime=Date.now();
+  totalOrangePegsThisLevel=0;
+  orangePegsHitWithoutMiss=0;
   
   const padding=80;
   const spawnPortal=()=>({
@@ -510,10 +524,15 @@ function generateLevel(){
   
   const specialPegs=pegs.filter(p=>p.type==="blue");
   shuffle(specialPegs);
-  specialPegs.slice(0,2).forEach(p=>p.type="green");
-  specialPegs.slice(2,4).forEach(p=>p.type="purple");
-  specialPegs.slice(4,6).forEach(p=>p.type="multiball");
-  specialPegs.slice(6,8).forEach(p=>p.type="fireball");
+  
+  // Hard mode: only 1 of each special peg, Normal mode: 2 of each
+  const specialCount = hardMode ? 1 : 2;
+  specialPegs.slice(0,specialCount).forEach(p=>p.type="green");
+  specialPegs.slice(specialCount,specialCount*2).forEach(p=>p.type="purple");
+  specialPegs.slice(specialCount*2,specialCount*3).forEach(p=>p.type="multiball");
+  specialPegs.slice(specialCount*3,specialCount*4).forEach(p=>p.type="fireball");
+  
+  totalOrangePegsThisLevel = pegs.filter(p => p.type === "orange").length;
   
   updateUI();
 }
@@ -522,13 +541,18 @@ function evaluateExtraAchievements(levelComplete=false){
   if(pegsHitThisTurn >= 15) unlockAchievement("chaos");
   if(portalUsesThisTurn >= 10) unlockAchievement("portal_lover");
   if(bucketVisitsThisTurn === 1 && pegsHitThisTurn === 0) unlockAchievement("bucket_only");
+  if(bucketVisitsThisTurn >= 2) unlockAchievement("double_bucket");
   if(orangeHitsThisTurn >= 5) unlockAchievement("orange_rush");
+  if(multiballPegsHit >= 6) unlockAchievement("multi_mayhem");
+  if(fireballHitsThisTurn >= 20) unlockAchievement("firestorm");
 
   if(levelComplete){
     if(shotsThisLevel >= 10) unlockAchievement("slow_burn");
     if(ballsLeft === 1) unlockAchievement("comeback");
     if(specialTypesHitThisLevel.size === 0) unlockAchievement("minimalist");
     if(level >= 10) unlockAchievement("marathon");
+    if(totalBucketCatches >= 5) unlockAchievement("bucket_greedy");
+    if(Date.now() - levelStartTime < 20000) unlockAchievement("speed_demon");
   }
 
   if(score >= 250000) unlockAchievement("immortal");
@@ -537,13 +561,12 @@ function evaluateExtraAchievements(levelComplete=false){
   if(unlockedAchievements.length >= 50) unlockAchievement("completionist");
 }
 
-
 function shoot(){
   if(!running||!canShoot||balls.length||ballsLeft<=0)return;
   ballsLeft--;
   canShoot=false;
   
-  // RESET SHOT STATS
+ // RESET SHOT STATS
   shotStartTime=Date.now();
   pegsHitThisTurn=0;
   firstPegTypeThisTurn = null;
@@ -555,6 +578,11 @@ function shoot(){
   lastPegType="";
   justExitedPortal=false;
   shotsThisLevel++;
+  bounceCount=0;
+  lastPortalEntered=null;
+  purpleExplosionsThisTurn=0;
+  multiballPegsHit=0;
+  lastBallY=60;
   
   const a=Math.atan2(mouse.y-60,mouse.x-canvas.width/2);
   balls.push({
@@ -565,7 +593,8 @@ function shoot(){
     fireball:false,portalCooldown:0
   });
   
-  if(multiballActive){
+ if(multiballActive){
+    ballsInMultiball=true;
     for(let i=0;i<2;i++){
       const offset=(i===0?-.15:.15);
       balls.push({
@@ -620,14 +649,24 @@ function endTurn(){
   pegs=pegs.filter(p=>!p.hit);
   balls=[];
 
-  setTimeout(()=>{
+ setTimeout(()=>{
     if(!pegs.some(p=>p.type==="orange")){
       if(shotsThisLevel <= 5) unlockAchievement("ach_26");
-      if(pegs.length === 0) unlockAchievement("ach_27");
       if(hitAllPegs) {
-  unlockAchievement("perfect");
-  unlockSkin("rainbow");
-}
+        unlockAchievement("perfect");
+        unlockSkin("rainbow");
+      }
+      // Check if all special peg types were used
+      if(specialTypesHitThisLevel.has("green") && 
+         specialTypesHitThisLevel.has("purple") && 
+         specialTypesHitThisLevel.has("multiball") && 
+         specialTypesHitThisLevel.has("fireball")) {
+        unlockAchievement("specialist");
+      }
+      // Check if all oranges cleared in one shot
+      if(totalOrangePegsThisLevel === orangeHitsThisTurn) {
+        unlockAchievement("orange_god");
+      }
       evaluateExtraAchievements(false);
       evaluateExtraAchievements(true);
       showOverlay("🎊 LEVEL COMPLETE! 🎊");
@@ -641,15 +680,19 @@ function collide(b,p){
   if(p.hit)return;
   const dx=b.x-p.x,dy=b.y-p.y,d=Math.hypot(dx,dy);
   if(d<b.r+p.r){
-    p.hit=true;
+   p.hit=true;
     p.wobble=.7;
     pegsHitThisTurn++;
+    if(ballsInMultiball) multiballPegsHit++;
     // FIRST PEG HIT CHECK
 if (firstPegTypeThisTurn === null) {
   firstPegTypeThisTurn = p.type;
 
   if (p.type === "orange") {
     unlockAchievement("clean_start"); // 🎯 First peg is orange
+  }
+  if (p.type === "green") {
+    unlockAchievement("green_touch"); // 💚 Hit green peg first
   }
 }
 
@@ -661,10 +704,23 @@ if (firstPegTypeThisTurn === null) {
     if(justExitedPortal && p.type === "orange") unlockAchievement("ach_9");
     justExitedPortal = false;
 
-    // ACH 5: DOUBLE TAP
+   // ACH 5: DOUBLE TAP
     if(p.type === "orange") {
         if(lastPegType === "orange") unlockAchievement("ach_5");
         orangeHitsThisTurn++;
+        orangePegsHitWithoutMiss++;
+        
+        // Check for orange streak
+        if(orangeHitsThisTurn > 0) orangeShotsInRow++;
+        else orangeShotsInRow = 1;
+        
+        if(orangeShotsInRow >= 3) unlockAchievement("orange_streak");
+        
+        // Portal sniper
+        if(justExitedPortal) unlockAchievement("portal_sniper");
+    } else {
+        // Reset orange streak if we hit non-orange
+        if(pegsHitThisTurn === 1 && p.type !== "orange") orangeShotsInRow = 0;
     }
     lastPegType = p.type;
 
@@ -672,7 +728,14 @@ if (firstPegTypeThisTurn === null) {
     if(p.type === "green") greenHitsThisTurn++;
     if(greenHitsThisTurn > 0 && orangeHitsThisTurn > 0) unlockAchievement("ach_19");
 
-    if(p.type!=="blue") specialTypesHitThisLevel.add(p.type);
+   if(p.type!=="blue") specialTypesHitThisLevel.add(p.type);
+    
+    // Bank shot and trick shot
+    if(bounceCount >= 1) unlockAchievement("bank_shot");
+    if(bounceCount >= 3) unlockAchievement("trickshot");
+    
+    // Sniper - hit peg near top
+    if(p.y < field.top + 80) unlockAchievement("sniper");
     
     const pts=p.type==="orange"?100:p.type==="green"?500:p.type==="purple"?1000:p.type==="multiball"?250:p.type==="fireball"?250:10;
     score+=pts;
@@ -709,6 +772,8 @@ if (firstPegTypeThisTurn === null) {
     }
     
     if(p.type==="purple"){
+      purpleExplosionsThisTurn++;
+      if(purpleExplosionsThisTurn >= 2) unlockAchievement("purple_power");
       const nearPegs=pegs.filter(np=>!np.hit&&Math.hypot(np.x-p.x,np.y-p.y)<120);
       // ACH 15: CHAIN REACTION
       if(nearPegs.length >= 5) unlockAchievement("ach_15");
@@ -733,9 +798,17 @@ if (firstPegTypeThisTurn === null) {
     if(p.type==="multiball")multiballActive=true;
     if(p.type==="fireball")b.fireball=true;
     
-    if(p.type==="orange"){
+   if(p.type==="orange"){
       const remainingOrange=pegs.filter(pg=>pg.type==="orange"&&!pg.hit).length;
-      if(remainingOrange===0) slowmo=120;
+      if(remainingOrange===0) {
+        slowmo=120;
+        unlockAchievement("last_orange");
+        
+        // Check if we hit all oranges without missing any
+        if(orangePegsHitWithoutMiss === totalOrangePegsThisLevel) {
+          unlockAchievement("orange_sweeper");
+        }
+      }
     }
     
     updateUI();
@@ -934,16 +1007,24 @@ function loop(){
     b.trail.push({x:b.x,y:b.y});
     if(b.trail.length>12)b.trail.shift();
 
-    if(b.x<field.left()+b.r){b.x=field.left()+b.r;b.vx*=-1;beep(450,.04,"square");}
-    if(b.x>field.right()-b.r){b.x=field.right()-b.r;b.vx*=-1;beep(450,.04,"square");}
-    if(b.y<b.r){b.y=b.r;b.vy*=-1;beep(450,.04,"square");}
+    if(b.x<field.left()+b.r){b.x=field.left()+b.r;b.vx*=-1;bounceCount++;beep(450,.04,"square");}
+    if(b.x>field.right()-b.r){b.x=field.right()-b.r;b.vx*=-1;bounceCount++;beep(450,.04,"square");}
+    if(b.y<b.r){b.y=b.r;b.vy*=-1;bounceCount++;beep(450,.04,"square");}
 
-    portals.forEach(p=>{
+   portals.forEach(p=>{
       if(b.portalCooldown===0&&Math.hypot(b.x-p.x,b.y-p.y)<p.r){
+        // Portal ping-pong detection
+        if(lastPortalEntered === p) unlockAchievement("portal_pingpong");
+        lastPortalEntered = portals.find(port => port.x === p.tx && port.y === p.ty);
+        
         b.x=p.tx; b.y=p.ty;
         b.portalCooldown=30;
         portalUsesThisTurn++;
+        totalPortalUses++;
         justExitedPortal = true;
+        
+        if(totalPortalUses >= 50) unlockAchievement("portal_master");
+        
         beep(1500,.15,"sine");
         for(let i=0;i<15;i++){
           particles.push({
@@ -975,14 +1056,25 @@ function loop(){
       }else{ collide(b,p); }
     });
 
-    if(!b.bucketed&&b.y>=by&&b.y<=by+30&&b.x>=bucketLeft&&b.x<=bucketLeft+currentBucketW){
+   if(!b.bucketed&&b.y>=by&&b.y<=by+30&&b.x>=bucketLeft&&b.x<=bucketLeft+currentBucketW){
       b.bucketed=true;
       ballsLeft++;
       bucketVisitsThisTurn++;
+      totalBucketCatches++;
+      
+      // Bucket achievements
       if(bucketExpanded) {
           bigBucketCatches++;
           if(bigBucketCatches >= 3) unlockAchievement("ach_16");
       }
+      if(ballsLeft === 1) unlockAchievement("bucket_save");
+      if(justExitedPortal) unlockAchievement("portal_escape");
+      
+      // Bucket edge detection (within 10px of edge)
+      if(b.x <= bucketLeft + 10 || b.x >= bucketLeft + currentBucketW - 10) {
+        unlockAchievement("bucket_dancer");
+      }
+      
       beep(1400,.2,"sine");
       bucketText.textContent="FREE BALL!";
       bucketText.style.color="#ffd700";
@@ -1098,7 +1190,10 @@ function showOverlay(title){
 function overlayAction(){
   overlay.style.display="none";
   if(overlayTitle.textContent.includes("COMPLETE")){
-    level++; ballsLeft=10; running=true; canShoot=true; generateLevel(); loop();
+    level++;
+    // Hard mode: only restore 3 balls, Normal mode: restore to 10
+    ballsLeft = hardMode ? Math.min(ballsLeft + 3, 10) : 10;
+    running=true; canShoot=true; generateLevel(); loop();
   }else{
     score=0; ballsLeft=10; level=1; running=true; canShoot=true; generateLevel(); loop();
   }
@@ -1134,8 +1229,9 @@ function renderSkinSelector(){
   });
 }
 
-function startGame(){
+function startGame(isHardMode = false){
   menu.style.display="none";
+  hardMode = isHardMode;
   score=0; ballsLeft=10; level=1; running=true; generateLevel(); loop();
 }
 
