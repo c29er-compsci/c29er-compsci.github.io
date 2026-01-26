@@ -225,9 +225,10 @@ canvas{display:block}
 <div id="menu">
   <h1>🎯 PEGGLE PORTAL 🎯</h1>
   <button class="btn" onclick="startGame(false)">START GAME</button>
-  <button class="btn" onclick="startGame(true)" style="margin-top:15px;background:linear-gradient(135deg,#ff4444,#cc0000)">🔥 OG MODE</button>
+  <button class="btn" onclick="startGame(true)" style="margin-top:15px;background:linear-gradient(135deg,#ff4444,#cc0000)">🔥 HARD MODE</button>
   <button class="btn" onclick="showAchievements()" style="margin-top:15px;font-size:20px;padding:12px 35px">🏆 ACHIEVEMENTS</button>
-  <div id="skinSelector">
+  <button class="btn" onclick="showSkins()" style="margin-top:15px;font-size:20px;padding:12px 35px">🎨 SKINS</button>
+  <div id="skinSelector" style="display:none">
     <h3>🎨 SKINS</h3>
     <div id="skinGrid"></div>
   </div>
@@ -301,7 +302,7 @@ const ACHIEVEMENTS=[
 {id:"clean_start", icon:"🎯", name:"Clean Start", desc:"First peg hit is orange", unlocked:false},
 {id:"no_miss", icon:"🧼", name:"No Miss Zone", desc:"Hit 10 pegs without missing", unlocked:false},
 {id:"sniper", icon:"🔭", name:"Sniper", desc:"Hit a peg near the top wall", unlocked:false},
-{id:"bank_shot", icon:"🏦", name:"Bank Shot", desc:"Hit a peg after bouncing off a wall", unlocked:false},
+{id:"bank_shot", icon:"🔥", name:"The OG", desc:"Reach 20,000 points in Hard Mode", unlocked:false},
 {id:"threader", icon:"🪡", name:"Threader", desc:"Pass between two pegs without hitting", unlocked:false},
 
 // --- PORTALS ---
@@ -446,27 +447,149 @@ function beep(f,d=.06,type="sine"){
   o.stop(audio.currentTime+d);
 }
 
+let currentBgTheme = 0;
+
 function drawBackground(){
   bgTime++;
-  const grad=ctx.createLinearGradient(0,0,0,canvas.height);
   const time=bgTime*.0005;
-  grad.addColorStop(0,`hsl(${230+Math.sin(time)*10},45%,${15+Math.sin(time*2)*3}%)`);
-  grad.addColorStop(.5,`hsl(${250+Math.cos(time*.7)*10},50%,${20+Math.cos(time*1.5)*3}%)`);
-  grad.addColorStop(1,`hsl(${210+Math.sin(time*.5)*10},40%,${12+Math.sin(time)*2}%)`);
-  ctx.fillStyle=grad;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
   
-  for(let i=0;i<30;i++){
-    const x=(i*50+time*20)%canvas.width;
-    const y=100+Math.sin(time+i)*40;
-    ctx.beginPath();
-    ctx.arc(x,y,2,0,Math.PI*2);
-    ctx.fillStyle=`rgba(255,255,255,${.1+Math.sin(time*2+i)*.05})`;
-    ctx.fill();
+  // Hard mode uses original background
+  if(hardMode){
+    const grad=ctx.createLinearGradient(0,0,0,canvas.height);
+    grad.addColorStop(0,`hsl(${230+Math.sin(time)*10},45%,${15+Math.sin(time*2)*3}%)`);
+    grad.addColorStop(.5,`hsl(${250+Math.cos(time*.7)*10},50%,${20+Math.cos(time*1.5)*3}%)`);
+    grad.addColorStop(1,`hsl(${210+Math.sin(time*.5)*10},40%,${12+Math.sin(time)*2}%)`);
+    ctx.fillStyle=grad;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    
+    for(let i=0;i<30;i++){
+      const x=(i*50+time*20)%canvas.width;
+      const y=100+Math.sin(time+i)*40;
+      ctx.beginPath();
+      ctx.arc(x,y,2,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${.1+Math.sin(time*2+i)*.05})`;
+      ctx.fill();
+    }
+    return;
+  }
+  
+  // Normal mode: 5 random cool backgrounds
+  switch(currentBgTheme){
+    case 0: // Sunset Waves
+      const sunset=ctx.createLinearGradient(0,0,0,canvas.height);
+      sunset.addColorStop(0,`hsl(${15+Math.sin(time)*5},80%,${50+Math.sin(time*2)*5}%)`);
+      sunset.addColorStop(.4,`hsl(${30+Math.cos(time*.8)*8},75%,${55+Math.cos(time*1.3)*5}%)`);
+      sunset.addColorStop(.7,`hsl(${280+Math.sin(time*.6)*10},60%,${35+Math.sin(time)*5}%)`);
+      sunset.addColorStop(1,`hsl(${260+Math.cos(time*.5)*8},55%,${25+Math.cos(time*1.2)*3}%)`);
+      ctx.fillStyle=sunset;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      for(let i=0;i<50;i++){
+        const x=(i*40+time*30)%canvas.width;
+        const y=200+Math.sin(time*2+i*.5)*60;
+        ctx.globalAlpha=.3+Math.sin(time*3+i)*.2;
+        ctx.beginPath();
+        ctx.arc(x,y,3+Math.sin(time+i)*2,0,Math.PI*2);
+        ctx.fillStyle=`hsl(${30+i*5},100%,70%)`;
+        ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      break;
+      
+    case 1: // Northern Lights
+      const aurora=ctx.createLinearGradient(0,0,0,canvas.height);
+      aurora.addColorStop(0,'#0a1628');
+      aurora.addColorStop(.5,'#1a2b4a');
+      aurora.addColorStop(1,'#0f1f3a');
+      ctx.fillStyle=aurora;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      for(let i=0;i<5;i++){
+        ctx.globalAlpha=.15+Math.sin(time*2+i)*.1;
+        const waveGrad=ctx.createLinearGradient(0,150+i*80,0,250+i*80);
+        waveGrad.addColorStop(0,`hsla(${120+i*40},100%,60%,0)`);
+        waveGrad.addColorStop(.5,`hsla(${120+i*40},100%,60%,.6)`);
+        waveGrad.addColorStop(1,`hsla(${120+i*40},100%,60%,0)`);
+        ctx.fillStyle=waveGrad;
+        ctx.fillRect(0,150+i*80+Math.sin(time+i)*30,canvas.width,100);
+      }
+      ctx.globalAlpha=1;
+      for(let i=0;i<60;i++){
+        ctx.beginPath();
+        ctx.arc(Math.random()*canvas.width,Math.random()*canvas.height,1,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,255,255,${.3+Math.random()*.4})`;
+        ctx.fill();
+      }
+      break;
+      
+   
+      
+    case 2: // Ocean Deep
+      const ocean=ctx.createRadialGradient(canvas.width/2,canvas.height/2,0,canvas.width/2,canvas.height/2,canvas.height);
+      ocean.addColorStop(0,`hsl(${190+Math.sin(time)*5},60%,${30+Math.sin(time*2)*5}%)`);
+      ocean.addColorStop(.6,`hsl(${200+Math.cos(time*.7)*8},65%,${20+Math.cos(time*1.5)*5}%)`);
+      ocean.addColorStop(1,`hsl(${210+Math.sin(time*.5)*10},70%,${10+Math.sin(time)*3}%)`);
+      ctx.fillStyle=ocean;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      for(let i=0;i<8;i++){
+        ctx.globalAlpha=.1+Math.sin(time+i)*.05;
+        ctx.beginPath();
+        for(let x=0;x<=canvas.width;x+=10){
+          const y=200+i*80+Math.sin(x*.01+time*2+i)*30;
+          if(x===0)ctx.moveTo(x,y);
+          else ctx.lineTo(x,y);
+        }
+        ctx.lineTo(canvas.width,canvas.height);
+        ctx.lineTo(0,canvas.height);
+        ctx.closePath();
+        ctx.fillStyle=`hsla(200,70%,${40-i*3}%,.3)`;
+        ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      for(let i=0;i<25;i++){
+        const x=(i*70+time*25)%canvas.width;
+        const y=150+Math.sin(time*1.5+i)*(canvas.height-200);
+        ctx.globalAlpha=.2+Math.sin(time*2+i)*.15;
+        ctx.beginPath();
+        ctx.arc(x,y,2+Math.sin(time+i),0,Math.PI*2);
+        ctx.fillStyle='#4dd0e1';
+        ctx.shadowColor='#4dd0e1';
+        ctx.shadowBlur=10;
+        ctx.fill();
+        ctx.shadowBlur=0;
+      }
+      ctx.globalAlpha=1;
+      break;
+      
+    case 3: // Nebula Dream
+      const nebula=ctx.createRadialGradient(canvas.width/2,canvas.height/3,0,canvas.width/2,canvas.height/2,canvas.height);
+      nebula.addColorStop(0,`hsl(${280+Math.sin(time)*15},70%,${40+Math.sin(time*2)*8}%)`);
+      nebula.addColorStop(.4,`hsl(${320+Math.cos(time*.8)*12},65%,${30+Math.cos(time*1.3)*6}%)`);
+      nebula.addColorStop(.7,`hsl(${200+Math.sin(time*.6)*10},60%,${25+Math.sin(time)*5}%)`);
+      nebula.addColorStop(1,'#0a0e27');
+      ctx.fillStyle=nebula;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      for(let i=0;i<100;i++){
+        const seed=i*123.456;
+        const x=(seed*37)%canvas.width;
+        const y=(seed*73)%canvas.height;
+        const size=Math.random()*2;
+        const alpha=.2+Math.sin(time*3+i)*.3;
+        ctx.globalAlpha=alpha;
+        ctx.beginPath();
+        ctx.arc(x,y,size,0,Math.PI*2);
+        ctx.fillStyle=`hsl(${280+i*2},100%,${60+Math.sin(i)*.20})`;
+        ctx.shadowColor=ctx.fillStyle;
+        ctx.shadowBlur=15;
+        ctx.fill();
+        ctx.shadowBlur=0;
+      }
+      ctx.globalAlpha=1;
+      break;
   }
 }
 
 function generateLevel(){
+  currentBgTheme = Math.floor(Math.random() * 4); // Pick random background theme
+  pegs=[];
   pegs=[];
   balls=[];
   particles=[];
@@ -731,8 +854,8 @@ if (firstPegTypeThisTurn === null) {
    if(p.type!=="blue") specialTypesHitThisLevel.add(p.type);
     
     // Bank shot and trick shot
-    if(bounceCount >= 1) unlockAchievement("bank_shot");
-    if(bounceCount >= 3) unlockAchievement("trickshot");
+   // Trick shot only
+if(bounceCount >= 3) unlockAchievement("trickshot");
     
     // Sniper - hit peg near top
     if(p.y < field.top + 80) unlockAchievement("sniper");
@@ -1160,6 +1283,7 @@ function updateUI(){
     unlockAchievement("100k");
     unlockSkin("gold");
   }
+  if(hardMode && score>=20000)unlockAchievement("bank_shot");
 
 }
 
@@ -1250,11 +1374,15 @@ function unlockAchievement(id){
 
 function showAchievements(){
   const achDiv = document.getElementById("achievements");
+  const skinDiv = document.getElementById("skinSelector");
 
   if (achDiv.style.display === "block") {
     achDiv.style.display = "none";
     return;
   }
+
+  // Hide skins when showing achievements
+  skinDiv.style.display = "none";
 
   const unlockedCount = ACHIEVEMENTS.filter(a => a.unlocked).length;
   const totalCount = ACHIEVEMENTS.length;
@@ -1288,6 +1416,20 @@ function showAchievements(){
   achDiv.style.display = "block";
 }
 
+function showSkins(){
+  const skinDiv = document.getElementById("skinSelector");
+  const achDiv = document.getElementById("achievements");
+
+  if (skinDiv.style.display === "block") {
+    skinDiv.style.display = "none";
+    return;
+  }
+
+  // Hide achievements when showing skins
+  achDiv.style.display = "none";
+
+  skinDiv.style.display = "block";
+}
 
 function shuffle(a){
   for(let i=a.length-1;i>0;i--){
