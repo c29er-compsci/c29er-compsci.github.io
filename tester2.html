@@ -138,6 +138,16 @@ canvas{display:block}
   text-shadow:0 0 20px rgba(255,215,0,.8),0 0 40px rgba(255,215,0,.5);
   z-index:50;
 }
+#missMessage{
+  position:fixed;bottom:80px;left:50%;
+  transform:translateX(-50%) scale(0);
+  font-size:40px;font-weight:bold;
+  opacity:0;
+  transition:.4s;
+  text-shadow:0 0 20px rgba(0,0,0,.8);
+  z-index:50;
+  text-align:center;
+}
 
 #achievement{
   position:fixed;top:100px;right:-400px;
@@ -244,6 +254,7 @@ canvas{display:block}
 
 <div id="ballsDisplay"></div>
 <div id="bucketText">FREE BALL!</div>
+<div id="missMessage"></div>
 
 <div id="achievement">
   <h3 id="achievementTitle"></h3>
@@ -278,6 +289,7 @@ const overlayTitle=document.getElementById("overlayTitle");
 const finalScore=document.getElementById("finalScore");
 const bucketText=document.getElementById("bucketText");
 const achievementEl=document.getElementById("achievement");
+const missMessage=document.getElementById("missMessage");
 const achievementTitle=document.getElementById("achievementTitle");
 const achievementDesc=document.getElementById("achievementDesc");
 const menu = document.getElementById("menu");
@@ -302,7 +314,7 @@ const ACHIEVEMENTS=[
 {id:"clean_start", icon:"🎯", name:"Clean Start", desc:"First peg hit is orange", unlocked:false},
 {id:"no_miss", icon:"🧼", name:"No Miss Zone", desc:"Hit 10 pegs without missing", unlocked:false},
 {id:"sniper", icon:"🔭", name:"Sniper", desc:"Hit a peg near the top wall", unlocked:false},
-{id:"bank_shot", icon:"🔥", name:"The OG", desc:"Reach 20,000 points in Hard Mode", unlocked:false},
+{id:"bank_shot", icon:"🔥", name:"The OG", desc:"Beat 3 levels in Hard Mode", unlocked:false},
 {id:"rainbow_master", icon:"🌈", name:"Rainbow Master", desc:"Hit all 4 special peg types in one shot", unlocked:false},
 
 // --- PORTALS ---
@@ -360,6 +372,7 @@ let hardMode=false;
 let multiballActive=false;
 let pegsHitThisTurn=0;
 let bucketExpanded=false,bucketTimer=0;
+let pegsHitThisBall=0;
 let slowmo=0,bgTime=0;
 let zoomActive=false,zoomLevel=1,zoomTargetY=0;
 let firstPegTypeThisTurn = null;
@@ -368,6 +381,7 @@ let shotStartTime=0;
 let lastPegType="";
 let orangeHitsThisTurn=0;
 let orangeHitTimes=[];
+let hardModeLevelsBeaten=0;
 let portalUsesThisTurn=0;
 let justExitedPortal=false;
 let bucketVisitsThisTurn=0;
@@ -693,6 +707,7 @@ function shoot(){
  // RESET SHOT STATS
   shotStartTime=Date.now();
   pegsHitThisTurn=0;
+  pegsHitThisBall=0; // Track for individual ball
   firstPegTypeThisTurn = null;
   portalUsesThisTurn=0;
   orangeHitsThisTurn=0;
@@ -763,8 +778,6 @@ function endTurn(){
    if(canShoot) return; // prevent double-call
   if(portalUsesThisTurn >= 5) unlockAchievement("ach_8");
   if(portalUsesThisTurn > 0 && bucketVisitsThisTurn > 0) unlockAchievement("ach_12");
-  if(ballsLeft === 0 && bucketVisitsThisTurn > 0) unlockAchievement("ach_23");
-  
   const initialTotal = pegs.length;
   const boardClearPercent = pegsHitThisTurn / (pegs.length + pegsHitThisTurn);
   if(boardClearPercent >= 0.3) unlockAchievement("ach_18");
@@ -792,6 +805,18 @@ function endTurn(){
     }
     
     if(!pegs.some(p=>p.type==="orange")){
+
+      // Track hard mode level completions
+      if(hardMode) {
+        hardModeLevelsBeaten++;
+        if(hardModeLevelsBeaten >= 3) unlockAchievement("bank_shot");
+      }
+      
+      if(shotsThisLevel <= 5) unlockAchievement("ach_26");
+      if(hitAllPegs) {
+        unlockAchievement("perfect");
+        unlockSkin("rainbow");
+      }
       if(shotsThisLevel <= 5) unlockAchievement("ach_26");
       if(hitAllPegs) {
         unlockAchievement("perfect");
@@ -820,6 +845,11 @@ function collide(b,p){
    p.hit=true;
     p.wobble=.7;
     pegsHitThisTurn++;
+    if(ballsInMultiball) multiballPegsHit++;
+    p.hit=true;
+    p.wobble=.7;
+    pegsHitThisTurn++;
+    pegsHitThisBall++; // Track for this specific ball
     if(ballsInMultiball) multiballPegsHit++;
     // FIRST PEG HIT CHECK
 if (firstPegTypeThisTurn === null) {
@@ -1205,6 +1235,7 @@ function loop(){
 
    if(!b.bucketed&&b.y>=by&&b.y<=by+30&&b.x>=bucketLeft&&b.x<=bucketLeft+currentBucketW){
       b.bucketed=true;
+      const hadZeroBalls = (ballsLeft === 0); // Check BEFORE adding
       ballsLeft++;
       bucketVisitsThisTurn++;
       totalBucketCatches++;
@@ -1215,6 +1246,7 @@ function loop(){
           if(bigBucketCatches >= 3) unlockAchievement("ach_16");
       }
       if(ballsLeft === 1) unlockAchievement("bucket_save");
+      if(hadZeroBalls) unlockAchievement("ach_23"); // Clutch - caught with 0 balls
       if(justExitedPortal) unlockAchievement("portal_escape");
       
       // Bucket edge detection (within 10px of edge)
@@ -1280,7 +1312,70 @@ function loop(){
     ctx.shadowBlur=0;
   });
 
-  // Remove balls that are finished
+ // Remove balls that are finished and check for mercy ball
+  const finishedBalls = balls.filter(b => b.y > canvas.height + 50 && !b.bucketed);
+  
+  finishedBalls.forEach(b => {
+    // Check if ball didn't hit ANY pegs and give 50/50 chance for ball back
+    if(pegsHitThisBall === 0 && Math.random() < 0.5) {
+      ballsLeft++;
+      
+      const funMessages = [
+        "LUCKY BREAK!",
+        "SECOND CHANCE!",
+        "MERCY BALL!",
+        "OOPS! HERE YOU GO!",
+        "FEELING GENEROUS!",
+        "ONE MORE TRY!",
+        "FATE SMILES!",
+        "BONUS BALL!",
+        "LUCKY YOU!",
+        "NOT TODAY!"
+      ];
+      
+      const randomMsg = funMessages[Math.floor(Math.random() * funMessages.length)];
+      
+      missMessage.textContent = randomMsg;
+      missMessage.style.color = "#00ff88";
+      missMessage.style.opacity = 1;
+      missMessage.style.transform = "translateX(-50%) scale(1.2)";
+      
+      beep(1200, .2, "sine");
+      
+      setTimeout(() => {
+        missMessage.style.opacity = 0;
+        missMessage.style.transform = "translateX(-50%) scale(0)";
+      }, 1500);
+      
+      updateUI();
+    } else if(pegsHitThisBall === 0) {
+      // Missed and didn't get lucky
+      const sadMessages = [
+        "WHIFF!",
+        "BETTER LUCK NEXT TIME!",
+        "OUCH!",
+        "SO CLOSE!",
+        "TRY AGAIN!",
+        "ALMOST!"
+      ];
+      
+      const randomSad = sadMessages[Math.floor(Math.random() * sadMessages.length)];
+      
+      missMessage.textContent = randomSad;
+      missMessage.style.color = "#ff6666";
+      missMessage.style.opacity = 1;
+      missMessage.style.transform = "translateX(-50%) scale(1.2)";
+      
+      setTimeout(() => {
+        missMessage.style.opacity = 0;
+        missMessage.style.transform = "translateX(-50%) scale(0)";
+      }, 1200);
+    }
+    
+    // Reset for next ball
+    pegsHitThisBall = 0;
+  });
+  
   balls = balls.filter(b => !b.bucketed && b.y <= canvas.height + 50);
 
   // End turn when all balls are gone
@@ -1307,8 +1402,6 @@ function updateUI(){
     unlockAchievement("100k");
     unlockSkin("gold");
   }
-  if(hardMode && score>=20000)unlockAchievement("bank_shot");
-
 }
 
 function unlockSkin(skinId){
@@ -1343,6 +1436,7 @@ function overlayAction(){
     ballsLeft = hardMode ? Math.min(ballsLeft + 3, 10) : 10;
     running=true; canShoot=true; generateLevel(); loop();
   }else{
+    hardModeLevelsBeaten = 0; // Reset on game over
     score=0; ballsLeft=10; level=1; running=true; canShoot=true; generateLevel(); loop();
   }
 }
@@ -1380,6 +1474,7 @@ function renderSkinSelector(){
 function startGame(isHardMode = false){
   menu.style.display="none";
   hardMode = isHardMode;
+  hardModeLevelsBeaten = 0; // Reset hard mode counter
   score=0; ballsLeft=10; level=1; running=true; generateLevel(); loop();
 }
 
