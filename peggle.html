@@ -1665,10 +1665,9 @@ async function loadLeaderboard() {
     }
     
     scores.sort((a, b) => b.score - a.score);
-    const top50 = scores.slice(0, 10);
+    const top10 = scores.slice(0, 10);  // ← FIXED
     
-    listDiv.innerHTML = top10.map((entry, index) => {
-//                  ^^^^^ change this too => {
+    listDiv.innerHTML = top10.map((entry, index) => {  // ← FIXED
       const rank = index + 1;
       const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
       
@@ -1684,6 +1683,7 @@ async function loadLeaderboard() {
   } catch (error) {
     loadingDiv.style.display = 'none';
     listDiv.innerHTML = '<p style="color:#ff6666;">Error loading leaderboard</p>';
+    console.error('Leaderboard error:', error);  // ← ADDED for debugging
   }
 }
 
@@ -1693,15 +1693,20 @@ async function submitCurrentScore() {
   
   if (!name) {
     alert('Please enter your name!');
+    nameInput.focus();
     return;
   }
   
   // Rate limit - once per minute
   const now = Date.now();
   if (now - lastSubmitTime < 60000) {
-    alert('Please wait before submitting again!');
+    const waitTime = Math.ceil((60000 - (now - lastSubmitTime)) / 1000);
+    alert(`Please wait ${waitTime} seconds before submitting again!`);
     return;
   }
+  
+  const loadingDiv = document.getElementById('loadingIndicator');
+  loadingDiv.style.display = 'block';
   
   try {
     // Get current scores
@@ -1736,15 +1741,18 @@ async function submitCurrentScore() {
     });
     
     lastSubmitTime = now;
+    loadingDiv.style.display = 'none';
+    
     alert(`🎉 Score submitted! ${score.toLocaleString()} points`);
     nameInput.value = '';
     document.getElementById('scorePrompt').style.display = 'none';
 
-await loadLeaderboard();
-    loadLeaderboard();
+    await loadLeaderboard();  // ← ONLY THIS LINE - DUPLICATE REMOVED
     
   } catch (error) {
+    loadingDiv.style.display = 'none';
     alert('Error submitting score: ' + error.message);
+    console.error('Submit error:', error);  // ← ADDED for debugging
   }
 }
 
