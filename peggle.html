@@ -6,6 +6,108 @@
 patch notes
 
 <style>
+  #scorePrompt {
+  background: linear-gradient(135deg, rgba(255, 215, 0, .95), rgba(255, 237, 78, .9));
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 18px;
+  color: #333;
+  font-weight: bold;
+  border: 2px solid rgba(255, 215, 0, .5);
+}
+  /* Add this to your existing <style> section */
+
+#leaderboard {
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 20px;
+  background: rgba(255,255,255,.1);
+  border-radius: 15px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+#leaderboard h2 {
+  color: white;
+  text-align: center;
+  margin: 0 0 20px 0;
+}
+
+.leaderboard-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(240,240,255,.9));
+  padding: 12px 15px;
+  margin: 8px 0;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,.3);
+}
+
+.leaderboard-entry.top3 {
+  border-color: #ffd700;
+  box-shadow: 0 4px 15px rgba(255,215,0,.3);
+}
+
+.leaderboard-rank {
+  font-weight: bold;
+  font-size: 18px;
+  color: #7b2cbf;
+  min-width: 50px;
+}
+
+.leaderboard-name {
+  flex-grow: 1;
+  font-weight: bold;
+  color: #333;
+  margin: 0 10px;
+}
+
+.leaderboard-score {
+  font-weight: bold;
+  color: #ff6600;
+}
+
+#submitScoreForm {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#submitScoreForm input {
+  padding: 10px 15px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-radius: 8px;
+  background: rgba(255,255,255,.9);
+  font-size: 14px;
+  min-width: 200px;
+}
+
+#loadingIndicator {
+  text-align: center;
+  color: white;
+  padding: 20px;
+  font-size: 16px;
+}
+
+.spinner {
+  border: 3px solid rgba(255,255,255,.3);
+  border-top: 3px solid #ffd700;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 10px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 html,body{
   margin:0;padding:0;overflow:hidden;
   background:linear-gradient(180deg,#0a0e27,#16213e,#0f3460);
@@ -267,7 +369,29 @@ canvas{display:block}
   </div>
   <div id="achievements" style="display:none"></div>
   <a href="notes.html"><div id="patchnotes"></div></a>
+  <button class="btn" onclick="showLeaderboard()" style="margin-top:15px;font-size:20px;padding:12px 35px">
+  🏆 LEADERBOARD
+</button>
+
+<div id="leaderboard" style="display:none">
+  <h2>🏆 TOP 10 SCORES 🏆</h2>
+  <div id="scorePrompt" style="display:none"></div>
+  <div id="submitScoreForm">
+    <input type="text" id="playerNameInput" placeholder="Your Name" maxlength="20">
+    <button class="btn" onclick="submitCurrentScore()" style="padding:10px 25px;font-size:16px">
+      Submit Score
+    </button>
+
+
+  </div>
+  <div id="loadingIndicator" style="display:none">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+  <div id="leaderboardList"></div>
 </div>
+</div>
+
 
 <div id="ui">
   <div style="color:#ff6600;font-size:18px">⭐ <span id="score">0</span></div>
@@ -299,6 +423,14 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
+
+  const JSONBIN_CONFIG = {
+ API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi', 
+  BIN_ID: '6979386dd0ea881f408b4c12'             // ← PASTE YOUR BIN ID HERE
+};
+
+let lastSubmitTime = 0;
+
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
@@ -352,7 +484,7 @@ const ACHIEVEMENTS=[
 {id:"portal_master", icon:"🧠", name:"Portal Master", desc:"Use portals 50 times total", unlocked:false},
 
 // --- BUCKET ---
-{id:"bucket_only", icon:"🪣", name:"Bucket Only", desc:"Catch ball without hitting any pegs", unlocked:false},
+
 {id:"double_bucket", icon:"🪣🪣", name:"Double Bucket", desc:"Catch two balls in one shot", unlocked:false},
 {id:"bucket_save", icon:"🛟", name:"Bucket Save", desc:"Catch ball with last remaining ball", unlocked:false},
 {id:"bucket_greedy", icon:"😈", name:"Greedy Bucket", desc:"Catch 5 balls in one level", unlocked:false},
@@ -1509,6 +1641,146 @@ function unlockSkin(skinId){
     renderSkinSelector();
   }
 }
+async function loadLeaderboard() {
+  const listDiv = document.getElementById('leaderboardList');
+  const loadingDiv = document.getElementById('loadingIndicator');
+  
+  loadingDiv.style.display = 'block';
+  listDiv.innerHTML = '';
+  
+  try {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+      method: 'GET',
+      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
+    });
+    
+    const data = await response.json();
+    const scores = data.record.scores || [];
+    
+    loadingDiv.style.display = 'none';
+    
+    if (scores.length === 0) {
+      listDiv.innerHTML = '<p style="color:white;text-align:center;">No scores yet! Be the first! 🎯</p>';
+      return;
+    }
+    
+    scores.sort((a, b) => b.score - a.score);
+    const top50 = scores.slice(0, 10);
+    
+    listDiv.innerHTML = top10.map((entry, index) => {
+//                  ^^^^^ change this too => {
+      const rank = index + 1;
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+      
+      return `
+        <div class="leaderboard-entry${rank <= 3 ? ' top3' : ''}">
+          <span class="leaderboard-rank">${medal}</span>
+          <span class="leaderboard-name">${escapeHtml(entry.name)}</span>
+          <span class="leaderboard-score">${entry.score.toLocaleString()} pts</span>
+        </div>
+      `;
+    }).join('');
+    
+  } catch (error) {
+    loadingDiv.style.display = 'none';
+    listDiv.innerHTML = '<p style="color:#ff6666;">Error loading leaderboard</p>';
+  }
+}
+
+async function submitCurrentScore() {
+  const nameInput = document.getElementById('playerNameInput');
+  const name = nameInput.value.trim();
+  
+  if (!name) {
+    alert('Please enter your name!');
+    return;
+  }
+  
+  // Rate limit - once per minute
+  const now = Date.now();
+  if (now - lastSubmitTime < 60000) {
+    alert('Please wait before submitting again!');
+    return;
+  }
+  
+  try {
+    // Get current scores
+    const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
+    });
+    
+    const data = await getResponse.json();
+    const scores = data.record.scores || [];
+    
+    // Add new score
+    scores.push({
+      name: name.substring(0, 20),
+      score: score,
+      level: level,
+      timestamp: now,
+      date: new Date().toISOString()
+    });
+    
+    // Keep top 100
+    scores.sort((a, b) => b.score - a.score);
+    const top100 = scores.slice(0, 100);
+    
+    // Update
+    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_CONFIG.API_KEY
+      },
+      body: JSON.stringify({ scores: top100 })
+    });
+    
+    lastSubmitTime = now;
+    alert(`🎉 Score submitted! ${score.toLocaleString()} points`);
+    nameInput.value = '';
+    document.getElementById('scorePrompt').style.display = 'none';
+
+await loadLeaderboard();
+    loadLeaderboard();
+    
+  } catch (error) {
+    alert('Error submitting score: ' + error.message);
+  }
+}
+
+function showLeaderboard(fromGameOver = false) {
+  const leaderboardDiv = document.getElementById("leaderboard");
+  const achievementsDiv = document.getElementById("achievements");
+  const skinDiv = document.getElementById("skinSelector");
+  const scorePrompt = document.getElementById("scorePrompt");
+
+  achievementsDiv.style.display = "none";
+  skinDiv.style.display = "none";
+
+  if (leaderboardDiv.style.display === "block" && !fromGameOver) {
+    leaderboardDiv.style.display = "none";
+    scorePrompt.style.display = "none";
+    return;
+  }
+
+  leaderboardDiv.style.display = "block";
+  
+  // Show score prompt if coming from game over
+  if (fromGameOver) {
+    scorePrompt.textContent = `🎮 Your Score: ${Math.floor(score).toLocaleString()} pts - Level ${level} 🎮`;
+    scorePrompt.style.display = "block";
+  } else {
+    scorePrompt.style.display = "none";
+  }
+  
+  loadLeaderboard();
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 function showOverlay(title){
   running=false;
@@ -1520,7 +1792,9 @@ function showOverlay(title){
 }
 function overlayAction(){
   overlay.style.display="none";
+  
   if(overlayTitle.textContent.includes("COMPLETE")){
+    // Your existing level complete code stays the same
     if(storyMode){
       storyLevel++;
       if(storyLevel > 10){
@@ -1538,16 +1812,30 @@ function overlayAction(){
       level++;
       ballsLeft = hardMode ? Math.min(ballsLeft + 3, 10) : 10;
     }
-    running=true; canShoot=true; generateLevel(); loop();
-  }else{
+    running=true; 
+    canShoot=true; 
+    generateLevel(); 
+    loop();
+    
+  } else {
+    // GAME OVER - REPLACE THIS ENTIRE SECTION:
     hardModeLevelsBeaten = 0;
     if(storyMode){
-      menu.style.display="flex";
       storyMode=false;
       storyLevel=1;
       document.getElementById("storyInfo").style.display="none";
     }
-    score=0; ballsLeft=10; level=1; running=true; canShoot=true; generateLevel(); loop();
+    
+    // Show menu and open leaderboard automatically
+    menu.style.display="flex";
+    showLeaderboard(true); // Pass true to show it's from game over
+    
+    // Auto-focus name input
+    setTimeout(() => {
+      const nameInput = document.getElementById('playerNameInput');
+      nameInput.focus();
+      nameInput.select();
+    }, 200);
   }
 }
 function renderSkinSelector(){
@@ -1709,7 +1997,12 @@ try{
   
   renderSkinSelector();
 }catch(e){}
-
+// Allow Enter key to submit score
+document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    submitCurrentScore();
+  }
+});
 </script>
 </body>
 </html>
