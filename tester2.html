@@ -303,7 +303,7 @@ const ACHIEVEMENTS=[
 {id:"no_miss", icon:"🧼", name:"No Miss Zone", desc:"Hit 10 pegs without missing", unlocked:false},
 {id:"sniper", icon:"🔭", name:"Sniper", desc:"Hit a peg near the top wall", unlocked:false},
 {id:"bank_shot", icon:"🔥", name:"The OG", desc:"Reach 20,000 points in Hard Mode", unlocked:false},
-{id:"threader", icon:"🪡", name:"Threader", desc:"Pass between two pegs without hitting", unlocked:false},
+{id:"rainbow_master", icon:"🌈", name:"Rainbow Master", desc:"Hit all 4 special peg types in one shot", unlocked:false},
 
 // --- PORTALS ---
 {id:"portal_lover", icon:"🌀", name:"Portal Lover", desc:"Use portals 10 times in one level", unlocked:false},
@@ -324,7 +324,7 @@ const ACHIEVEMENTS=[
 {id:"last_orange", icon:"🧨", name:"Last Orange", desc:"Final peg hit is orange", unlocked:false},
 {id:"orange_streak", icon:"🔥", name:"Orange Streak", desc:"Hit orange pegs 3 shots in a row", unlocked:false},
 {id:"orange_sweeper", icon:"🧹", name:"Orange Sweeper", desc:"Clear all oranges without missing", unlocked:false},
-{id:"orange_god", icon:"👑", name:"Orange God", desc:"Clear all orange pegs in one shot", unlocked:false},
+{id:"chain_lightning", icon:"⚡", name:"Chain Lightning", desc:"Hit 4 orange pegs in under 2 seconds", unlocked:false},
 
 // --- SPECIAL PEGS ---
 {id:"green_touch", icon:"💚", name:"Green Touch", desc:"Hit green peg first", unlocked:false},
@@ -367,6 +367,7 @@ let firstPegTypeThisTurn = null;
 let shotStartTime=0;
 let lastPegType="";
 let orangeHitsThisTurn=0;
+let orangeHitTimes=[];
 let portalUsesThisTurn=0;
 let justExitedPortal=false;
 let bucketVisitsThisTurn=0;
@@ -695,6 +696,7 @@ function shoot(){
   firstPegTypeThisTurn = null;
   portalUsesThisTurn=0;
   orangeHitsThisTurn=0;
+  orangeHitTimes=[];
   greenHitsThisTurn=0;
   fireballHitsThisTurn=0;
   bucketVisitsThisTurn=0;
@@ -773,6 +775,22 @@ function endTurn(){
   balls=[];
 
  setTimeout(()=>{
+    // Check for Rainbow Master BEFORE level completion check
+    let hitMultiball = false;
+    let hitFireball = false;
+    
+    // Check if multiball or fireball were activated this turn
+    pegs.forEach(p => {
+      if(p.hit) {
+        if(p.type === "multiball") hitMultiball = true;
+        if(p.type === "fireball") hitFireball = true;
+      }
+    });
+    
+    if(greenHitsThisTurn > 0 && purpleExplosionsThisTurn > 0 && hitMultiball && hitFireball) {
+      unlockAchievement("rainbow_master");
+    }
+    
     if(!pegs.some(p=>p.type==="orange")){
       if(shotsThisLevel <= 5) unlockAchievement("ach_26");
       if(hitAllPegs) {
@@ -786,11 +804,7 @@ function endTurn(){
          specialTypesHitThisLevel.has("fireball")) {
         unlockAchievement("specialist");
       }
-      // Check if all oranges cleared in one shot
-      if(totalOrangePegsThisLevel === orangeHitsThisTurn) {
-        unlockAchievement("orange_god");
-      }
-      evaluateExtraAchievements(false);
+           evaluateExtraAchievements(false);
       evaluateExtraAchievements(true);
       showOverlay("🎊 LEVEL COMPLETE! 🎊");
     }else if(ballsLeft<=0){
@@ -831,6 +845,16 @@ if (firstPegTypeThisTurn === null) {
     if(p.type === "orange") {
         if(lastPegType === "orange") unlockAchievement("ach_5");
         orangeHitsThisTurn++;
+        // Track orange hit time for Chain Lightning
+        orangeHitTimes.push(Date.now());
+        
+        // Check for Chain Lightning: 4 oranges in under 2 seconds
+        if(orangeHitTimes.length >= 4) {
+          const timeDiff = orangeHitTimes[orangeHitTimes.length - 1] - orangeHitTimes[orangeHitTimes.length - 4];
+          if(timeDiff < 2000) {
+            unlockAchievement("chain_lightning");
+          }
+        }
         orangePegsHitWithoutMiss++;
         
         // Check for orange streak
