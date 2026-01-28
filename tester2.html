@@ -6,6 +6,108 @@
 patch notes
 
 <style>
+  #scorePrompt {
+  background: linear-gradient(135deg, rgba(255, 215, 0, .95), rgba(255, 237, 78, .9));
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 18px;
+  color: #333;
+  font-weight: bold;
+  border: 2px solid rgba(255, 215, 0, .5);
+}
+  /* Add this to your existing <style> section */
+
+#leaderboard {
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 20px;
+  background: rgba(255,255,255,.1);
+  border-radius: 15px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+#leaderboard h2 {
+  color: white;
+  text-align: center;
+  margin: 0 0 20px 0;
+}
+
+.leaderboard-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(240,240,255,.9));
+  padding: 12px 15px;
+  margin: 8px 0;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,.3);
+}
+
+.leaderboard-entry.top3 {
+  border-color: #ffd700;
+  box-shadow: 0 4px 15px rgba(255,215,0,.3);
+}
+
+.leaderboard-rank {
+  font-weight: bold;
+  font-size: 18px;
+  color: #7b2cbf;
+  min-width: 50px;
+}
+
+.leaderboard-name {
+  flex-grow: 1;
+  font-weight: bold;
+  color: #333;
+  margin: 0 10px;
+}
+
+.leaderboard-score {
+  font-weight: bold;
+  color: #ff6600;
+}
+
+#submitScoreForm {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#submitScoreForm input {
+  padding: 10px 15px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-radius: 8px;
+  background: rgba(255,255,255,.9);
+  font-size: 14px;
+  min-width: 200px;
+}
+
+#loadingIndicator {
+  text-align: center;
+  color: white;
+  padding: 20px;
+  font-size: 16px;
+}
+
+.spinner {
+  border: 3px solid rgba(255,255,255,.3);
+  border-top: 3px solid #ffd700;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 10px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 html,body{
   margin:0;padding:0;overflow:hidden;
   background:linear-gradient(180deg,#0a0e27,#16213e,#0f3460);
@@ -267,7 +369,29 @@ canvas{display:block}
   </div>
   <div id="achievements" style="display:none"></div>
   <a href="notes.html"><div id="patchnotes"></div></a>
+  <button class="btn" onclick="showLeaderboard()" style="margin-top:15px;font-size:20px;padding:12px 35px">
+  🏆 LEADERBOARD
+</button>
+
+<div id="leaderboard" style="display:none">
+  <h2>🏆 TOP 10 SCORES 🏆</h2>
+  <div id="scorePrompt" style="display:none"></div>
+  <div id="submitScoreForm">
+    <input type="text" id="playerNameInput" placeholder="Your Name" maxlength="20">
+    <button class="btn" onclick="submitCurrentScore()" style="padding:10px 25px;font-size:16px">
+      Submit Score
+    </button>
+
+
+  </div>
+  <div id="loadingIndicator" style="display:none">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+  <div id="leaderboardList"></div>
 </div>
+</div>
+
 
 <div id="ui">
   <div style="color:#ff6600;font-size:18px">⭐ <span id="score">0</span></div>
@@ -299,6 +423,14 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
+
+  const JSONBIN_CONFIG = {
+ API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi', 
+  BIN_ID: '6979386dd0ea881f408b4c12'             // ← PASTE YOUR BIN ID HERE
+};
+
+let lastSubmitTime = 0;
+
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
@@ -337,59 +469,60 @@ const ACHIEVEMENTS=[
   {id:"ach_19", icon:"☯️", name:"Efficient Energy", desc:"Hit Green and Orange in one shot", unlocked:false},
   {id:"ach_23", icon:"🆘", name:"Clutch", desc:"Get a Free Ball with 0 balls remaining", unlocked:false},
   {id:"ach_26", icon:"🏃", name:"Speedrunner", desc:"Complete level in under 5 shots", unlocked:false},
+  
   // --- FUN / SKILL ---
-{id:"clean_start", icon:"🎯", name:"Clean Start", desc:"First peg hit is orange", unlocked:false},
-{id:"no_miss", icon:"🧼", name:"No Miss Zone", desc:"Hit 10 pegs without missing", unlocked:false},
-{id:"sniper", icon:"🔭", name:"Sniper", desc:"Hit a peg near the top wall", unlocked:false},
-{id:"bank_shot", icon:"🔥", name:"The OG", desc:"Beat 3 levels in Hard Mode", unlocked:false},
-{id:"rainbow_master", icon:"🌈", name:"Rainbow Master", desc:"Hit all 4 special peg types in one shot", unlocked:false},
+  {id:"clean_start", icon:"🎯", name:"Clean Start", desc:"First peg hit is orange", unlocked:false},
+  {id:"no_miss", icon:"🧼", name:"No Miss Zone", desc:"Complete a shot hitting 5+ pegs", unlocked:false},
+  {id:"sniper", icon:"🔭", name:"Sniper", desc:"Hit a peg near the top wall", unlocked:false},
+  {id:"bank_shot", icon:"🔥", name:"The OG", desc:"Beat 3 levels in Hard Mode", unlocked:false},
+  {id:"rainbow_master", icon:"🌈", name:"Rainbow Master", desc:"Hit all 4 special peg types in one shot", unlocked:false},
 
-// --- PORTALS ---
-{id:"portal_lover", icon:"🌀", name:"Portal Lover", desc:"Use portals 10 times in one level", unlocked:false},
-{id:"portal_pingpong", icon:"🏓", name:"Portal Ping-Pong", desc:"Enter same portal twice in one shot", unlocked:false},
-{id:"portal_escape", icon:"🚪", name:"Portal Escape", desc:"Exit portal and hit bucket", unlocked:false},
-{id:"portal_sniper", icon:"🎯", name:"Portal Sniper", desc:"Exit portal and hit orange peg", unlocked:false},
-{id:"portal_master", icon:"🧠", name:"Portal Master", desc:"Use portals 50 times total", unlocked:false},
+  // --- PORTALS ---
+  {id:"portal_lover", icon:"🌀", name:"Portal Lover", desc:"Use portals 10 times in one level", unlocked:false},
+  {id:"portal_pingpong", icon:"🏓", name:"Portal Ping-Pong", desc:"Enter same portal twice in one shot", unlocked:false},
+  {id:"portal_escape", icon:"🚪", name:"Portal Escape", desc:"Exit portal and hit bucket", unlocked:false},
+  {id:"portal_sniper", icon:"🎯", name:"Portal Sniper", desc:"Exit portal and hit orange peg", unlocked:false},
+  {id:"portal_master", icon:"🧠", name:"Portal Master", desc:"Use portals 50 times total", unlocked:false},
 
-// --- BUCKET ---
-{id:"bucket_only", icon:"🪣", name:"Bucket Only", desc:"Catch ball without hitting any pegs", unlocked:false},
-{id:"double_bucket", icon:"🪣🪣", name:"Double Bucket", desc:"Catch two balls in one shot", unlocked:false},
-{id:"bucket_save", icon:"🛟", name:"Bucket Save", desc:"Catch ball with last remaining ball", unlocked:false},
-{id:"bucket_greedy", icon:"😈", name:"Greedy Bucket", desc:"Catch 5 balls in one level", unlocked:false},
-{id:"bucket_dancer", icon:"💃", name:"Bucket Dancer", desc:"Catch ball at bucket edge", unlocked:false},
+  // --- BUCKET ---
+  {id:"double_bucket", icon:"🪣🪣", name:"Double Bucket", desc:"Catch two balls in one shot", unlocked:false},
+  {id:"bucket_save", icon:"🛟", name:"Bucket Save", desc:"Catch ball with last remaining ball", unlocked:false},
+  {id:"bucket_greedy", icon:"😈", name:"Greedy Bucket", desc:"Catch 5 balls in one level", unlocked:false},
+  {id:"bucket_dancer", icon:"💃", name:"Bucket Dancer", desc:"Catch ball at bucket edge", unlocked:false},
 
-// --- ORANGE ---
-{id:"orange_rush", icon:"🍊", name:"Orange Rush", desc:"Hit 5 orange pegs in one shot", unlocked:false},
-{id:"last_orange", icon:"🧨", name:"Last Orange", desc:"Final peg hit is orange", unlocked:false},
-{id:"orange_streak", icon:"🔥", name:"Orange Streak", desc:"Hit orange pegs 3 shots in a row", unlocked:false},
-{id:"orange_sweeper", icon:"🧹", name:"Orange Sweeper", desc:"Clear all oranges without missing", unlocked:false},
-{id:"chain_lightning", icon:"⚡", name:"Chain Lightning", desc:"Hit 4 orange pegs in under 2 seconds", unlocked:false},
+  // --- ORANGE ---
+  {id:"orange_rush", icon:"🍊", name:"Orange Rush", desc:"Hit 5 orange pegs in one shot", unlocked:false},
+  {id:"last_orange", icon:"🧨", name:"Last Orange", desc:"Final orange peg clears the level", unlocked:false},
+  {id:"orange_streak", icon:"🔥", name:"Orange Streak", desc:"Hit orange pegs 3 shots in a row", unlocked:false},
+  {id:"orange_sweeper", icon:"🧹", name:"Orange Sweeper", desc:"Clear all oranges in a level", unlocked:false},
+  {id:"chain_lightning", icon:"⚡", name:"Chain Lightning", desc:"Hit 4 orange pegs in under 2 seconds", unlocked:false},
 
-// --- SPECIAL PEGS ---
-{id:"green_touch", icon:"💚", name:"Green Touch", desc:"Hit green peg first", unlocked:false},
-{id:"purple_power", icon:"💜", name:"Purple Power", desc:"Trigger purple explosion twice in one shot", unlocked:false},
-{id:"multi_mayhem", icon:"🔵", name:"Multi Mayhem", desc:"Multiball hits 6 pegs", unlocked:false},
-{id:"firestorm", icon:"🔥", name:"Firestorm", desc:"Fireball hits 20 pegs", unlocked:false},
-{id:"specialist", icon:"🎓", name:"Specialist", desc:"Use every special peg in one level", unlocked:false},
+  // --- SPECIAL PEGS ---
+  {id:"green_touch", icon:"💚", name:"Green Touch", desc:"Hit green peg first", unlocked:false},
+  {id:"purple_power", icon:"💜", name:"Purple Power", desc:"Trigger purple explosion twice in one shot", unlocked:false},
+  {id:"multi_mayhem", icon:"🔵", name:"Multi Mayhem", desc:"Multiball hits 6 pegs", unlocked:false},
+  {id:"firestorm", icon:"🔥", name:"Firestorm", desc:"Fireball hits 20 pegs", unlocked:false},
+  {id:"specialist", icon:"🎓", name:"Specialist", desc:"Use every special peg type in one level", unlocked:false},
 
-// --- STYLE / FUN ---
-{id:"chaos", icon:"☯️", name:"Chaos", desc:"Hit 15 pegs in one shot", unlocked:false},
-{id:"minimalist", icon:"⚪", name:"Minimalist", desc:"Beat level with no special pegs", unlocked:false},
-{id:"trickshot", icon:"🎩", name:"Trick Shot", desc:"Hit peg after 3 bounces", unlocked:false},
-{id:"speed_demon", icon:"⚡", name:"Speed Demon", desc:"Finish level in under 20 seconds", unlocked:false},
-{id:"slow_burn", icon:"🐢", name:"Slow Burn", desc:"Finish level after 10 shots", unlocked:false},
+  // --- STYLE / FUN ---
+  {id:"chaos", icon:"☯️", name:"Chaos", desc:"Hit 15 pegs in one shot", unlocked:false},
+  {id:"minimalist", icon:"⚪", name:"Minimalist", desc:"Beat level with no special pegs hit", unlocked:false},
+  {id:"trickshot", icon:"🎩", name:"Trick Shot", desc:"Hit peg after 3 bounces", unlocked:false},
+  {id:"speed_demon", icon:"⚡", name:"Speed Demon", desc:"Finish level in under 30 seconds", unlocked:false},
+  {id:"slow_burn", icon:"🐢", name:"Slow Burn", desc:"Finish level after 10 shots", unlocked:false},
 
-// --- META ---
-{id:"comeback", icon:"💀➡️😎", name:"Comeback", desc:"Win level with 1 ball remaining", unlocked:false},
-{id:"collector", icon:"📦", name:"Collector", desc:"Unlock 20 achievements", unlocked:false},
-{id:"marathon", icon:"🏃", name:"Marathon", desc:"Reach level 10", unlocked:false},
-{id:"immortal", icon:"♾️", name:"Invincible", desc:"Score 250,000 points", unlocked:false},
-{id:"story_master", icon:"📖", name:"Story Master", desc:"Complete all 10 Story Mode levels", unlocked:false},
-{id:"completionist", icon:"🏆", name:"Peggle", desc:"Unlock all achievements", unlocked:false},
+  // --- META ---
+  {id:"comeback", icon:"💀➡️😎", name:"Comeback", desc:"Win level with 1 ball remaining", unlocked:false},
+  {id:"collector", icon:"📦", name:"Collector", desc:"Unlock 20 achievements", unlocked:false},
+  {id:"marathon", icon:"🏃", name:"Marathon", desc:"Reach level 10", unlocked:false},
+  {id:"immortal", icon:"♾️", name:"Invincible", desc:"Score 250,000 points", unlocked:false},
+  {id:"story_master", icon:"📖", name:"Story Master", desc:"Complete all 10 Story Mode levels (Unlocks Skin)", unlocked:false},
+  {id:"completionist", icon:"🏆", name:"Peggle Master", desc:"Unlock all achievements", unlocked:false},
+];
 
   
 
-];
+
 
 let unlockedAchievements=[];
 let running=false;
@@ -404,6 +537,15 @@ let pegsHitThisBall=0;
 let slowmo=0,bgTime=0;
 let zoomActive=false,zoomLevel=1,zoomTargetY=0;
 let firstPegTypeThisTurn = null;
+let levelOrangeHitCount = 0;
+let levelSpecialTypesHit = new Set();
+let totalLevelPegsAtStart = 0;
+let shotOrangeCount = 0;
+ let shotGreenHit = false;
+  let shotPurpleHit = false;
+  let shotMultiballHit = false;
+  let shotFireballHit = false;
+  let portalUsesThisLevel = 0;  // ← ADD THIS LINE
 
 let shotStartTime=0;
 let lastPegType="";
@@ -666,6 +808,7 @@ function generateLevel(){
   shotsThisLevel=0;
   bigBucketCatches=0;
   totalBucketCatches=0;
+   portalUsesThisLevel=0;  // ← ADD THIS LINE
   levelStartTime=Date.now();
   totalOrangePegsThisLevel=0;
   orangePegsHitWithoutMiss=0;
@@ -756,6 +899,9 @@ function generateLevel(){
   specialPegs.slice(specialCount*3,specialCount*4).forEach(p=>p.type="fireball");
   
   totalOrangePegsThisLevel = pegs.filter(p => p.type === "orange").length;
+  totalLevelPegsAtStart = pegs.length;
+  levelOrangeHitCount = 0;
+  levelSpecialTypesHit.clear();
   
   updateUI();
 }
@@ -792,7 +938,7 @@ function shoot(){
  // RESET SHOT STATS
   shotStartTime=Date.now();
   pegsHitThisTurn=0;
-  pegsHitThisBall=0; // Track for individual ball
+  pegsHitThisBall=0;
   firstPegTypeThisTurn = null;
   portalUsesThisTurn=0;
   orangeHitsThisTurn=0;
@@ -808,6 +954,11 @@ function shoot(){
   purpleExplosionsThisTurn=0;
   multiballPegsHit=0;
   lastBallY=60;
+shotOrangeCount = 0;
+shotGreenHit = false;
+shotPurpleHit = false;
+shotMultiballHit = false;
+shotFireballHit = false;
   
   const a=Math.atan2(mouse.y-60,mouse.x-canvas.width/2);
   balls.push({
@@ -837,7 +988,6 @@ function shoot(){
   updateUI();
 
   {
-  if(pegsHitThisTurn >= 10) unlockAchievement("no_miss");
   if(pegsHitThisTurn >= 15) unlockAchievement("chaos");
   if(portalUsesThisTurn >= 10) unlockAchievement("portal_lover");
   if(bucketVisitsThisTurn === 1 && pegsHitThisTurn === 0) unlockAchievement("bucket_only");
@@ -859,12 +1009,21 @@ function shoot(){
 }
 
 function endTurn(){
-  // TRIGGER END-OF-TURN ACHIEVEMENTS
-   if(canShoot) return; // prevent double-call
+  if(canShoot) return; // prevent double-call
+  
+  // End-of-turn achievement checks
+  if(pegsHitThisTurn >= 5) unlockAchievement("no_miss");
+  if(pegsHitThisTurn >= 10) unlockAchievement("no_miss");
+  if(pegsHitThisTurn >= 15) unlockAchievement("chaos");
   if(portalUsesThisTurn >= 5) unlockAchievement("ach_8");
+  if(portalUsesThisTurn >= 10) unlockAchievement("portal_lover");
   if(portalUsesThisTurn > 0 && bucketVisitsThisTurn > 0) unlockAchievement("ach_12");
-  const initialTotal = pegs.length;
-  const boardClearPercent = pegsHitThisTurn / (pegs.length + pegsHitThisTurn);
+  if(orangeHitsThisTurn >= 5) unlockAchievement("orange_rush");
+  if(bucketVisitsThisTurn >= 2) unlockAchievement("double_bucket");
+  if(multiballPegsHit >= 6) unlockAchievement("multi_mayhem");
+  if(fireballHitsThisTurn >= 20) unlockAchievement("firestorm");
+  
+  const boardClearPercent = pegsHitThisTurn / totalLevelPegsAtStart;
   if(boardClearPercent >= 0.3) unlockAchievement("ach_18");
 
   canShoot=true;
@@ -872,25 +1031,9 @@ function endTurn(){
   pegs=pegs.filter(p=>!p.hit);
   balls=[];
 
- setTimeout(()=>{
-    // Check for Rainbow Master BEFORE level completion check
-    let hitMultiball = false;
-    let hitFireball = false;
-    
-    // Check if multiball or fireball were activated this turn
-    pegs.forEach(p => {
-      if(p.hit) {
-        if(p.type === "multiball") hitMultiball = true;
-        if(p.type === "fireball") hitFireball = true;
-      }
-    });
-    
-    if(greenHitsThisTurn > 0 && purpleExplosionsThisTurn > 0 && hitMultiball && hitFireball) {
-      unlockAchievement("rainbow_master");
-    }
-    
+  setTimeout(()=>{
+    // Check for level completion
     if(!pegs.some(p=>p.type==="orange")){
-
       // Track hard mode level completions
       if(hardMode) {
         hardModeLevelsBeaten++;
@@ -902,22 +1045,37 @@ function endTurn(){
         unlockAchievement("perfect");
         unlockSkin("rainbow");
       }
-      if(shotsThisLevel <= 5) unlockAchievement("ach_26");
-      if(hitAllPegs) {
-        unlockAchievement("perfect");
-        unlockSkin("rainbow");
-      }
-      // Check if all special peg types were used
-      if(specialTypesHitThisLevel.has("green") && 
-         specialTypesHitThisLevel.has("purple") && 
-         specialTypesHitThisLevel.has("multiball") && 
-         specialTypesHitThisLevel.has("fireball")) {
+
+       // Check portal lover achievement
+    if(portalUsesThisLevel >= 10) unlockAchievement("portal_lover");  // ← ADD THIS LINE
+      
+      // Check if all special peg types were used this level
+      if(levelSpecialTypesHit.has("green") && 
+         levelSpecialTypesHit.has("purple") && 
+         levelSpecialTypesHit.has("multiball") && 
+         levelSpecialTypesHit.has("fireball")) {
         unlockAchievement("specialist");
       }
-           evaluateExtraAchievements(false);
-      evaluateExtraAchievements(true);
+      
+      // Check if NO special pegs were hit
+      if(levelSpecialTypesHit.size === 0) {
+        unlockAchievement("minimalist");
+      }
+      
+      if(shotsThisLevel >= 10) unlockAchievement("slow_burn");
+      if(ballsLeft === 1) unlockAchievement("comeback");
+      if(level >= 10) unlockAchievement("marathon");
+      if(totalBucketCatches >= 5) unlockAchievement("bucket_greedy");
+      
+      const levelTime = Date.now() - levelStartTime;
+      if(levelTime < 30000) unlockAchievement("speed_demon");
+      
+      if(score >= 250000) unlockAchievement("immortal");
+      if(unlockedAchievements.length >= 20) unlockAchievement("collector");
+      if(unlockedAchievements.length >= ACHIEVEMENTS.length - 1) unlockAchievement("completionist");
+      
       showOverlay("🎊 LEVEL COMPLETE! 🎊");
-    }else if(ballsLeft<=0){
+    } else if(ballsLeft<=0){
       showOverlay("💀 GAME OVER 💀");
     }
   },100);
@@ -937,17 +1095,26 @@ function collide(b,p){
     pegsHitThisBall++; // Track for this specific ball
     if(ballsInMultiball) multiballPegsHit++;
     // FIRST PEG HIT CHECK
-if (firstPegTypeThisTurn === null) {
-  firstPegTypeThisTurn = p.type;
+    if (firstPegTypeThisTurn === null) {
+      firstPegTypeThisTurn = p.type;
 
-  if (p.type === "orange") {
-    unlockAchievement("clean_start"); // 🎯 First peg is orange
-  }
-  if (p.type === "green") {
-    unlockAchievement("green_touch"); // 💚 Hit green peg first
-  }
-}
+      if (p.type === "orange") {
+        unlockAchievement("clean_start");
+      }
+      if (p.type === "green") {
+        unlockAchievement("green_touch");
+      }
+    }
 
+    // Track special types for the level
+    if(p.type !== "blue") {
+      levelSpecialTypesHit.add(p.type);
+    }
+    
+    // Track orange hits for the level
+    if(p.type === "orange") {
+      levelOrangeHitCount++;
+    }
     
     // ACH 2: BULLSEYE
     if(Date.now() - shotStartTime < 500) unlockAchievement("ach_2");
@@ -956,10 +1123,12 @@ if (firstPegTypeThisTurn === null) {
     if(justExitedPortal && p.type === "orange") unlockAchievement("ach_9");
     justExitedPortal = false;
 
-   // ACH 5: DOUBLE TAP
+    // ACH 5: DOUBLE TAP
     if(p.type === "orange") {
         if(lastPegType === "orange") unlockAchievement("ach_5");
         orangeHitsThisTurn++;
+        shotOrangeCount++;
+        
         // Track orange hit time for Chain Lightning
         orangeHitTimes.push(Date.now());
         
@@ -970,7 +1139,6 @@ if (firstPegTypeThisTurn === null) {
             unlockAchievement("chain_lightning");
           }
         }
-        orangePegsHitWithoutMiss++;
         
         // Check for orange streak
         if(orangeHitsThisTurn > 0) orangeShotsInRow++;
@@ -981,20 +1149,27 @@ if (firstPegTypeThisTurn === null) {
         // Portal sniper
         if(justExitedPortal) unlockAchievement("portal_sniper");
     } else {
-        // Reset orange streak if we hit non-orange
+        // Reset orange streak if first peg of turn is not orange
         if(pegsHitThisTurn === 1 && p.type !== "orange") orangeShotsInRow = 0;
     }
     lastPegType = p.type;
 
     // ACH 19: EFFICIENT ENERGY
-    if(p.type === "green") greenHitsThisTurn++;
+    if(p.type === "green") {
+      greenHitsThisTurn++;
+      shotGreenHit = true;
+    }
     if(greenHitsThisTurn > 0 && orangeHitsThisTurn > 0) unlockAchievement("ach_19");
 
-   if(p.type!=="blue") specialTypesHitThisLevel.add(p.type);
+    if(p.type !== "blue") specialTypesHitThisLevel.add(p.type);
+    
+    // Track for rainbow master
+    if(p.type === "purple") shotPurpleHit = true;
+    if(p.type === "multiball") shotMultiballHit = true;
+    if(p.type === "fireball") shotFireballHit = true;
     
     // Bank shot and trick shot
-   // Trick shot only
-if(bounceCount >= 3) unlockAchievement("trickshot");
+    if(bounceCount >= 3) unlockAchievement("trickshot");
     
     // Sniper - hit peg near top
     if(p.y < field.top + 80) unlockAchievement("sniper");
@@ -1028,7 +1203,7 @@ if(bounceCount >= 3) unlockAchievement("trickshot");
       });
     }
     
-    if(p.type==="green"){
+  if(p.type==="green"){
       bucketExpanded=true;
       bucketTimer=900;
     }
@@ -1042,7 +1217,14 @@ if(bounceCount >= 3) unlockAchievement("trickshot");
       nearPegs.forEach(np=>{
         np.hit=true;
         pegsHitThisTurn++;
-        if(np.type!=="blue") specialTypesHitThisLevel.add(np.type);
+        if(np.type !== "blue") {
+          specialTypesHitThisLevel.add(np.type);
+          levelSpecialTypesHit.add(np.type);
+        }
+        if(np.type === "orange") {
+          levelOrangeHitCount++;
+          shotOrangeCount++;
+        }
         score+=np.type==="orange"?100:10;
         for(let i=0;i<20;i++){
           particles.push({
@@ -1057,8 +1239,26 @@ if(bounceCount >= 3) unlockAchievement("trickshot");
       });
     }
     
-    if(p.type==="multiball")multiballActive=true;
-    if(p.type==="fireball")b.fireball=true;
+    if(p.type==="multiball") multiballActive=true;
+    if(p.type==="fireball") b.fireball=true;
+    
+    // Check rainbow master at end of collision
+    if(shotGreenHit && shotPurpleHit && shotMultiballHit && shotFireballHit) {
+      unlockAchievement("rainbow_master");
+    }
+    
+    // Check for last orange and orange sweeper
+    const remainingOrange=pegs.filter(pg=>pg.type==="orange"&&!pg.hit).length;
+    if(p.type==="orange" && remainingOrange === 0) {
+      slowmo=120;
+      unlockAchievement("last_orange");
+      
+      // Check if we hit ALL oranges in the level
+      if(levelOrangeHitCount === totalOrangePegsThisLevel) {
+        unlockAchievement("orange_sweeper");
+      }
+    }
+    
     
    if(p.type==="orange"){
       const remainingOrange=pegs.filter(pg=>pg.type==="orange"&&!pg.hit).length;
@@ -1164,6 +1364,7 @@ function loop(){
     ctx.shadowColor="#a020f0";
     ctx.shadowBlur=20;
     ctx.setLineDash([8,8]);
+   portalUsesThisLevel++;  // ← ADD THIS LINE
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.shadowBlur=0;
@@ -1509,6 +1710,154 @@ function unlockSkin(skinId){
     renderSkinSelector();
   }
 }
+async function loadLeaderboard() {
+  const listDiv = document.getElementById('leaderboardList');
+  const loadingDiv = document.getElementById('loadingIndicator');
+  
+  loadingDiv.style.display = 'block';
+  listDiv.innerHTML = '';
+  
+  try {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+      method: 'GET',
+      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
+    });
+    
+    const data = await response.json();
+    const scores = data.record.scores || [];
+    
+    loadingDiv.style.display = 'none';
+    
+    if (scores.length === 0) {
+      listDiv.innerHTML = '<p style="color:white;text-align:center;">No scores yet! Be the first! 🎯</p>';
+      return;
+    }
+    
+    scores.sort((a, b) => b.score - a.score);
+    const top10 = scores.slice(0, 10);  // ← FIXED
+    
+    listDiv.innerHTML = top10.map((entry, index) => {  // ← FIXED
+      const rank = index + 1;
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+      
+      return `
+        <div class="leaderboard-entry${rank <= 3 ? ' top3' : ''}">
+          <span class="leaderboard-rank">${medal}</span>
+          <span class="leaderboard-name">${escapeHtml(entry.name)}</span>
+          <span class="leaderboard-score">${entry.score.toLocaleString()} pts</span>
+        </div>
+      `;
+    }).join('');
+    
+  } catch (error) {
+    loadingDiv.style.display = 'none';
+    listDiv.innerHTML = '<p style="color:#ff6666;">Error loading leaderboard</p>';
+    console.error('Leaderboard error:', error);  // ← ADDED for debugging
+  }
+}
+
+async function submitCurrentScore() {
+  const nameInput = document.getElementById('playerNameInput');
+  const name = nameInput.value.trim();
+  
+  if (!name) {
+    alert('Please enter your name!');
+    nameInput.focus();
+    return;
+  }
+  
+  // Rate limit - once per minute
+  const now = Date.now();
+  if (now - lastSubmitTime < 60000) {
+    const waitTime = Math.ceil((60000 - (now - lastSubmitTime)) / 1000);
+    alert(`Please wait ${waitTime} seconds before submitting again!`);
+    return;
+  }
+  
+  const loadingDiv = document.getElementById('loadingIndicator');
+  loadingDiv.style.display = 'block';
+  
+  try {
+    // Get current scores
+    const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
+    });
+    
+    const data = await getResponse.json();
+    const scores = data.record.scores || [];
+    
+    // Add new score
+    scores.push({
+      name: name.substring(0, 20),
+      score: score,
+      level: level,
+      timestamp: now,
+      date: new Date().toISOString()
+    });
+    
+    // Keep top 100
+    scores.sort((a, b) => b.score - a.score);
+    const top100 = scores.slice(0, 100);
+    
+    // Update
+    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_CONFIG.API_KEY
+      },
+      body: JSON.stringify({ scores: top100 })
+    });
+    
+    lastSubmitTime = now;
+    loadingDiv.style.display = 'none';
+    
+    alert(`🎉 Score submitted! ${score.toLocaleString()} points`);
+    nameInput.value = '';
+    document.getElementById('scorePrompt').style.display = 'none';
+
+    await loadLeaderboard();  // ← ONLY THIS LINE - DUPLICATE REMOVED
+    
+  } catch (error) {
+    loadingDiv.style.display = 'none';
+    alert('Error submitting score: ' + error.message);
+    console.error('Submit error:', error);  // ← ADDED for debugging
+  }
+}
+
+function showLeaderboard(fromGameOver = false) {
+  const leaderboardDiv = document.getElementById("leaderboard");
+  const achievementsDiv = document.getElementById("achievements");
+  const skinDiv = document.getElementById("skinSelector");
+  const scorePrompt = document.getElementById("scorePrompt");
+
+  achievementsDiv.style.display = "none";
+  skinDiv.style.display = "none";
+
+  if (leaderboardDiv.style.display === "block" && !fromGameOver) {
+    leaderboardDiv.style.display = "none";
+    scorePrompt.style.display = "none";
+    return;
+  }
+
+  leaderboardDiv.style.display = "block";
+  
+  // Show score prompt if coming from game over
+  if (fromGameOver) {
+    scorePrompt.textContent = `🎮 Your Score: ${Math.floor(score).toLocaleString()} pts - Level ${level} 🎮`;
+    scorePrompt.style.display = "block";
+  } else {
+    scorePrompt.style.display = "none";
+  }
+  
+  loadLeaderboard();
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 function showOverlay(title){
   running=false;
@@ -1520,7 +1869,9 @@ function showOverlay(title){
 }
 function overlayAction(){
   overlay.style.display="none";
+  
   if(overlayTitle.textContent.includes("COMPLETE")){
+    // Your existing level complete code stays the same
     if(storyMode){
       storyLevel++;
       if(storyLevel > 10){
@@ -1538,16 +1889,30 @@ function overlayAction(){
       level++;
       ballsLeft = hardMode ? Math.min(ballsLeft + 3, 10) : 10;
     }
-    running=true; canShoot=true; generateLevel(); loop();
-  }else{
+    running=true; 
+    canShoot=true; 
+    generateLevel(); 
+    loop();
+    
+  } else {
+    // GAME OVER - REPLACE THIS ENTIRE SECTION:
     hardModeLevelsBeaten = 0;
     if(storyMode){
-      menu.style.display="flex";
       storyMode=false;
       storyLevel=1;
       document.getElementById("storyInfo").style.display="none";
     }
-    score=0; ballsLeft=10; level=1; running=true; canShoot=true; generateLevel(); loop();
+    
+    // Show menu and open leaderboard automatically
+    menu.style.display="flex";
+    showLeaderboard(true); // Pass true to show it's from game over
+    
+    // Auto-focus name input
+    setTimeout(() => {
+      const nameInput = document.getElementById('playerNameInput');
+      nameInput.focus();
+      nameInput.select();
+    }, 200);
   }
 }
 function renderSkinSelector(){
@@ -1709,7 +2074,12 @@ try{
   
   renderSkinSelector();
 }catch(e){}
-
+// Allow Enter key to submit score
+document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    submitCurrentScore();
+  }
+});
 </script>
 </body>
 </html>
