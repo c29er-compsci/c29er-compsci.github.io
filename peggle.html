@@ -29,10 +29,22 @@ patch notes
   overflow-y: auto;
 }
 
-#leaderboard h2 {
-  color: white;
-  text-align: center;
-  margin: 0 0 20px 0;
+#leaderboard {
+  position: fixed;
+  right: -650px;
+  top: 0;
+  width: 600px;
+  height: 100vh;
+  padding: 20px;
+  background: rgba(0,0,0,.95);
+  border-left: 3px solid rgba(255,215,0,.5);
+  overflow-y: auto;
+  transition: right 0.4s ease-in-out;
+  z-index: 200;
+}
+
+#leaderboard.show {
+  right: 0;
 }
 
 .leaderboard-entry {
@@ -373,7 +385,7 @@ canvas{display:block}
   🏆 LEADERBOARD
 </button>
 
-<div id="leaderboard" style="display:none">
+<div id="leaderboard">
   <h2>🏆 TOP 10 SCORES 🏆</h2>
   <div id="scorePrompt" style="display:none"></div>
   <div id="submitScoreForm">
@@ -1834,13 +1846,13 @@ function showLeaderboard(fromGameOver = false) {
   achievementsDiv.style.display = "none";
   skinDiv.style.display = "none";
 
-  if (leaderboardDiv.style.display === "block" && !fromGameOver) {
-    leaderboardDiv.style.display = "none";
+  if (leaderboardDiv.classList.contains("show") && !fromGameOver) {
+    leaderboardDiv.classList.remove("show");
     scorePrompt.style.display = "none";
     return;
   }
 
-  leaderboardDiv.style.display = "block";
+  leaderboardDiv.classList.add("show");
   
   // Show score prompt if coming from game over
   if (fromGameOver) {
