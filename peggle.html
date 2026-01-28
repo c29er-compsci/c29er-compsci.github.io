@@ -516,7 +516,7 @@ const ACHIEVEMENTS=[
 {id:"collector", icon:"📦", name:"Collector", desc:"Unlock 20 achievements", unlocked:false},
 {id:"marathon", icon:"🏃", name:"Marathon", desc:"Reach level 10", unlocked:false},
 {id:"immortal", icon:"♾️", name:"Invincible", desc:"Score 250,000 points", unlocked:false},
-{id:"story_master", icon:"📖", name:"Story Master", desc:"Complete all 10 Story Mode levels", unlocked:false},
+{id:"story_master", icon:"📖", name:"Story Master", desc:"Complete all 10 Story Mode levels (Unlocks Skin)", unlocked:false},
 {id:"completionist", icon:"🏆", name:"Peggle", desc:"Unlock all achievements", unlocked:false},
 
   
@@ -1717,18 +1717,30 @@ async function submitCurrentScore() {
     const data = await getResponse.json();
     const scores = data.record.scores || [];
     
-    // Add new score
-    scores.push({
-      name: name.substring(0, 20),
-      score: score,
-      level: level,
-      timestamp: now,
-      date: new Date().toISOString()
-    });
-    
-    // Keep top 100
-    scores.sort((a, b) => b.score - a.score);
-    const top100 = scores.slice(0, 100);
+   // Add new score
+scores.push({
+  name: name.substring(0, 20),
+  score: score,
+  level: level,
+  timestamp: now,
+  date: new Date().toISOString()
+});
+
+// REMOVE DUPLICATES (same name + same score)
+const uniqueScores = [];
+const seen = new Set();
+
+scores.forEach(entry => {
+  const key = `${entry.name}-${entry.score}`;
+  if (!seen.has(key)) {
+    seen.add(key);
+    uniqueScores.push(entry);
+  }
+});
+
+// SORT: Highest to Lowest
+uniqueScores.sort((a, b) => b.score - a.score);
+const top100 = uniqueScores.slice(0, 100);
     
     // Update
     await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
