@@ -476,6 +476,16 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
+  // Seeded random number generator for identical levels
+let rngSeed = 0;
+function seededRandom() {
+  rngSeed = (rngSeed * 9301 + 49297) % 233280;
+  return rngSeed / 233280;
+}
+
+function setSeed(seed) {
+  rngSeed = seed;
+}
 
   const JSONBIN_CONFIG = {
  API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi', 
@@ -1232,6 +1242,92 @@ function collide(b,p){
     
     updateUI();
   }
+}
+function generateMultiplayerLevel(seed) {
+  setSeed(seed); // Set the seed so both players get same level
+  
+  pegs = [];
+  balls = [];
+  particles = [];
+  bucket.x = field.left();
+  multiballActive = false;
+  slowmo = 0;
+  specialTypesHitThisLevel.clear();
+  shotsThisLevel = 0;
+  bigBucketCatches = 0;
+  totalBucketCatches = 0;
+  portalUsesThisLevel = 0;
+  levelStartTime = Date.now();
+  totalOrangePegsThisLevel = 0;
+  orangePegsHitWithoutMiss = 0;
+  
+  const padding = 80;
+  const spawnPortal = () => ({
+    x: field.left() + padding + seededRandom() * (800 - padding * 2),
+    y: field.top + 100 + seededRandom() * (canvas.height - field.top - 300),
+    r: 28
+  });
+
+  // Create portals using seeded random
+  const p1 = spawnPortal();
+  const p2 = spawnPortal();
+  
+  while(Math.hypot(p1.x - p2.x, p1.y - p2.y) < 200) {
+    p2.x = field.left() + padding + seededRandom() * (800 - padding * 2);
+    p2.y = field.top + 100 + seededRandom() * (canvas.height - field.top - 300);
+  }
+  
+  portals = [
+    {x: p1.x, y: p1.y, tx: p2.x, ty: p2.y, r: p1.r, pulse: 0},
+    {x: p2.x, y: p2.y, tx: p1.x, ty: p1.y, r: p2.r, pulse: Math.PI}
+  ];
+  
+  // Generate pegs using seeded random
+  for(let r = 0; r < 9; r++) {
+    for(let c = 0; c < 10; c++) {
+      if(seededRandom() < .1) continue; // Use seeded random instead of Math.random()
+      
+      const px = field.left() + 80 + c * 75 + (r % 2) * 37;
+      const py = field.top + r * 60;
+      const nearPortal = portals.some(port => Math.hypot(px - port.x, py - port.y) < 50);
+      
+      if(!nearPortal) {
+        pegs.push({
+          x: px, y: py, r: 9,
+          hit: false, type: "blue", wobble: 0,
+          pulse: seededRandom() * Math.PI * 2
+        });
+      }
+    }
+  }
+  
+  // Shuffle using seeded random
+  for(let i = pegs.length - 1; i > 0; i--) {
+    const j = (seededRandom() * (i + 1)) | 0;
+    [pegs[i], pegs[j]] = [pegs[j], pegs[i]];
+  }
+  
+  // Set orange pegs
+  pegs.slice(0, Math.floor(pegs.length * 0.2)).forEach(p => p.type = "orange");
+  
+  // Set special pegs
+  const specialPegs = pegs.filter(p => p.type === "blue");
+  for(let i = specialPegs.length - 1; i > 0; i--) {
+    const j = (seededRandom() * (i + 1)) | 0;
+    [specialPegs[i], specialPegs[j]] = [specialPegs[j], specialPegs[i]];
+  }
+  
+  specialPegs.slice(0, 2).forEach(p => p.type = "green");
+  specialPegs.slice(2, 4).forEach(p => p.type = "purple");
+  specialPegs.slice(4, 6).forEach(p => p.type = "multiball");
+  specialPegs.slice(6, 8).forEach(p => p.type = "fireball");
+  
+  totalOrangePegsThisLevel = pegs.filter(p => p.type === "orange").length;
+  totalLevelPegsAtStart = pegs.length;
+  levelOrangeHitCount = 0;
+  levelSpecialTypesHit.clear();
+  
+  updateUI();
 }
 
 function loop(){
@@ -2277,13 +2373,16 @@ async function createLobby() {
       name: name,
       score: 0,
       level: 1,
-      ballsLeft: 10
+      ballsLeft: 10,
+      orangeLeft: 0,
+      finished: false
     },
     guest: null,
-    status: 'waiting', // waiting, playing, finished
+    status: 'waiting',
     createdAt: Date.now(),
     startedAt: null,
-    winner: null
+    winner: null,
+    levelSeed: Math.random() * 999999 | 0 // ✅ Shared seed for identical levels
   };
   
   try {
@@ -2291,6 +2390,9 @@ async function createLobby() {
     multiplayerState.active = true;
     showActiveGame();
     startPolling();
+    
+    document.getElementById('gameStatus').textContent = '⏳ Waiting for opponent to join...';
+    
   } catch(error) {
     alert('Error creating lobby: ' + error.message);
   }
@@ -2330,7 +2432,9 @@ async function joinLobby(lobbyId) {
       name: name,
       score: 0,
       level: 1,
-      ballsLeft: 10
+      ballsLeft: 10,
+      orangeLeft: 0,
+      finished: false
     };
     lobby.status = 'playing';
     lobby.startedAt = Date.now();
@@ -2341,13 +2445,10 @@ async function joinLobby(lobbyId) {
     showActiveGame();
     startPolling();
     
-    // Start the actual game
-    startMultiplayerGame();
   } catch(error) {
     alert('Error joining lobby: ' + error.message);
   }
 }
-
 // Leave current lobby
 async function leaveLobby() {
   if(!multiplayerState.active) return;
@@ -2426,7 +2527,6 @@ function showActiveGame() {
   updateMultiplayerUI();
 }
 
-// Update multiplayer UI
 function updateMultiplayerUI(lobby = null) {
   if(!lobby) return;
   
@@ -2442,20 +2542,21 @@ function updateMultiplayerUI(lobby = null) {
     document.getElementById('player2Score').textContent = opponent.score || 0;
     document.getElementById('player2Level').textContent = opponent.level || 1;
     
+    // ✅ Show orange pegs remaining for both players
+    const yourOrange = you?.orangeLeft ?? 0;
+    const theirOrange = opponent?.orangeLeft ?? 0;
+    
     if(lobby.status === 'playing') {
-      const timeLeft = Math.max(0, MP_CONFIG.GAME_DURATION - (Date.now() - lobby.startedAt));
-      const minutes = Math.floor(timeLeft / 60000);
-      const seconds = Math.floor((timeLeft % 60000) / 1000);
-      document.getElementById('gameStatus').textContent = `⏱️ Time Left: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+      document.getElementById('gameStatus').textContent = 
+        `🟠 You: ${yourOrange} oranges | Opponent: ${theirOrange} oranges`;
     }
   } else {
     document.getElementById('player2Name').textContent = 'Waiting...';
     document.getElementById('gameStatus').textContent = 'Waiting for opponent...';
   }
 }
-
 // Start multiplayer game
-function startMultiplayerGame() {
+function startMultiplayerGame(levelSeed) {
   menu.style.display = 'none';
   document.getElementById('multiplayerMenu').style.display = 'none';
   hardMode = false;
@@ -2465,7 +2566,9 @@ function startMultiplayerGame() {
   level = 1;
   running = true;
   multiplayerState.gameStartTime = Date.now();
-  generateLevel();
+  
+  // ✅ Generate level with shared seed
+  generateMultiplayerLevel(levelSeed);
   loop();
 }
 
@@ -2479,12 +2582,17 @@ async function updateMultiplayerStats() {
     
     if(!lobby) return;
     
+    const orangeLeft = pegs.filter(p => p.type === "orange" && !p.hit).length;
+    const finished = orangeLeft === 0;
+    
     const playerData = {
       id: multiplayerState.playerId,
       name: multiplayerState.playerName,
       score: score,
       level: level,
-      ballsLeft: ballsLeft
+      ballsLeft: ballsLeft,
+      orangeLeft: orangeLeft,
+      finished: finished
     };
     
     if(multiplayerState.isHost) {
@@ -2493,13 +2601,25 @@ async function updateMultiplayerStats() {
       lobby.guest = playerData;
     }
     
-    // Check for game end
-    if(lobby.status === 'playing' && lobby.startedAt) {
-      const elapsed = Date.now() - lobby.startedAt;
-      if(elapsed >= MP_CONFIG.GAME_DURATION) {
-        endMultiplayerGame(lobby);
-        return;
-      }
+    // ✅ Check if someone won (cleared all oranges first)
+    if(lobby.status === 'playing' && finished) {
+      lobby.status = 'finished';
+      lobby.winner = multiplayerState.playerName;
+      await updateLobby(lobby);
+      
+      showOverlay("🎉 YOU WIN! 🎉");
+      stopPolling();
+      multiplayerState.active = false;
+      return;
+    }
+    
+    // Check if opponent won
+    const opponent = multiplayerState.isHost ? lobby.guest : lobby.host;
+    if(opponent && opponent.finished && lobby.status === 'finished') {
+      showOverlay("💀 OPPONENT WON 💀");
+      stopPolling();
+      multiplayerState.active = false;
+      return;
     }
     
     await updateLobby(lobby);
@@ -2507,8 +2627,6 @@ async function updateMultiplayerStats() {
     console.error('Error updating stats:', error);
   }
 }
-
-// End multiplayer game
 async function endMultiplayerGame(lobby) {
   lobby.status = 'finished';
   
@@ -2538,6 +2656,8 @@ async function endMultiplayerGame(lobby) {
 // Polling system
 function startPolling() {
   stopPolling();
+  let gameStarted = false;
+  
   multiplayerState.pollInterval = setInterval(async () => {
     if(!multiplayerState.active) {
       stopPolling();
@@ -2556,29 +2676,29 @@ function startPolling() {
       
       updateMultiplayerUI(lobby);
       
-      // If guest joined and we're host, start the game
-      if(multiplayerState.isHost && lobby.guest && lobby.status === 'waiting') {
-        lobby.status = 'playing';
-        lobby.startedAt = Date.now();
-        await updateLobby(lobby);
+      // ✅ When guest joins, start game for BOTH players with same seed
+      if(lobby.guest && lobby.status === 'playing' && !gameStarted) {
+        gameStarted = true;
         multiplayerState.gameStartTime = Date.now();
-        startMultiplayerGame();
-      }
-      
-      // Check if game should end
-      if(lobby.status === 'playing' && lobby.startedAt) {
-        const elapsed = Date.now() - lobby.startedAt;
-        if(elapsed >= MP_CONFIG.GAME_DURATION) {
-          endMultiplayerGame(lobby);
-        }
+        
+        // Countdown
+        document.getElementById('gameStatus').textContent = '🎮 Starting in 3...';
+        setTimeout(() => {
+          document.getElementById('gameStatus').textContent = '🎮 Starting in 2...';
+        }, 1000);
+        setTimeout(() => {
+          document.getElementById('gameStatus').textContent = '🎮 Starting in 1...';
+        }, 2000);
+        setTimeout(() => {
+          document.getElementById('gameStatus').textContent = '🎮 GO! 🎮';
+          startMultiplayerGame(lobby.levelSeed); // ✅ Use shared seed
+        }, 3000);
       }
       
       // Check if game finished
       if(lobby.status === 'finished' && running) {
         const isWinner = lobby.winner === multiplayerState.playerName;
-        const message = lobby.winner === 'TIE' ? 
-          "🤝 IT'S A TIE! 🤝" : 
-          isWinner ? "🎉 YOU WIN! 🎉" : "💀 YOU LOSE 💀";
+        const message = isWinner ? "🎉 YOU WIN! 🎉" : "💀 OPPONENT WON 💀";
         showOverlay(message);
         stopPolling();
         multiplayerState.active = false;
@@ -2589,7 +2709,6 @@ function startPolling() {
     }
   }, MP_CONFIG.POLL_INTERVAL);
 }
-
 function stopPolling() {
   if(multiplayerState.pollInterval) {
     clearInterval(multiplayerState.pollInterval);

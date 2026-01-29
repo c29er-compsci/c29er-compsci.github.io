@@ -19,6 +19,10 @@
 <body>
 
 <script>
+	let colors = ["blue", "green", "purple"]
+let my_students = ["kendrick", "lukas", "matthew"]
+	console.log(colors.length)
+	console.log(my_students.length)
 
 function changeColor () {
 	let r = Math.round(Math.random()*255)
@@ -29,7 +33,10 @@ function changeColor () {
 		"rgb(" + r + "," + g + "," + b + ")"
 }
 
-setInterval(changeColor, 1000)
+let randomColorIndex = Math.floor(Math.random() * colors.length) 
+box.style.borderColor = colors [randomColorIndex]
+
+setInterval(changeColorborder, 1000)
 
 function makeConfetti () {
 
