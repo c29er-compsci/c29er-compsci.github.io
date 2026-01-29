@@ -20,16 +20,6 @@ patch notes
   /* Add this to your existing <style> section */
 
 #leaderboard {
-  max-width: 600px;
-  margin: 30px auto;
-  padding: 20px;
-  background: rgba(255,255,255,.1);
-  border-radius: 15px;
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-#leaderboard {
   position: fixed;
   right: -650px;
   top: 0;
@@ -45,6 +35,12 @@ patch notes
 
 #leaderboard.show {
   right: 0;
+}
+
+#leaderboard h2 {
+  color: white;
+  text-align: center;
+  margin: 0 0 20px 0;
 }
 
 .leaderboard-entry {
@@ -393,8 +389,6 @@ canvas{display:block}
     <button class="btn" onclick="submitCurrentScore()" style="padding:10px 25px;font-size:16px">
       Submit Score
     </button>
-
-
   </div>
   <div id="loadingIndicator" style="display:none">
     <div class="spinner"></div>
@@ -403,6 +397,7 @@ canvas{display:block}
   <div id="leaderboardList"></div>
 </div>
 </div>
+ 
 
 
 <div id="ui">
@@ -518,7 +513,7 @@ const ACHIEVEMENTS=[
 
   // --- STYLE / FUN ---
   {id:"chaos", icon:"☯️", name:"Chaos", desc:"Hit 15 pegs in one shot", unlocked:false},
-  {id:"minimalist", icon:"⚪", name:"Minimalist", desc:"Beat level with no special pegs hit", unlocked:false},
+ {id:"hardcore", icon:"💀", name:"Hardcore", desc:"Reach 10,000 points in Hard Mode", unlocked:false},
   {id:"trickshot", icon:"🎩", name:"Trick Shot", desc:"Hit peg after 3 bounces", unlocked:false},
   {id:"speed_demon", icon:"⚡", name:"Speed Demon", desc:"Finish level in under 30 seconds", unlocked:false},
   {id:"slow_burn", icon:"🐢", name:"Slow Burn", desc:"Finish level after 10 shots", unlocked:false},
@@ -599,19 +594,22 @@ const BALL_SKINS = [
   ,{id:"nebula", name:"Nebula", unlocked:false, gradient:["#9d4edd","#7b2cbf","#5a189a"], unlock:"story_master"}
 ];
 const STORY_LEVELS = [
-  {chapter: 1, title: "The Beginning", desc: "Ancient civilizations used peggle boards to communicate with parallel dimensions", balls: 12, orangePercent: 0.15, specialCount: 3, portalCount: 2, theme: 0},
-  {chapter: 2, title: "Portal Discovery", desc: "The purple pegs contain fragments of a shattered cosmic crystal with explosive properties.", balls: 11, orangePercent: 0.18, specialCount: 2, portalCount: 3, theme: 1},
-  {chapter: 3, title: "Rising Challenge", desc: "Each orange peg is a miniature star that must be extinguished to restore balance.", balls: 10, orangePercent: 0.22, specialCount: 2, portalCount: 2, theme: 2},
-  {chapter: 4, title: "The Gauntlet", desc: "The portals were created by interdimensional travelers who left them as gateways between worlds.", balls: 10, orangePercent: 0.25, specialCount: 1, portalCount: 2, theme: 3},
-  {chapter: 5, title: "Midpoint Trial", desc: "Green pegs are alive and expand the bucket as a symbiotic survival mechanism.", balls: 9, orangePercent: 0.28, specialCount: 2, portalCount: 3, theme: 0},
-  {chapter: 6, title: "Portal Mastery", desc: "The ball you're firing is actually condensed spacetime seeking to return home.", balls: 9, orangePercent: 0.30, specialCount: 1, portalCount: 4, theme: 1},
-  {chapter: 7, title: "The Crucible", desc: "Multiball pegs split reality itself, creating temporary clones from alternate timelines.", balls: 8, orangePercent: 0.32, specialCount: 1, portalCount: 2, theme: 2},
-  {chapter: 8, title: "Desperate Measures", desc: "Fireball pegs contain the last remnants of a dying phoenix's eternal flame.", balls: 8, orangePercent: 0.35, specialCount: 1, portalCount: 3, theme: 3},
-  {chapter: 9, title: "Final Approach", desc: "The moving bucket is piloted by a tiny guardian trying to catch falling stars.", balls: 7, orangePercent: 0.38, specialCount: 1, portalCount: 2, theme: 0},
-  {chapter: 10, title: "Ultimate Test", desc: "Hard Mode awakens the Portal Architect, an ancient entity that must be defeated to seal the dimensional rifts forever.", balls: 7, orangePercent: 0.40, specialCount: 1, portalCount: 2, theme: 1}
+  {chapter: 1, title: "The Beginning", desc: "A simple start", balls: 12, orangePercent: 0.15, specialCount: 3, portalCount: 2, theme: 0},
+  {chapter: 2, title: "Portal Discovery", desc: "Portals grow stronger", balls: 11, orangePercent: 0.18, specialCount: 2, portalCount: 3, theme: 1},
+  {chapter: 3, title: "Rising Challenge", desc: "More oranges await", balls: 10, orangePercent: 0.22, specialCount: 2, portalCount: 2, theme: 2},
+  {chapter: 4, title: "The Gauntlet", desc: "Power-ups grow scarce", balls: 10, orangePercent: 0.25, specialCount: 1, portalCount: 2, theme: 3},
+  {chapter: 5, title: "Midpoint Trial", desc: "Halfway there", balls: 9, orangePercent: 0.28, specialCount: 2, portalCount: 3, theme: 0},
+  {chapter: 6, title: "Portal Mastery", desc: "Navigate the maze", balls: 9, orangePercent: 0.30, specialCount: 1, portalCount: 4, theme: 1},
+  {chapter: 7, title: "The Crucible", desc: "Few chances remain", balls: 8, orangePercent: 0.32, specialCount: 1, portalCount: 2, theme: 2},
+  {chapter: 8, title: "Desperate Measures", desc: "Every shot counts", balls: 8, orangePercent: 0.35, specialCount: 1, portalCount: 3, theme: 3},
+  {chapter: 9, title: "Final Approach", desc: "One step from victory", balls: 7, orangePercent: 0.38, specialCount: 1, portalCount: 2, theme: 0},
+  {chapter: 10, title: "Ultimate Test", desc: "Prove your mastery", balls: 7, orangePercent: 0.40, specialCount: 1, portalCount: 2, theme: 1}
 ];
 
 let selectedSkin = "classic";
+let storyMode = false;
+let storyLevel = 1;
+let storyLives = 3;
 
 const field={
   left:()=>canvas.width/2-400,
@@ -797,126 +795,28 @@ function drawBackground(){
   }
 }
 
-function generateLevel(){
-  // Story mode uses specific themes
-  if(storyMode && storyLevel <= 10) {
-    const config = STORY_LEVELS[storyLevel - 1];
-    currentBgTheme = config.theme;
-    document.getElementById("storyInfo").style.display = "block";
-    document.getElementById("storyTitle").textContent = `Chapter ${config.chapter}/10`;
-    document.getElementById("storyDesc").textContent = config.desc;
-  } else {
-    currentBgTheme = Math.floor(Math.random() * 4);
-    document.getElementById("storyInfo").style.display = "none";
-  }
-  
-  pegs=[];
-  balls=[];
-  particles=[];
-  bucket.x=field.left();
-  multiballActive=false;
-  slowmo=0;
-  specialTypesHitThisLevel.clear();
-  shotsThisLevel=0;
-  bigBucketCatches=0;
-  totalBucketCatches=0;
-   portalUsesThisLevel=0;  // ← ADD THIS LINE
-  levelStartTime=Date.now();
-  totalOrangePegsThisLevel=0;
-  orangePegsHitWithoutMiss=0;
-  
- const padding=80;
-  const spawnPortal=()=>({
-    x:field.left()+padding+Math.random()*(800-padding*2),
-    y:field.top+100+Math.random()*(canvas.height-field.top-300),
-    r:28
+// In the loop() function, find this section and REMOVE the marked line:
+portals.forEach(p=>{
+    p.pulse+=.05;
+    const pulseSize=p.r+(Math.sin(p.pulse)*3);
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,pulseSize,0,Math.PI*2);
+    const portalGrad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,pulseSize);
+    portalGrad.addColorStop(0,"rgba(160,32,240,.3)");
+    portalGrad.addColorStop(.5,"rgba(160,32,240,.1)");
+    portalGrad.addColorStop(1,"rgba(160,32,240,0)");
+    ctx.fillStyle=portalGrad;
+    ctx.fill();
+    ctx.strokeStyle="#a020f0";
+    ctx.lineWidth=4;
+    ctx.shadowColor="#a020f0";
+    ctx.shadowBlur=20;
+    ctx.setLineDash([8,8]);
+    // portalUsesThisLevel++;  // ← REMOVE THIS LINE
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur=0;
   });
-
-  // Determine portal count
-  let portalPairs = 1;
-  if(storyMode && storyLevel <= 10) {
-    portalPairs = Math.floor(STORY_LEVELS[storyLevel - 1].portalCount / 2);
-  }
-
-  portals = [];
-  for(let pair = 0; pair < portalPairs; pair++) {
-    const p1 = spawnPortal();
-    const p2 = spawnPortal();
-    
-    while(Math.hypot(p1.x-p2.x,p1.y-p2.y)<200){
-      p2.x=field.left()+padding+Math.random()*(800-padding*2);
-      p2.y=field.top+100+Math.random()*(canvas.height-field.top-300);
-    }
-    
-    portals.push(
-      {x:p1.x,y:p1.y,tx:p2.x,ty:p2.y,r:p1.r,pulse:pair*Math.PI/2},
-      {x:p2.x,y:p2.y,tx:p1.x,ty:p1.y,r:p2.r,pulse:(pair+1)*Math.PI/2}
-    );
-  }
-  
-  if(portals.length === 0) {
-    const p1=spawnPortal();
-    const p2=spawnPortal();
-    while(Math.hypot(p1.x-p2.x,p1.y-p2.y)<200){
-      p2.x=field.left()+padding+Math.random()*(800-padding*2);
-      p2.y=field.top+100+Math.random()*(canvas.height-field.top-300);
-    }
-    portals=[
-      {x:p1.x,y:p1.y,tx:p2.x,ty:p2.y,r:p1.r,pulse:0},
-      {x:p2.x,y:p2.y,tx:p1.x,ty:p1.y,r:p2.r,pulse:Math.PI}
-    ];
-  }
-  
-  for(let r=0;r<9;r++){
-    for(let c=0;c<10;c++){
-      if(Math.random()<.1)continue;
-      
-      const px=field.left()+80+c*75+(r%2)*37;
-      const py=field.top+r*60;
-      const nearPortal=portals.some(port=>Math.hypot(px-port.x,py-port.y)<50);
-      
-      if(!nearPortal){
-        pegs.push({
-          x:px,y:py,r:9,
-          hit:false,type:"blue",wobble:0,
-          pulse:Math.random()*Math.PI*2
-        });
-      }
-    }
-  }
-  
- shuffle(pegs);
-  
-  // Determine orange percentage
-  let orangePercent = 0.2;
-  if(storyMode && storyLevel <= 10) {
-    orangePercent = STORY_LEVELS[storyLevel - 1].orangePercent;
-  }
-  
-  pegs.slice(0,Math.floor(pegs.length * orangePercent)).forEach(p=>p.type="orange");
-  
-  const specialPegs=pegs.filter(p=>p.type==="blue");
-  shuffle(specialPegs);
-  
-  // Determine special count
-  let specialCount = 2;
-  if(hardMode) {
-    specialCount = 1;
-  } else if(storyMode && storyLevel <= 10) {
-    specialCount = STORY_LEVELS[storyLevel - 1].specialCount;
-  }
-  specialPegs.slice(0,specialCount).forEach(p=>p.type="green");
-  specialPegs.slice(specialCount,specialCount*2).forEach(p=>p.type="purple");
-  specialPegs.slice(specialCount*2,specialCount*3).forEach(p=>p.type="multiball");
-  specialPegs.slice(specialCount*3,specialCount*4).forEach(p=>p.type="fireball");
-  
-  totalOrangePegsThisLevel = pegs.filter(p => p.type === "orange").length;
-  totalLevelPegsAtStart = pegs.length;
-  levelOrangeHitCount = 0;
-  levelSpecialTypesHit.clear();
-  
-  updateUI();
-}
 function evaluateExtraAchievements(levelComplete=false){
   if(pegsHitThisTurn >= 10) unlockAchievement("no_miss");
   if(pegsHitThisTurn >= 15) unlockAchievement("chaos");
@@ -930,7 +830,6 @@ function evaluateExtraAchievements(levelComplete=false){
   if(levelComplete){
     if(shotsThisLevel >= 10) unlockAchievement("slow_burn");
     if(ballsLeft === 1) unlockAchievement("comeback");
-    if(specialTypesHitThisLevel.size === 0) unlockAchievement("minimalist");
     if(level >= 10) unlockAchievement("marathon");
     if(totalBucketCatches >= 5) unlockAchievement("bucket_greedy");
     if(Date.now() - levelStartTime < 20000) unlockAchievement("speed_demon");
@@ -1376,7 +1275,6 @@ function loop(){
     ctx.shadowColor="#a020f0";
     ctx.shadowBlur=20;
     ctx.setLineDash([8,8]);
-   portalUsesThisLevel++;  // ← ADD THIS LINE
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.shadowBlur=0;
@@ -1696,6 +1594,7 @@ function updateUI(){
     ballsDisplay.appendChild(d);
   }
   if(score>=10000)unlockAchievement("10k");
+  if(hardMode && score >= 10000) unlockAchievement("hardcore");
   if(score>=100000){
     unlockAchievement("100k");
     unlockSkin("gold");
@@ -1796,16 +1695,24 @@ async function submitCurrentScore() {
     });
     
     const data = await getResponse.json();
-    const scores = data.record.scores || [];
+    let scores = data.record.scores || [];
     
-    // Add new score
-    scores.push({
+    // Remove duplicates with same name AND score
+    const newScore = {
       name: name.substring(0, 20),
       score: score,
       level: level,
       timestamp: now,
       date: new Date().toISOString()
-    });
+    };
+    
+    // Filter out any existing entries with same name and score
+    scores = scores.filter(entry => 
+      !(entry.name === newScore.name && entry.score === newScore.score)
+    );
+    
+    // Add new score
+    scores.push(newScore);
     
     // Keep top 100
     scores.sort((a, b) => b.score - a.score);
@@ -1828,14 +1735,15 @@ async function submitCurrentScore() {
     nameInput.value = '';
     document.getElementById('scorePrompt').style.display = 'none';
 
-    await loadLeaderboard();  // ← ONLY THIS LINE - DUPLICATE REMOVED
+    await loadLeaderboard();
     
   } catch (error) {
     loadingDiv.style.display = 'none';
     alert('Error submitting score: ' + error.message);
-    console.error('Submit error:', error);  // ← ADDED for debugging
+    console.error('Submit error:', error);
   }
 }
+
 
 function showLeaderboard(fromGameOver = false) {
   const leaderboardDiv = document.getElementById("leaderboard");
@@ -1906,25 +1814,50 @@ function overlayAction(){
     generateLevel(); 
     loop();
     
-  } else {
-    // GAME OVER - REPLACE THIS ENTIRE SECTION:
+} else {
+    // GAME OVER
     hardModeLevelsBeaten = 0;
+    
     if(storyMode){
-      storyMode=false;
-      storyLevel=1;
-      document.getElementById("storyInfo").style.display="none";
+      storyLives--; // Lose a life
+      
+      if(storyLives <= 0) {
+        // All lives lost - reset story mode
+        storyMode = false;
+        storyLevel = 1;
+        storyLives = 3;
+        document.getElementById("storyInfo").style.display = "none";
+        
+        // Show menu and leaderboard
+        menu.style.display = "flex";
+        showLeaderboard(true);
+        
+        setTimeout(() => {
+          const nameInput = document.getElementById('playerNameInput');
+          nameInput.focus();
+          nameInput.select();
+        }, 200);
+      } else {
+        // Still have lives - retry current level
+        score = 0;
+        level = storyLevel;
+        ballsLeft = STORY_LEVELS[storyLevel - 1].balls;
+        running = true;
+        canShoot = true;
+        generateLevel();
+        loop();
+      }
+    } else {
+      // Normal/Hard mode game over
+      menu.style.display = "flex";
+      showLeaderboard(true);
+      
+      setTimeout(() => {
+        const nameInput = document.getElementById('playerNameInput');
+        nameInput.focus();
+        nameInput.select();
+      }, 200);
     }
-    
-    // Show menu and open leaderboard automatically
-    menu.style.display="flex";
-    showLeaderboard(true); // Pass true to show it's from game over
-    
-    // Auto-focus name input
-    setTimeout(() => {
-      const nameInput = document.getElementById('playerNameInput');
-      nameInput.focus();
-      nameInput.select();
-    }, 200);
   }
 }
 function renderSkinSelector(){
@@ -1967,11 +1900,132 @@ function startGame(isHardMode = false){
   document.getElementById("storyInfo").style.display="none";
   score=0; ballsLeft=10; level=1; running=true; generateLevel(); loop();
 }
+function generateLevel(){
+  // Story mode uses specific themes
+  if(storyMode && storyLevel <= 10) {
+    const config = STORY_LEVELS[storyLevel - 1];
+    currentBgTheme = config.theme;
+    document.getElementById("storyInfo").style.display = "block";
+    document.getElementById("storyTitle").textContent = `Chapter ${config.chapter}/10 | Lives: ${"❤️".repeat(storyLives)}`;
+    document.getElementById("storyDesc").textContent = config.desc;
+  } else {
+    currentBgTheme = Math.floor(Math.random() * 4);
+    document.getElementById("storyInfo").style.display = "none";
+  }
+  
+  pegs=[];
+  balls=[];
+  particles=[];
+  bucket.x=field.left();
+  multiballActive=false;
+  slowmo=0;
+  specialTypesHitThisLevel.clear();
+  shotsThisLevel=0;
+  bigBucketCatches=0;
+  totalBucketCatches=0;
+  portalUsesThisLevel=0;
+  levelStartTime=Date.now();
+  totalOrangePegsThisLevel=0;
+  orangePegsHitWithoutMiss=0;
+  
+  const padding=80;
+  const spawnPortal=()=>({
+    x:field.left()+padding+Math.random()*(800-padding*2),
+    y:field.top+100+Math.random()*(canvas.height-field.top-300),
+    r:28
+  });
+
+  // Determine portal count
+  let portalPairs = 1;
+  if(storyMode && storyLevel <= 10) {
+    portalPairs = Math.floor(STORY_LEVELS[storyLevel - 1].portalCount / 2);
+  }
+
+  portals = [];
+  for(let pair = 0; pair < portalPairs; pair++) {
+    const p1 = spawnPortal();
+    const p2 = spawnPortal();
+    
+    while(Math.hypot(p1.x-p2.x,p1.y-p2.y)<200){
+      p2.x=field.left()+padding+Math.random()*(800-padding*2);
+      p2.y=field.top+100+Math.random()*(canvas.height-field.top-300);
+    }
+    
+    portals.push(
+      {x:p1.x,y:p1.y,tx:p2.x,ty:p2.y,r:p1.r,pulse:pair*Math.PI/2},
+      {x:p2.x,y:p2.y,tx:p1.x,ty:p1.y,r:p2.r,pulse:(pair+1)*Math.PI/2}
+    );
+  }
+  
+  if(portals.length === 0) {
+    const p1=spawnPortal();
+    const p2=spawnPortal();
+    while(Math.hypot(p1.x-p2.x,p1.y-p2.y)<200){
+      p2.x=field.left()+padding+Math.random()*(800-padding*2);
+      p2.y=field.top+100+Math.random()*(canvas.height-field.top-300);
+    }
+    portals=[
+      {x:p1.x,y:p1.y,tx:p2.x,ty:p2.y,r:p1.r,pulse:0},
+      {x:p2.x,y:p2.y,tx:p1.x,ty:p1.y,r:p2.r,pulse:Math.PI}
+    ];
+  }
+  
+  for(let r=0;r<9;r++){
+    for(let c=0;c<10;c++){
+      if(Math.random()<.1)continue;
+      
+      const px=field.left()+80+c*75+(r%2)*37;
+      const py=field.top+r*60;
+      const nearPortal=portals.some(port=>Math.hypot(px-port.x,py-port.y)<50);
+      
+      if(!nearPortal){
+        pegs.push({
+          x:px,y:py,r:9,
+          hit:false,type:"blue",wobble:0,
+          pulse:Math.random()*Math.PI*2
+        });
+      }
+    }
+  }
+  
+  shuffle(pegs);
+  
+  // Determine orange percentage
+  let orangePercent = 0.2;
+  if(storyMode && storyLevel <= 10) {
+    orangePercent = STORY_LEVELS[storyLevel - 1].orangePercent;
+  }
+  
+  pegs.slice(0,Math.floor(pegs.length * orangePercent)).forEach(p=>p.type="orange");
+  
+  const specialPegs=pegs.filter(p=>p.type==="blue");
+  shuffle(specialPegs);
+  
+  // Determine special count
+  let specialCount = 2;
+  if(hardMode) {
+    specialCount = 1;
+  } else if(storyMode && storyLevel <= 10) {
+    specialCount = STORY_LEVELS[storyLevel - 1].specialCount;
+  }
+  specialPegs.slice(0,specialCount).forEach(p=>p.type="green");
+  specialPegs.slice(specialCount,specialCount*2).forEach(p=>p.type="purple");
+  specialPegs.slice(specialCount*2,specialCount*3).forEach(p=>p.type="multiball");
+  specialPegs.slice(specialCount*3,specialCount*4).forEach(p=>p.type="fireball");
+  
+  totalOrangePegsThisLevel = pegs.filter(p => p.type === "orange").length;
+  totalLevelPegsAtStart = pegs.length;
+  levelOrangeHitCount = 0;
+  levelSpecialTypesHit.clear();
+  
+  updateUI();
+}
 function startStoryMode(){
   menu.style.display="none";
   hardMode = false;
   storyMode = true;
   storyLevel = 1;
+  storyLives = 3; // Reset lives when starting story mode
   hardModeLevelsBeaten = 0;
   score = 0;
   level = 1;
@@ -2052,6 +2106,27 @@ function showSkins(){
 
   skinDiv.style.display = "block";
 }
+// Save story progress
+function saveStoryProgress() {
+  if(storyMode) {
+    try {
+      localStorage.setItem("peggle-story-level", storyLevel);
+      localStorage.setItem("peggle-story-lives", storyLives);
+    } catch(e) {}
+  }
+}
+
+// Load story progress
+function loadStoryProgress() {
+  try {
+    const savedLevel = localStorage.getItem("peggle-story-level");
+    const savedLives = localStorage.getItem("peggle-story-lives");
+    if(savedLevel && savedLives) {
+      storyLevel = parseInt(savedLevel);
+      storyLives = parseInt(savedLives);
+    }
+  } catch(e) {}
+}
 
 function shuffle(a){
   for(let i=a.length-1;i>0;i--){
@@ -2059,6 +2134,7 @@ function shuffle(a){
     [a[i],a[j]]=[a[j],a[i]];
   }
 }
+
 
 try{
   const saved=localStorage.getItem("peggle-achievements");
