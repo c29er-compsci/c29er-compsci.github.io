@@ -1,137 +1,73 @@
+
+
 <!DOCTYPE html>
 <html>
 <head>
-	<style type="text/css">
+	<style>
+	.box{
+		border:5px solid;
+		background-image: url(https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/3934672.png&w=350&h=254);
+		background-position: center;
+		background-size: contain;
+		background-repeat: no-repeat;
 
-		}
-
-		/*	body{
- 		background-color: rgb(r, g, b);
- 	}*/
-		
-.box{
-	/*width: 50px;
-	height: 50px;*/
-	border:5px solid;
-	display: inline-block;
-	background-image: url(https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/3934672.png&w=350&h=254);
-background-position: center;
-background-size: contain;
-background-repeat: no-repeat;
-display: inline-block;
-position: absolute;
-animation-name: swing3d;
-animation-duration: 3s;
-animation-iteration-count: infinite;
-animation-direction: alternate;
-
-
-}
-
-	@keyframes swing { 
-	from{
-		transform: rotate(var(--startrot));
-	} 
-	to {
-		transform: rotate(var(--endrot));
+		position: absolute;
+		display: inline-block;
 	}
-}
-
-@keyframes swing3d {
-from{
-	transform: rotateX(-45deg)rotateZ(-25deg)rotateY(-180deg);
-}
-to {
-	transform:rotateZ(25deg)rotateX(45deg)rotateY(180deg) ;
-}
-}
-
 	</style>
 </head>
 <body>
-<div id="dude">
-	
 
-</div>
-	<div style="box">
-		
+<script>
 
-	</div>
+function changeColor () {
+	let r = Math.round(Math.random()*255)
+	let g = Math.round(Math.random()*255)
+	let b = Math.round(Math.random()*255)
 
-<script type="text/javascript">
-
-	
-
-
-
-
-	function changeColor () {
-let r1 = Math.round(Math.random()*255)
-let g2 = Math.round(Math.random()*255)
-let b3 = Math.round(Math.random()*255)
-
-document.body.style.backgroundColor ="rgb("+ r1 + "," +g2 +","+ b3+")"
+	document.body.style.backgroundColor =
+		"rgb(" + r + "," + g + "," + b + ")"
 }
 
- setInterval(changeColor, 1000)
+setInterval(changeColor, 1000)
 
+function makeConfetti () {
 
-function makeConfetti (){
+	let square = document.createElement("div")
+	square.classList.add("box")
+	document.body.appendChild(square)
 
-let square = document.createElement("div")
-square.classList.add("box")
-document.body.appendChild(square)
+	let r = Math.round(Math.random()*255)
+	let g = Math.round(Math.random()*255)
+	let b = Math.round(Math.random()*255)
 
+	square.style.borderColor = "rgb(" + r + "," + g + "," + b + ")"
 
-let r = Math.round(Math.random()*255)
-let g = Math.round(Math.random()*255)
-let b = Math.round(Math.random()*255)
+	square.style.top = Math.random() * 1000 + "px"
+	square.style.left = Math.random() * 2000 + "px"
+	square.style.height = Math.random() * 25 + "px"
+	square.style.width = Math.random() * 25 + "px"
 
-let rotation = Math.random() * 360
+	function fall() {
+		let fallFactor = 10
+		square.style.top =
+			parseInt(square.style.top) + fallFactor + "px"
 
-let startrot = Math.random() * -360 + "deg"
-let endrot = Math.random() * 360 + "deg"
-
-square.style.setProperty("--startrot", startrot)
-square.style.setProperty("--endrot", endrot)
-
-square.style.borderColor = "rgb("+r+","+g+","+b+")"
-
-square.style.top=Math.random()*1000+"px"
-square.style.left=Math.random()*2000+"px"
-square.style.transform = "rotate("+ rotation + "deg)"
-square.style.height = Math.random() * 25 + "px"
-square.style.width = Math.random() * 25 + "px"
-
-
-
-function fall() { 
-	let fallFactor = 100
-	square.style.top = parseInt(square.style.top) + fallFactor + "px"
-
-	if (parseInt(square.style.top) > 1000){
-		square.style.top = Math.random() * 1000 + "px"
+		if (parseInt(square.style.top) > 1000) {
+			square.style.top = "10px"
+		}
 	}
 
-
+	setInterval(fall, 50)
 }
 
-setInterval(fall, 200)
+// create 5 confetti pieces
+for (let i = 1; i < 100; i++) {
+	makeConfetti()
 }
-
-setInterval(makeConfetti, 10)
-
-
-
-
-
-
 
 
 </script>
-
-
-
 
 </body>
 </html>
