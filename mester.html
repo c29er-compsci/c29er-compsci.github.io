@@ -2467,12 +2467,11 @@ async function createLobby() {
   multiplayerState.lobbyId = generateId();
   multiplayerState.isHost = true;
   multiplayerState.lives = 3;
-multiplayerState.opponentLives = 3;
-multiplayerState.levelSeed = Math.random() * 999999 | 0;
-multiplayerState.levelSeed = lobby.levelSeed;
+  multiplayerState.opponentLives = 3;
+  multiplayerState.levelSeed = Math.random() * 999999 | 0;
   
   const lobby = {
-  id: multiplayerState.lobbyId,
+    id: multiplayerState.lobbyId,
   host: {
     id: multiplayerState.playerId,
     name: name,
@@ -2538,18 +2537,21 @@ multiplayerState.opponentLives = 3;
     }
     
     lobby.guest = {
-      id: multiplayerState.playerId,
-      name: name,
-      score: 0,
-      level: 1,
-      ballsLeft: 10,
-      orangeLeft: 0,
-      finished: false
-    };
-    lobby.status = 'ready';
-    lobby.startedAt = Date.now();
-    
-    await updateLobby(lobby);
+  id: multiplayerState.playerId,
+  name: name,
+  score: 0,
+  level: 1,
+  ballsLeft: 10,
+  orangeLeft: 0,
+  finished: false,
+  lives: 3,
+  finishTime: null
+};
+lobby.status = 'playing';  // Changed from 'ready' to 'playing'
+lobby.startedAt = Date.now();
+multiplayerState.levelSeed = lobby.levelSeed;
+
+await updateLobby(lobby);
     multiplayerState.active = true;
     multiplayerState.gameStartTime = Date.now();
     showActiveGame();
@@ -2782,7 +2784,7 @@ if (opponent) {
 }
       
       // ✅ When guest joins, start game for BOTH players with same seed
-      if(lobby.guest && lobby.status === 'playing' && !gameStarted) {
+      if(lobby.guest && lobby.status === 'ready' && !gameStarted) {
         gameStarted = true;
         multiplayerState.gameStartTime = Date.now();
         
