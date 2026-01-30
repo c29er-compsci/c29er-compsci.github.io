@@ -438,18 +438,19 @@ canvas{display:block}
   
   <div style="display:flex; justify-content:space-around; margin:20px 0;">
         <div style="text-align:center;">
-          <h4 id="player1Name">You</h4>
-            <div class="lives" id="player1Lives">❤️❤️❤️</div>  <!-- ADD THIS -->
-          <p style="font-size:24px; color:#ffd700;">Score: <span id="player1Score">0</span></p>
-          <p style="font-size:18px;">Level: <span id="player1Level">1</span></p>
-        </div>
-        <div style="text-align:center;">
-          <h4 id="player2Name">Opponent</h4>
-           <div class="lives" id="player2Lives">❤️❤️❤️</div>  <!-- ADD THIS -->
-          <p style="font-size:24px; color:#ffd700;">Score: <span id="player2Score">0</span></p>
-          <p style="font-size:18px;">Level: <span id="player2Level">1</span></p>
-        </div>
-      </div>
+  <h4 id="player1Name">You</h4>
+  <div class="lives" id="player1Lives">❤️❤️❤️</div>
+  <p style="font-size:14px;">Orange left: <span id="player1Orange">0</span></p>
+  <p style="font-size:24px; color:#ffd700;">Score: <span id="player1Score">0</span></p>
+  <p style="font-size:18px;">Level: <span id="player1Level">1</span></p>
+</div>
+<div style="text-align:center;">
+  <h4 id="player2Name">Opponent</h4>
+  <div class="lives" id="player2Lives">❤️❤️❤️</div>
+  <p style="font-size:14px;">Orange left: <span id="player2Orange">0</span></p>
+  <p style="font-size:24px; color:#ffd700;">Score: <span id="player2Score">0</span></p>
+  <p style="font-size:18px;">Level: <span id="player2Level">1</span></p>
+</div>
       <button class="btn" onclick="leaveLobby()" style="padding:10px 20px; font-size:14px; background:linear-gradient(135deg,#ff4444,#cc0000);">
         ❌ Leave Game
       </button>
