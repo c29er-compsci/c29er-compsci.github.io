@@ -17,6 +17,116 @@ patch notes
   font-weight: bold;
   border: 2px solid rgba(255, 215, 0, .5);
 }
+
+/* MULTIPLAYER STYLES */
+#multiplayerMenu {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+#multiplayerMenu h1 {
+  color: white;
+  font-size: 64px;
+  margin: 20px;
+  text-shadow: 0 0 20px rgba(255,255,255,.5);
+}
+
+#gameCodeInput {
+  padding: 15px 25px;
+  font-size: 24px;
+  border: 3px solid white;
+  border-radius: 15px;
+  margin: 15px;
+  text-align: center;
+  background: rgba(255,255,255,.95);
+  min-width: 300px;
+}
+
+#waitingRoom {
+  display: none;
+  background: rgba(255,255,255,.95);
+  padding: 30px;
+  border-radius: 20px;
+  margin: 20px;
+  text-align: center;
+  max-width: 500px;
+}
+
+#waitingRoom h3 {
+  margin: 0 0 15px 0;
+  color: #7b2cbf;
+  font-size: 24px;
+}
+
+#gameCode {
+  font-size: 48px;
+  font-weight: bold;
+  color: #f5576c;
+  margin: 20px 0;
+  letter-spacing: 8px;
+}
+
+#opponentBoard {
+  position: fixed;
+  right: 20px;
+  top: 100px;
+  width: 300px;
+  background: rgba(0,0,0,.85);
+  border: 3px solid rgba(255,215,0,.5);
+  border-radius: 15px;
+  padding: 15px;
+  display: none;
+  z-index: 50;
+}
+
+#opponentBoard h3 {
+  color: #ffd700;
+  margin: 0 0 10px 0;
+  text-align: center;
+  font-size: 18px;
+}
+
+#opponentStats {
+  color: white;
+  font-size: 14px;
+}
+
+#opponentStats div {
+  margin: 8px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+#multiplayerResult {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.95);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 2000;
+}
+
+#multiplayerResult h1 {
+  font-size: 72px;
+  margin: 30px;
+  text-shadow: 0 0 30px currentColor;
+}
+
+#multiplayerResult.winner h1 {
+  color: #ffd700;
+}
+
+#multiplayerResult.loser h1 {
+  color: #ff6666;
+}
   /* Add this to your existing <style> section */
 
 #leaderboard {
@@ -327,13 +437,6 @@ canvas{display:block}
   color:#666;
   font-size:13px;
 }
-
-
-.lives {
-  font-size: 24px;
-  margin: 10px 0;
-}
-
 #patchnotes{
   background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkjEXMNlMhCPOJdQ62X8hg_Mv85yqXc4GvnQ&s);
    position:fixed;top:15px;left:15px;
@@ -371,97 +474,62 @@ canvas{display:block}
 
 <body>
 
+<!-- MULTIPLAYER MENU -->
+<div id="multiplayerMenu">
+  <h1>🎮 MULTIPLAYER 🎮</h1>
+  <button class="btn" onclick="createMultiplayerGame()">CREATE GAME</button>
+  <div style="color:white;margin:20px;font-size:20px">- OR -</div>
+  <input type="text" id="gameCodeInput" placeholder="Enter Game Code" maxlength="6">
+  <button class="btn" onclick="joinMultiplayerGame()">JOIN GAME</button>
+  <button class="btn" onclick="backToMenu()" style="margin-top:30px;font-size:18px;padding:12px 30px;background:linear-gradient(135deg,#666,#444)">
+    ← BACK
+  </button>
+  
+  <div id="waitingRoom">
+    <h3>🎯 Waiting for Opponent...</h3>
+    <div>Share this code:</div>
+    <div id="gameCode"></div>
+    <div class="spinner"></div>
+    <button class="btn" onclick="cancelMultiplayer()" style="margin-top:20px;font-size:16px;padding:10px 25px;background:linear-gradient(135deg,#ff6666,#cc0000)">
+      CANCEL
+    </button>
+  </div>
+</div>
+
+<!-- OPPONENT STATS -->
+<div id="opponentBoard">
+  <h3>👤 <span id="opponentName">Opponent</span></h3>
+  <div id="opponentStats">
+    <div>
+      <span>Score:</span>
+      <span id="oppScore">0</span>
+    </div>
+    <div>
+      <span>Orange Left:</span>
+      <span id="oppOrange">0</span>
+    </div>
+    <div>
+      <span>Balls Left:</span>
+      <span id="oppBalls">10</span>
+    </div>
+  </div>
+</div>
+
+<!-- MULTIPLAYER RESULT -->
+<div id="multiplayerResult">
+  <h1 id="mpResultText"></h1>
+  <p style="font-size:32px;margin:25px" id="mpResultDetails"></p>
+  <button class="btn" onclick="backToMenuFromMP()">BACK TO MENU</button>
+</div>
+
 <div id="menu">
   <h1>🎯 PEGGLE PORTAL 🎯</h1>
-  <button class="btn" onclick="startGame(false)">START GAME</button>
+  <button class="btn" onclick="startGame(false)">SINGLEPLAYER</button>
+  <button class="btn" onclick="showMultiplayerMenu()" style="margin-top:15px;background:linear-gradient(135deg,#00d9ff,#0099cc)">🌐 MULTIPLAYER</button>
   <button class="btn" onclick="startGame(true)" style="margin-top:15px;background:linear-gradient(135deg,#ff4444,#cc0000)">🔥 OG MODE</button>
   <button class="btn" onclick="startStoryMode()" style="margin-top:15px;background:linear-gradient(135deg,#9d4edd,#7b2cbf)">📖 STORY MODE</button>
   <button class="btn" onclick="showAchievements()" style="margin-top:15px;font-size:20px;padding:12px 35px">🏆 ACHIEVEMENTS</button>
-  <button class="btn" onclick="showSkins()" style="margin-top:15px;font-size:20px;padding:12px 35px">🎨 SKINS</button>
-  <button class="btn" onclick="showMultiplayer()" style="margin-top:15px;font-size:20px;padding:12px 35px; background:linear-gradient(135deg,#00d9ff,#0099cc)">
-  🎮 MULTIPLAYER
-</button>
-  <div id="skinSelector" style="display:none">
-    <h3>🎨 SKINS</h3>
-    <div id="skinGrid"></div>
-  </div>
-  <div id="achievements" style="display:none"></div>
-  <a href="notes.html"><div id="patchnotes"></div></a>
-  <button class="btn" onclick="showLeaderboard()" style="margin-top:15px;font-size:20px;padding:12px 35px">
-  🏆 LEADERBOARD
-</button>
-
-<div id="leaderboard">
-  <h2>🏆 TOP 10 SCORES 🏆</h2>
-  <div id="scorePrompt" style="display:none"></div>
-  <div id="submitScoreForm">
-    <input type="text" id="playerNameInput" placeholder="Your Name" maxlength="20">
-    <button class="btn" onclick="submitCurrentScore()" style="padding:10px 25px;font-size:16px">
-      Submit Score
-    </button>
-  </div>
-  <div id="loadingIndicator" style="display:none">
-    <div class="spinner"></div>
-    <p>Loading...</p>
-  </div>
-  <div id="leaderboardList"></div>
-</div>
-</div>
-<div id="multiplayerMenu" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.95); z-index:300; overflow-y:auto; padding:40px;">
-  <div style="max-width:800px; margin:0 auto; color:white;">
-    <h2 style="text-align:center; margin-bottom:30px;">🎮 1v1 MULTIPLAYER 🎮</h2>
-    
-    <div id="lobbyList" style="margin-bottom:30px;">
-      <h3>Available Lobbies</h3>
-      <div id="lobbiesContainer"></div>
-      <button class="btn" onclick="refreshLobbies()" style="margin-top:15px; padding:12px 25px; font-size:16px;">
-        🔄 Refresh
-      </button>
-    </div>
-    
-    <div style="text-align:center; margin:30px 0;">
-      <input type="text" id="lobbyNameInput" placeholder="Your Name" maxlength="20" style="padding:12px; border-radius:8px; margin-right:10px; font-size:16px;">
-      <button class="btn" onclick="createLobby()" style="padding:12px 25px; font-size:16px;">
-        ➕ Create Lobby
-      </button>
-    </div>
-    
-    
-<div id="activeGame" style="display:none; background:rgba(255,255,255,.1); padding:20px; border-radius:15px;">
-  <h3 id="gameStatus">Waiting for opponent...</h3>
-  
-  <div style="text-align:center; margin:15px 0;">
-    <button id="hostStartButton" class="btn" onclick="hostStartGame()" style="padding:12px 30px; font-size:18px; display:none; background:linear-gradient(135deg,#00ff88,#00cc66);">
-      🚀 START GAME
-    </button>
-  </div>
-  
-  <div style="display:flex; justify-content:space-around; margin:20px 0;">
-        <div style="text-align:center;">
-  <h4 id="player1Name">You</h4>
-  <div class="lives" id="player1Lives">❤️❤️❤️</div>
-  <p style="font-size:14px;">Orange left: <span id="player1Orange">0</span></p>
-  <p style="font-size:24px; color:#ffd700;">Score: <span id="player1Score">0</span></p>
-  <p style="font-size:18px;">Level: <span id="player1Level">1</span></p>
-</div>
-<div style="text-align:center;">
-  <h4 id="player2Name">Opponent</h4>
-  <div class="lives" id="player2Lives">❤️❤️❤️</div>
-  <p style="font-size:14px;">Orange left: <span id="player2Orange">0</span></p>
-  <p style="font-size:24px; color:#ffd700;">Score: <span id="player2Score">0</span></p>
-  <p style="font-size:18px;">Level: <span id="player2Level">1</span></p>
-</div>
-      <button class="btn" onclick="leaveLobby()" style="padding:10px 20px; font-size:14px; background:linear-gradient(135deg,#ff4444,#cc0000);">
-        ❌ Leave Game
-      </button>
-    </div>
-    
-    <button class="btn" onclick="closeMultiplayer()" style="margin-top:20px; padding:10px 20px; font-size:14px;">
-      ◀️ Back to Menu
-    </button>
-  </div>
-</div>
- 
+  <button class="btn" onclick="showSkins()" style="margin-top:15px;font-size:20px;padding:12px 35px">🎨 SKINS</button> 
 
 
 <div id="ui">
@@ -494,22 +562,20 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
-  // Seeded random number generator for identical levels
-let rngSeed = 0;
-function seededRandom() {
-  rngSeed = (rngSeed * 9301 + 49297) % 233280;
-  return rngSeed / 233280;
-}
 
-function setSeed(seed) {
-  rngSeed = seed;
-}
-
- const JSONBIN_CONFIG = {
-  API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi',
-  SCORES_BIN_ID: '6979386dd0ea881f408b4c12',
-  LOBBIES_BIN_ID: '697b985643b1c97be9555ea8'
+  const JSONBIN_CONFIG = {
+  API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi', 
+  BIN_ID: '6979386dd0ea881f408b4c12'
 };
+
+// MULTIPLAYER STATE
+let multiplayerMode = false;
+let isHost = false;
+let gameCode = null;
+let opponentData = null;
+let multiplayerCheckInterval = null;
+let myPlayerNumber = null;
+let multiplayerSeed = null;
 
 let lastSubmitTime = 0;
 
@@ -887,6 +953,7 @@ portals.forEach(p=>{
     ctx.shadowColor="#a020f0";
     ctx.shadowBlur=20;
     ctx.setLineDash([8,8]);
+    // portalUsesThisLevel++;  // ← REMOVE THIS LINE
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.shadowBlur=0;
@@ -971,7 +1038,10 @@ shotFireballHit = false;
   
   beep(400,.08,"square");
   updateUI();
-
+// Send state to opponent if multiplayer
+  if(multiplayerMode) {
+    updateMultiplayerState();
+  }
   {
   if(pegsHitThisTurn >= 15) unlockAchievement("chaos");
   if(portalUsesThisTurn >= 10) unlockAchievement("portal_lover");
@@ -1016,198 +1086,63 @@ function endTurn(){
   pegs=pegs.filter(p=>!p.hit);
   balls=[];
 
-  setTimeout(()=>{
+ setTimeout(()=>{
     const orangeLeft = pegs.filter(p=>p.type==="orange").length;
     
-    // Check for level completion
     if(orangeLeft === 0){
-      if(multiplayerState.active) {
-        handleMultiplayerLevelComplete();
-        return;
-      }
-      
-      // Single player level complete
-      if(hardMode) {
-        hardModeLevelsBeaten++;
-        if(hardModeLevelsBeaten >= 3) unlockAchievement("bank_shot");
-      }
-      
-      if(shotsThisLevel <= 5) unlockAchievement("ach_26");
-      if(hitAllPegs) {
-        unlockAchievement("perfect");
-        unlockSkin("rainbow");
-      }
+      if(multiplayerMode) {
+        endMultiplayerGame(true); // We won!
+      } else {
+        // Track hard mode level completions
+        if(hardMode) {
+          hardModeLevelsBeaten++;
+          if(hardModeLevelsBeaten >= 3) unlockAchievement("bank_shot");
+        }
+        
+        if(shotsThisLevel <= 5) unlockAchievement("ach_26");
+        if(hitAllPegs) {
+          unlockAchievement("perfect");
+          unlockSkin("rainbow");
+        }
 
-      if(portalUsesThisLevel >= 10) unlockAchievement("portal_lover");
-      
-      if(levelSpecialTypesHit.has("green") && 
-         levelSpecialTypesHit.has("purple") && 
-         levelSpecialTypesHit.has("multiball") && 
-         levelSpecialTypesHit.has("fireball")) {
-        unlockAchievement("specialist");
+        if(portalUsesThisLevel >= 10) unlockAchievement("portal_lover");
+        
+        if(levelSpecialTypesHit.has("green") && 
+           levelSpecialTypesHit.has("purple") && 
+           levelSpecialTypesHit.has("multiball") && 
+           levelSpecialTypesHit.has("fireball")) {
+          unlockAchievement("specialist");
+        }
+        
+        if(levelSpecialTypesHit.size === 0) {
+          unlockAchievement("minimalist");
+        }
+        
+        if(shotsThisLevel >= 10) unlockAchievement("slow_burn");
+        if(ballsLeft === 1) unlockAchievement("comeback");
+        if(level >= 10) unlockAchievement("marathon");
+        if(totalBucketCatches >= 5) unlockAchievement("bucket_greedy");
+        
+        const levelTime = Date.now() - levelStartTime;
+        if(levelTime < 30000) unlockAchievement("speed_demon");
+        
+        if(score >= 250000) unlockAchievement("immortal");
+        if(unlockedAchievements.length >= 20) unlockAchievement("collector");
+        if(unlockedAchievements.length >= ACHIEVEMENTS.length - 1) unlockAchievement("completionist");
+        
+        showOverlay("🎊 LEVEL COMPLETE! 🎊");
       }
-      
-      if(levelSpecialTypesHit.size === 0) {
-        unlockAchievement("minimalist");
-      }
-      
-      if(shotsThisLevel >= 10) unlockAchievement("slow_burn");
-      if(ballsLeft === 1) unlockAchievement("comeback");
-      if(level >= 10) unlockAchievement("marathon");
-      if(totalBucketCatches >= 5) unlockAchievement("bucket_greedy");
-      
-      const levelTime = Date.now() - levelStartTime;
-      if(levelTime < 30000) unlockAchievement("speed_demon");
-      
-      if(score >= 250000) unlockAchievement("immortal");
-      if(unlockedAchievements.length >= 20) unlockAchievement("collector");
-      if(unlockedAchievements.length >= ACHIEVEMENTS.length - 1) unlockAchievement("completionist");
-      
-      showOverlay("🎊 LEVEL COMPLETE! 🎊");
-   } else if (ballsLeft <= 0) {
-      if (multiplayerState.active) {
-        handleMultiplayerLevelLost();
+    } else if(ballsLeft<=0){
+      if(multiplayerMode) {
+        endMultiplayerGame(false); // We lost
       } else {
         showOverlay("💀 GAME OVER 💀");
       }
+    } else if(multiplayerMode) {
+      updateMultiplayerState(); // Update our state
     }
   },100);
-}
-async function handleMultiplayerLevelComplete() {
-  const lobbies = await getAllLobbies();
-  const lobby = lobbies.find(l => l.id === multiplayerState.lobbyId);
-  
-  if (!lobby) return;
-  
-  const you = multiplayerState.isHost ? lobby.host : lobby.guest;
-  const opponent = multiplayerState.isHost ? lobby.guest : lobby.host;
-  
-  // Mark yourself as finished
-  you.finished = true;
-  you.finishTime = Date.now();
-  you.score = score;
-  you.lives = multiplayerState.lives;
-  
-  await updateLobby(lobby);
-  
-  // Check if opponent also finished
-  if (opponent && opponent.finished && opponent.finishTime) {
-    // Both finished - compare scores
-    if (you.score >= opponent.score) {
-      // You won or tied
-      multiplayerState.opponentLives--;
-      
-      if (multiplayerState.opponentLives <= 0) {
-        showOverlay("🎉 YOU WIN! 🎉");
-        setTimeout(() => {
-          leaveLobby();
-          menu.style.display = 'flex';
-        }, 3000);
-      } else {
-        showOverlay(`🎊 YOU WON THIS ROUND!\n❤️ Opponent Lives: ${multiplayerState.opponentLives}`);
-        setTimeout(() => {
-          nextMultiplayerLevel();
-        }, 2000);
-      }
-    } else {
-      // You lost
-      multiplayerState.lives--;
-      
-      if (multiplayerState.lives <= 0) {
-        showOverlay("💀 GAME OVER - OPPONENT WINS! 💀");
-        setTimeout(() => {
-          leaveLobby();
-          menu.style.display = 'flex';
-        }, 3000);
-      } else {
-        showOverlay(`😰 OPPONENT SCORED HIGHER - LIFE LOST!\n❤️ Lives: ${multiplayerState.lives}`);
-        setTimeout(() => {
-          nextMultiplayerLevel();
-        }, 2000);
-      }
-    }
-  } else {
-    // You finished first - wait for opponent
-    document.getElementById('gameStatus').textContent = '⏳ Waiting for opponent to finish...';
-    running = false;
-  }
-}
-async function handleMultiplayerLevelLost() {
-  const lobbies = await getAllLobbies();
-  const lobby = lobbies.find(l => l.id === multiplayerState.lobbyId);
-  
-  if (!lobby) return;
-  
-  const you = multiplayerState.isHost ? lobby.host : lobby.guest;
-  const opponent = multiplayerState.isHost ? lobby.guest : lobby.host;
-  
-  // Mark as not finished
-  you.finished = false;
-  you.score = score;
-  you.lives = multiplayerState.lives;
-  
-  await updateLobby(lobby);
-  
-  // Check if opponent finished
-  if (opponent && opponent.finished) {
-    // Opponent finished, you didn't - lose life
-    multiplayerState.lives--;
-    
-    if (multiplayerState.lives <= 0) {
-      showOverlay("💀 GAME OVER - OPPONENT WINS! 💀");
-      setTimeout(() => {
-        leaveLobby();
-        menu.style.display = 'flex';
-      }, 3000);
-    } else {
-      showOverlay(`😰 OPPONENT FINISHED - LIFE LOST!\n❤️ Lives: ${multiplayerState.lives}`);
-      setTimeout(() => {
-        nextMultiplayerLevel();
-      }, 2000);
-    }
-  } else {
-    // Both failed - next level
-    showOverlay(`⏭️ BOTH FAILED - NEXT LEVEL!`);
-    setTimeout(() => {
-      nextMultiplayerLevel();
-    }, 2000);
-  }
-}
-async function nextMultiplayerLevel() {
-  overlay.style.display = 'none';
-  
-  // Generate new seed for next level
-  multiplayerState.levelSeed = Math.random() * 999999 | 0;
-  
-  const lobbies = await getAllLobbies();
-  const lobby = lobbies.find(l => l.id === multiplayerState.lobbyId);
-  
-  if (lobby) {
-    lobby.currentLevel++;
-    lobby.levelSeed = multiplayerState.levelSeed;
-    
-    // Update your player data
-    const you = multiplayerState.isHost ? lobby.host : lobby.guest;
-    you.lives = multiplayerState.lives;
-    you.finished = false;
-    you.finishTime = null;
-    you.score = 0;
-    you.level = lobby.currentLevel;
-    you.ballsLeft = 10;
-    
-    await updateLobby(lobby);
-  }
-  
-  // Reset game state
-  score = 0;
-  ballsLeft = 10;
-  level = lobby ? lobby.currentLevel : 1;
-  running = true;
-  canShoot = true;
-  
-  generateLevel(); // Will use multiplayerState.levelSeed automatically
-  loop();
-}
+
 
 function collide(b,p){
   if(p.hit)return;
@@ -1624,7 +1559,6 @@ function loop(){
         }
       }
     });
-   
 
     pegs.forEach(p=>{
       if(b.fireball){
@@ -1796,9 +1730,6 @@ function loop(){
   if (balls.length === 0 && !canShoot) {
     endTurn();
   }
-  if (multiplayerState.active && running) {
-    updateMultiplayerStats();
-  }
 
   ctx.restore();
   requestAnimationFrame(loop);
@@ -1850,7 +1781,7 @@ async function loadLeaderboard() {
   listDiv.innerHTML = '';
   
   try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.SCORES_BIN_ID}/latest`, {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
       method: 'GET',
       headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
     });
@@ -1911,7 +1842,7 @@ async function submitCurrentScore() {
   
   try {
     // Get current scores
-    const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.SCORES_BIN_ID}/latest`, {
+    const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
       headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
     });
     
@@ -1940,7 +1871,7 @@ async function submitCurrentScore() {
     const top100 = scores.slice(0, 100);
     
     // Update
-    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.SCORES_BIN_ID}`, {
+    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -2121,13 +2052,11 @@ function startGame(isHardMode = false){
   document.getElementById("storyInfo").style.display="none";
   score=0; ballsLeft=10; level=1; running=true; generateLevel(); loop();
 }
-
 function generateLevel(){
-  // Use seed if in multiplayer mode
-  if (multiplayerState.active && multiplayerState.levelSeed) {
-    setSeed(multiplayerState.levelSeed);
+   // Use seed for multiplayer to generate identical levels
+  if(multiplayerMode && multiplayerSeed) {
+    Math.seedrandom(multiplayerSeed);
   }
-  
   // Story mode uses specific themes
   if(storyMode && storyLevel <= 10) {
     const config = STORY_LEVELS[storyLevel - 1];
@@ -2136,10 +2065,7 @@ function generateLevel(){
     document.getElementById("storyTitle").textContent = `Chapter ${config.chapter}/10 | Lives: ${"❤️".repeat(storyLives)}`;
     document.getElementById("storyDesc").textContent = config.desc;
   } else {
-    // Use seeded random in multiplayer, regular random otherwise
-    currentBgTheme = multiplayerState.active ? 
-      Math.floor(seededRandom() * 4) : 
-      Math.floor(Math.random() * 4);
+    currentBgTheme = Math.floor(Math.random() * 4);
     document.getElementById("storyInfo").style.display = "none";
   }
   
@@ -2159,11 +2085,9 @@ function generateLevel(){
   orangePegsHitWithoutMiss=0;
   
   const padding=80;
-  const randomFunc = multiplayerState.active ? seededRandom : Math.random;
-  
   const spawnPortal=()=>({
-    x:field.left()+padding+randomFunc()*(800-padding*2),
-    y:field.top+100+randomFunc()*(canvas.height-field.top-300),
+    x:field.left()+padding+Math.random()*(800-padding*2),
+    y:field.top+100+Math.random()*(canvas.height-field.top-300),
     r:28
   });
 
@@ -2179,8 +2103,8 @@ function generateLevel(){
     const p2 = spawnPortal();
     
     while(Math.hypot(p1.x-p2.x,p1.y-p2.y)<200){
-      p2.x=field.left()+padding+randomFunc()*(800-padding*2);
-      p2.y=field.top+100+randomFunc()*(canvas.height-field.top-300);
+      p2.x=field.left()+padding+Math.random()*(800-padding*2);
+      p2.y=field.top+100+Math.random()*(canvas.height-field.top-300);
     }
     
     portals.push(
@@ -2193,8 +2117,8 @@ function generateLevel(){
     const p1=spawnPortal();
     const p2=spawnPortal();
     while(Math.hypot(p1.x-p2.x,p1.y-p2.y)<200){
-      p2.x=field.left()+padding+randomFunc()*(800-padding*2);
-      p2.y=field.top+100+randomFunc()*(canvas.height-field.top-300);
+      p2.x=field.left()+padding+Math.random()*(800-padding*2);
+      p2.y=field.top+100+Math.random()*(canvas.height-field.top-300);
     }
     portals=[
       {x:p1.x,y:p1.y,tx:p2.x,ty:p2.y,r:p1.r,pulse:0},
@@ -2204,7 +2128,7 @@ function generateLevel(){
   
   for(let r=0;r<9;r++){
     for(let c=0;c<10;c++){
-      if(randomFunc()<.1)continue;
+      if(Math.random()<.1)continue;
       
       const px=field.left()+80+c*75+(r%2)*37;
       const py=field.top+r*60;
@@ -2214,18 +2138,13 @@ function generateLevel(){
         pegs.push({
           x:px,y:py,r:9,
           hit:false,type:"blue",wobble:0,
-          pulse:randomFunc()*Math.PI*2
+          pulse:Math.random()*Math.PI*2
         });
       }
     }
   }
   
-  // Use seeded shuffle in multiplayer
-  if (multiplayerState.active) {
-    seededShuffle(pegs);
-  } else {
-    shuffle(pegs);
-  }
+  shuffle(pegs);
   
   // Determine orange percentage
   let orangePercent = 0.2;
@@ -2236,12 +2155,7 @@ function generateLevel(){
   pegs.slice(0,Math.floor(pegs.length * orangePercent)).forEach(p=>p.type="orange");
   
   const specialPegs=pegs.filter(p=>p.type==="blue");
-  
-  if (multiplayerState.active) {
-    seededShuffle(specialPegs);
-  } else {
-    shuffle(specialPegs);
-  }
+  shuffle(specialPegs);
   
   // Determine special count
   let specialCount = 2;
@@ -2254,6 +2168,11 @@ function generateLevel(){
   specialPegs.slice(specialCount,specialCount*2).forEach(p=>p.type="purple");
   specialPegs.slice(specialCount*2,specialCount*3).forEach(p=>p.type="multiball");
   specialPegs.slice(specialCount*3,specialCount*4).forEach(p=>p.type="fireball");
+  
+  // Reset Math.random if we used seed
+  if(multiplayerMode && multiplayerSeed) {
+    Math.seedrandom();
+  }
   
   totalOrangePegsThisLevel = pegs.filter(p => p.type === "orange").length;
   totalLevelPegsAtStart = pegs.length;
@@ -2376,12 +2295,6 @@ function shuffle(a){
     [a[i],a[j]]=[a[j],a[i]];
   }
 }
-function seededShuffle(a){
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(seededRandom()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-}
 
 
 try{
@@ -2411,613 +2324,333 @@ try{
   renderSkinSelector();
 }catch(e){}
 // Allow Enter key to submit score
-document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    submitCurrentScore();
-  }
-});// ============================================
-// MULTIPLAYER SYSTEM
+// ============================================
+// MULTIPLAYER FUNCTIONS
 // ============================================
 
-
-
-
-let lastLobbyUpdate = 0;
-const MIN_UPDATE_INTERVAL = 1000;
-let multiplayerState = {
-  active: false,
-  lobbyId: null,
-  playerId: null,
-  playerName: '',
-  isHost: false,
-  pollInterval: null,
-  gameStartTime: null,
-  lives: 3,
-  opponentLives: 3,
-  levelSeed: 0
-};
-
-// Show multiplayer menu
-function showMultiplayer() {
-  document.getElementById('multiplayerMenu').style.display = 'block';
-  refreshLobbies();
+function showMultiplayerMenu() {
+  menu.style.display = "none";
+  document.getElementById("multiplayerMenu").style.display = "flex";
+  document.getElementById("waitingRoom").style.display = "none";
+  document.getElementById("gameCodeInput").value = "";
 }
 
-function closeMultiplayer() {
-  if(multiplayerState.active) {
-    if(confirm('Leave current game?')) {
-      leaveLobby();
-    } else {
-      return;
-    }
-  }
-  document.getElementById('multiplayerMenu').style.display = 'none';
+function backToMenu() {
+  document.getElementById("multiplayerMenu").style.display = "none";
+  document.getElementById("waitingRoom").style.display = "none";
+  menu.style.display = "flex";
+  cancelMultiplayer();
 }
 
-// Generate unique IDs
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-async function createLobby() {
-  const nameInput = document.getElementById('lobbyNameInput');
-  const name = nameInput.value.trim();
+async function createMultiplayerGame() {
+  gameCode = generateGameCode();
+  isHost = true;
+  myPlayerNumber = 1;
+  multiplayerSeed = Date.now();
   
-  if(!name) {
-    alert('Please enter your name!');
-    return;
-  }
+  document.getElementById("gameCode").textContent = gameCode;
+  document.getElementById("waitingRoom").style.display = "block";
   
-  const levelSeed = Math.random() * 999999 | 0;
-  
-  multiplayerState.playerId = generateId();
-  multiplayerState.playerName = name;
-  multiplayerState.lobbyId = generateId();
-  multiplayerState.isHost = true;
-  multiplayerState.lives = 3;
-  multiplayerState.opponentLives = 3;
-  multiplayerState.levelSeed = levelSeed;
-  
-  const lobby = {
-    id: multiplayerState.lobbyId,
+  const gameData = {
+    gameCode: gameCode,
     host: {
-      id: multiplayerState.playerId,
-      name: name,
       score: 0,
-      level: 1,
-      ballsLeft: 10,
       orangeLeft: 0,
-      finished: false,
-      lives: 3,
-      finishTime: null
+      ballsLeft: 10,
+      finished: false
     },
-    guest: null,
-    status: 'waiting',
-    createdAt: Date.now(),
-    startedAt: null,
-    levelSeed: levelSeed,
-    currentLevel: 1
+    opponent: null,
+    seed: multiplayerSeed,
+    status: "waiting",
+    createdAt: Date.now()
   };
   
   try {
-    await updateLobby(lobby);
-    multiplayerState.active = true;
-    showActiveGame();
-    startPolling();
-    
-    document.getElementById('gameStatus').textContent = '⏳ Waiting for opponent to join...';
-    document.getElementById('hostStartButton').style.display = 'none';
-    
-  } catch(error) {
-    alert('Error creating lobby: ' + error.message);
-    console.error('Create lobby error:', error);
+    await saveMultiplayerGame(gameCode, gameData);
+    startWaitingForOpponent();
+  } catch(e) {
+    alert("Error creating game: " + e.message);
+    backToMenu();
   }
 }
 
-// Join existing lobby
-async function joinLobby(lobbyId) {
-  const nameInput = document.getElementById('lobbyNameInput');
-  const name = nameInput.value.trim();
+async function joinMultiplayerGame() {
+  const code = document.getElementById("gameCodeInput").value.trim().toUpperCase();
   
-  if(!name) {
-    alert('Please enter your name!');
+  if(!code || code.length !== 6) {
+    alert("Please enter a valid 6-character game code!");
     return;
   }
   
-  console.log('Attempting to join lobby:', lobbyId);
-  
-  multiplayerState.playerId = generateId();
-  multiplayerState.playerName = name;
-  multiplayerState.lobbyId = lobbyId;
-  multiplayerState.isHost = false;
-  multiplayerState.lives = 3;
-  multiplayerState.opponentLives = 3;
-  
   try {
-    // Fetch lobbies with retry logic
-    let lobbies = await getAllLobbies();
-    let lobby = lobbies.find(l => l.id === lobbyId);
+    const gameData = await loadMultiplayerGame(code);
     
-    if(!lobby) {
-      console.error('Lobby not found on first attempt, retrying...');
-      // Wait and retry once
-      await new Promise(resolve => setTimeout(resolve, 500));
-      lobbies = await getAllLobbies();
-      lobby = lobbies.find(l => l.id === lobbyId);
-      
-      if(!lobby) {
-        alert('Lobby not found! It may have been closed.');
-        console.error('Lobby still not found after retry');
-        return;
-      }
-    }
-    
-    if(lobby.guest) {
-      alert('Lobby is full!');
+    if(!gameData) {
+      alert("Game not found! Please check the code.");
       return;
     }
     
-    console.log('Found lobby, joining:', lobby);    
-    multiplayerState.levelSeed = lobby.levelSeed;
+    if(gameData.opponent) {
+      alert("This game is already full!");
+      return;
+    }
     
-    lobby.guest = {
-      id: multiplayerState.playerId,
-      name: name,
+    if(gameData.status !== "waiting") {
+      alert("This game has already started!");
+      return;
+    }
+    
+    gameCode = code;
+    isHost = false;
+    myPlayerNumber = 2;
+    multiplayerSeed = gameData.seed;
+    
+    gameData.opponent = {
       score: 0,
-      level: 1,
-      ballsLeft: 10,
       orangeLeft: 0,
-      finished: false,
-      lives: 3,
-      finishTime: null
+      ballsLeft: 10,
+      finished: false
     };
-    lobby.status = 'ready';
-    lobby.startedAt = Date.now();
+    gameData.status = "playing";
     
-    await updateLobby(lobby);
-    multiplayerState.active = true;
-    multiplayerState.gameStartTime = Date.now();
-    showActiveGame();
-    startPolling();
+    await saveMultiplayerGame(gameCode, gameData);
+    startMultiplayerGame();
     
-    document.getElementById('gameStatus').textContent = '✅ Joined! Waiting for host to start...';
-    
-  } catch(error) {
-    alert('Error joining lobby: ' + error.message);
-    console.error('Join lobby error:', error);
-  }
-}
-// Host starts the game manually
-async function hostStartGame() {
-  if(!multiplayerState.isHost) return;
-  
-  try {
-    const lobbies = await getAllLobbies();
-    const lobby = lobbies.find(l => l.id === multiplayerState.lobbyId);
-    
-    if(!lobby || !lobby.guest) {
-      alert('Waiting for opponent to join!');
-      return;
-    }
-    
-    lobby.status = 'playing';
-    await updateLobby(lobby);
-    
-    document.getElementById('hostStartButton').style.display = 'none';
-    
-    // Countdown
-    document.getElementById('gameStatus').textContent = '🎮 Starting in 3...';
-    setTimeout(() => {
-      document.getElementById('gameStatus').textContent = '🎮 Starting in 2...';
-    }, 1000);
-    setTimeout(() => {
-      document.getElementById('gameStatus').textContent = '🎮 Starting in 1...';
-    }, 2000);
-    setTimeout(() => {
-      document.getElementById('gameStatus').textContent = '🎮 GO! 🎮';
-      startMultiplayerGame(lobby.levelSeed);
-    }, 3000);
-    
-  } catch(error) {
-    alert('Error starting game: ' + error.message);
-    console.error('Host start error:', error);
+  } catch(e) {
+    alert("Error joining game: " + e.message);
   }
 }
 
-// Leave current lobby
-async function leaveLobby() {
-  if(!multiplayerState.active) return;
-  
-  try {
-    const lobbies = await getAllLobbies();
-    const updatedLobbies = lobbies.filter(l => l.id !== multiplayerState.lobbyId);
-    await saveAllLobbies(updatedLobbies);
-  } catch(error) {
-    console.error('Error leaving lobby:', error);
-  }
-  
-  stopPolling();
- multiplayerState.active = false;
-  multiplayerState.lobbyId = null;
-  multiplayerState.lives = 3;
-  multiplayerState.opponentLives = 3;
-  document.getElementById('activeGame').style.display = 'none';
-  document.getElementById('lobbyList').style.display = 'block';
-  
-  // Stop the game if running
-  if(running) {
-    running = false;
-    menu.style.display = 'flex';
-  }
-  
-  refreshLobbies();
-}
-
-// Refresh lobby list
-async function refreshLobbies() {
-  const container = document.getElementById('lobbiesContainer');
-  container.innerHTML = '<p style="color:white;">Loading...</p>';
-  
-  try {
-    const lobbies = await getAllLobbies();
-    
-    // DON'T delete lobbies here - just display them
-    const waitingLobbies = lobbies.filter(l => l.status === 'waiting');
-    
-    if(waitingLobbies.length === 0) {
-      container.innerHTML = '<p style="color:white;">No lobbies available. Create one!</p>';
-      return;
-    }
-    
-    container.innerHTML = waitingLobbies.map(lobby => `
-      <div style="background:rgba(255,255,255,.1); padding:15px; margin:10px 0; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <strong style="color:#ffd700;">${escapeHtml(lobby.host.name)}'s Game</strong>
-          <p style="margin:5px 0; font-size:14px; color:#ccc;">Created ${Math.floor((Date.now() - lobby.createdAt)/1000)}s ago</p>
-        </div>
-        <button class="btn" onclick="joinLobby('${lobby.id}')" style="padding:10px 20px; font-size:14px;">
-          ▶️ Join
-        </button>
-      </div>
-    `).join('');
-    
-  } catch(error) {
-    container.innerHTML = '<p style="color:#ff6666;">Error loading lobbies</p>';
-    console.error('Refresh error:', error);
-  }
-}
-async function cleanupOldLobbies() {
-  try {
-    const lobbies = await getAllLobbies();
-    const now = Date.now();
-    
-    const activeLobbies = lobbies.filter(l => {
-      const age = now - l.createdAt;
-      return age < 3600000 && l.status !== 'finished';
-    });
-    
-    if(activeLobbies.length !== lobbies.length) {
-      await saveAllLobbies(activeLobbies);
-    }
-  } catch(error) {
-    console.error('Cleanup error:', error);
-  }
-}
-
-setInterval(cleanupOldLobbies, 300000);
-
-// Cleanup old lobbies (runs separately, not during refresh)
-async function cleanupOldLobbies() {
-  try {
-    const lobbies = await getAllLobbies();
-    const now = Date.now();
-    
-    // Only delete lobbies that are:
-    // 1. Older than 1 hour, OR
-    // 2. Status is 'finished'
-    const activeLobbies = lobbies.filter(l => {
-      const age = now - l.createdAt;
-      const isOld = age > 3600000; // 1 hour
-      const isFinished = l.status === 'finished';
+function startWaitingForOpponent() {
+  multiplayerCheckInterval = setInterval(async () => {
+    try {
+      const gameData = await loadMultiplayerGame(gameCode);
       
-      // Keep if NOT old AND NOT finished
-      return !isOld && !isFinished;
-    });
-    
-    if(activeLobbies.length !== lobbies.length) {
-      console.log(`Cleaned up ${lobbies.length - activeLobbies.length} old lobbies`);
-      await saveAllLobbies(activeLobbies);
+      if(gameData && gameData.opponent && gameData.status === "playing") {
+        clearInterval(multiplayerCheckInterval);
+        startMultiplayerGame();
+      }
+    } catch(e) {
+      console.error("Error checking for opponent:", e);
     }
-  } catch(error) {
-    console.error('Cleanup error:', error);
-  }
+  }, 2000);
 }
 
-// Run cleanup every 5 minutes (not during refresh!)
-setInterval(cleanupOldLobbies, 300000);
-
-// Show active game UI
-function showActiveGame() {
-  document.getElementById('lobbyList').style.display = 'none';
-  document.getElementById('activeGame').style.display = 'block';
-  document.getElementById('player1Name').textContent = multiplayerState.playerName + ' (You)';
-  updateMultiplayerUI();
-}
-
-function updateMultiplayerUI(lobby = null) {
-  if (!lobby) return;
-
-  const isHost = multiplayerState.isHost;
-  const you = isHost ? lobby.host : lobby.guest;
-  const opponent = isHost ? lobby.guest : lobby.host;
-
-  if (you) {
-    document.getElementById('player1Score').textContent = you.score || 0;
-    document.getElementById('player1Level').textContent = you.level || 1;
-    document.getElementById('player1Lives').textContent = '❤️'.repeat(you.lives || 3);  // ADD THIS
-    document.getElementById('player1Orange').textContent = you.orangeLeft || 0;
-  }
-
-  if (opponent) {
-    document.getElementById('player2Name').textContent = opponent.name;
-    document.getElementById('player2Score').textContent = opponent.score || 0;
-    document.getElementById('player2Level').textContent = opponent.level || 1;
-    document.getElementById('player2Lives').textContent = '❤️'.repeat(opponent.lives || 3);  // ADD THIS
-    document.getElementById('player2Orange').textContent = opponent.orangeLeft || 0;
-
-    if (lobby.status === 'playing' && !multiplayerState.opponentFinished) {
-      document.getElementById('gameStatus').textContent =
-        `🎮 Level ${lobby.currentLevel} - First to clear wins!`;
-    }
-  } else {
-    document.getElementById('player2Name').textContent = 'Waiting...';
-    document.getElementById('gameStatus').textContent = 'Waiting for opponent...';
-  }
-}
-// Start multiplayer game
-
-function startMultiplayerGame(levelSeed) {
-  menu.style.display = 'none';
-  document.getElementById('multiplayerMenu').style.display = 'none';
-  hardMode = false;
-  storyMode = false;
+function startMultiplayerGame() {
+  clearInterval(multiplayerCheckInterval);
+  
+  multiplayerMode = true;
+  document.getElementById("multiplayerMenu").style.display = "none";
+  document.getElementById("opponentBoard").style.display = "block";
+  document.getElementById("opponentName").textContent = isHost ? "Player 2" : "Player 1";
+  
   score = 0;
   ballsLeft = 10;
   level = 1;
   running = true;
   
-  // Set the seed
-  multiplayerState.levelSeed = levelSeed;
-  
-  // Generate level (will use the seed)
   generateLevel();
-  
-  // Start game loop
   loop();
-}
-let lastStatsUpdate = 0;
-// Update player stats
-async function updateMultiplayerStats() {
-  if (!multiplayerState.active || !running) return;
-  const now = Date.now();
-  if (now - lastStatsUpdate < 3000) return;
-  lastStatsUpdate = now;
-
-  try {
-    const lobbies = await getAllLobbies();
-    const lobby = lobbies.find(l => l.id === multiplayerState.lobbyId);
-
-    if (!lobby) return;
-
-    const orangeLeft = pegs.filter(p => p.type === "orange" && !p.hit).length;
-
-    const playerData = {
-      id: multiplayerState.playerId,
-      name: multiplayerState.playerName,
-      score: score,
-      level: level,
-      ballsLeft: ballsLeft,
-      orangeLeft: orangeLeft,
-      finished: false, // Only set in handleMultiplayerLevelComplete
-      lives: multiplayerState.lives,
-      finishTime: null
-    };
-
-    if (multiplayerState.isHost) {
-      lobby.host = { ...lobby.host, ...playerData };
-    } else {
-      lobby.guest = { ...lobby.guest, ...playerData };
-    }
-
-    await updateLobby(lobby);
-  } catch (error) {
-    console.error('Error updating stats:', error);
-  }
+  startOpponentPolling();
 }
 
-async function endMultiplayerGame(lobby) {
-  lobby.status = 'finished';
-  
-  const hostScore = lobby.host?.score || 0;
-  const guestScore = lobby.guest?.score || 0;
-  
-  if(hostScore > guestScore) {
-    lobby.winner = lobby.host.name;
-  } else if(guestScore > hostScore) {
-    lobby.winner = lobby.guest.name;
-  } else {
-    lobby.winner = 'TIE';
-  }
-  
-  await updateLobby(lobby);
-  
-  const isWinner = lobby.winner === multiplayerState.playerName;
-  const message = lobby.winner === 'TIE' ? 
-    "🤝 IT'S A TIE! 🤝" : 
-    isWinner ? "🎉 YOU WIN! 🎉" : "💀 YOU LOSE 💀";
-  
-  showOverlay(message);
-  stopPolling();
-  multiplayerState.active = false;
-}
-
-// Polling system
-function startPolling() {
-  stopPolling();
-  let gameStarted = false;
-  
-  multiplayerState.pollInterval = setInterval(async () => {
-    if(!multiplayerState.active) {
-      stopPolling();
-      return;
-    }
+function startOpponentPolling() {
+  multiplayerCheckInterval = setInterval(async () => {
+    if(!multiplayerMode || !running) return;
     
     try {
-      const lobbies = await getAllLobbies();
-      const lobby = lobbies.find(l => l.id === multiplayerState.lobbyId);
+      const gameData = await loadMultiplayerGame(gameCode);
+      if(!gameData) return;
       
-      if(!lobby) {
-        console.log('Lobby not found, stopping polling');
-        stopPolling();
-        if(running) {
-          alert('Opponent left the game!');
-          leaveLobby();
-        }
-        return;
-      }
+      const oppData = isHost ? gameData.opponent : gameData.host;
+      if(!oppData) return;
       
-      updateMultiplayerUI(lobby);
+      document.getElementById("oppScore").textContent = oppData.score || 0;
+      document.getElementById("oppOrange").textContent = oppData.orangeLeft || 0;
+      document.getElementById("oppBalls").textContent = oppData.ballsLeft || 0;
       
-      // Update opponent lives
-      const opponent = multiplayerState.isHost ? lobby.guest : lobby.host;
-      if (opponent) {
-        multiplayerState.opponentLives = opponent.lives || 3;
-      }
-      
-      // Show start button when guest joins (HOST ONLY)
-      if(multiplayerState.isHost && lobby.guest && lobby.status === 'ready') {
-        document.getElementById('gameStatus').textContent = '✅ Opponent joined! Ready to start!';
-        document.getElementById('hostStartButton').style.display = 'inline-block';
-      }
-      
-      // Start game when status changes to 'playing' (GUEST)
-      if(!multiplayerState.isHost && lobby.status === 'playing' && !gameStarted) {
-        gameStarted = true;
-        multiplayerState.gameStartTime = Date.now();
+      if(oppData.finished) {
+        const myOrangeLeft = pegs.filter(p=>p.type==="orange"&&!p.hit).length;
         
-        // Countdown
-        document.getElementById('gameStatus').textContent = '🎮 Starting in 3...';
-        setTimeout(() => {
-          document.getElementById('gameStatus').textContent = '🎮 Starting in 2...';
-        }, 1000);
-        setTimeout(() => {
-          document.getElementById('gameStatus').textContent = '🎮 Starting in 1...';
-        }, 2000);
-        setTimeout(() => {
-          document.getElementById('gameStatus').textContent = '🎮 GO! 🎮';
-          startMultiplayerGame(lobby.levelSeed);
-        }, 3000);
+        if(myOrangeLeft > 0) {
+          endMultiplayerGame(false);
+        } else {
+          const myData = isHost ? gameData.host : gameData.opponent;
+          if(myData && myData.finishTime && oppData.finishTime) {
+            const iWon = myData.finishTime < oppData.finishTime;
+            endMultiplayerGame(iWon);
+          }
+        }
       }
       
-      // Check if game finished
-      if(lobby.status === 'finished' && running) {
-        const isWinner = lobby.winner === multiplayerState.playerName;
-        const message = isWinner ? "🎉 YOU WIN! 🎉" : "💀 OPPONENT WON 💀";
-        showOverlay(message);
-        stopPolling();
-        multiplayerState.active = false;
-      }
-      
-    } catch(error) {
-      console.error('Polling error:', error);
+    } catch(e) {
+      console.error("Error polling opponent:", e);
     }
-  }, MP_CONFIG.POLL_INTERVAL);
+  }, 1000);
 }
-function stopPolling() {
-  if(multiplayerState.pollInterval) {
-    clearInterval(multiplayerState.pollInterval);
-    multiplayerState.pollInterval = null;
+
+async function updateMultiplayerState() {
+  if(!multiplayerMode || !gameCode) return;
+  
+  try {
+    const gameData = await loadMultiplayerGame(gameCode);
+    if(!gameData) return;
+    
+    const myData = {
+      score: score,
+      orangeLeft: pegs.filter(p=>p.type==="orange"&&!p.hit).length,
+      ballsLeft: ballsLeft,
+      finished: pegs.filter(p=>p.type==="orange"&&!p.hit).length === 0,
+      finishTime: pegs.filter(p=>p.type==="orange"&&!p.hit).length === 0 ? Date.now() : null
+    };
+    
+    if(isHost) {
+      gameData.host = myData;
+    } else {
+      gameData.opponent = myData;
+    }
+    
+    await saveMultiplayerGame(gameCode, gameData);
+  } catch(e) {
+    console.error("Error updating multiplayer state:", e);
   }
 }
 
-// JSONBin API calls
-async function getAllLobbies() {
+function endMultiplayerGame(won) {
+  running = false;
+  clearInterval(multiplayerCheckInterval);
+  
+  const resultDiv = document.getElementById("multiplayerResult");
+  const resultText = document.getElementById("mpResultText");
+  const resultDetails = document.getElementById("mpResultDetails");
+  
+  resultDiv.className = won ? "winner" : "loser";
+  resultText.textContent = won ? "🏆 YOU WIN! 🏆" : "💀 YOU LOSE 💀";
+  resultDetails.textContent = `Final Score: ${Math.floor(score)}`;
+  
+  resultDiv.style.display = "flex";
+  document.getElementById("opponentBoard").style.display = "none";
+  
+  beep(won ? 1800 : 600, .4, "triangle");
+  
+  setTimeout(() => {
+    deleteMultiplayerGame(gameCode);
+  }, 30000);
+}
+
+function backToMenuFromMP() {
+  document.getElementById("multiplayerResult").style.display = "none";
+  document.getElementById("opponentBoard").style.display = "none";
+  multiplayerMode = false;
+  clearInterval(multiplayerCheckInterval);
+  menu.style.display = "flex";
+}
+
+function cancelMultiplayer() {
+  clearInterval(multiplayerCheckInterval);
+  if(gameCode) {
+    deleteMultiplayerGame(gameCode);
+  }
+  gameCode = null;
+  multiplayerMode = false;
+}
+
+function generateGameCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for(let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+async function saveMultiplayerGame(code, gameData) {
   try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.LOBBIES_BIN_ID}/latest`, {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
       headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
     });
-    
-    if(!response.ok) {
-      console.error('Failed to fetch lobbies, status:', response.status);
-      throw new Error('Failed to fetch lobbies');
-    }
     
     const data = await response.json();
-    console.log('Fetched lobbies:', data.record.lobbies?.length || 0);
-    return data.record.lobbies || [];
-  } catch(error) {
-    console.error('Get lobbies error:', error);
-    return [];
-  }
-}
-
-async function saveAllLobbies(lobbies) {
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.LOBBIES_BIN_ID}/latest`, {
-      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
+    let allData = data.record || {};
+    
+    if(!allData.games) allData.games = {};
+    if(!allData.scores) allData.scores = [];
+    
+    const now = Date.now();
+    Object.keys(allData.games).forEach(key => {
+      if(allData.games[key].createdAt && now - allData.games[key].createdAt > 3600000) {
+        delete allData.games[key];
+      }
     });
     
-    const currentData = await response.json();
-    currentData.record.lobbies = lobbies;
+    allData.games[code] = gameData;
     
-    console.log('Saving lobbies:', lobbies.length);
-    
-    const saveResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.LOBBIES_BIN_ID}`, {
+    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'X-Master-Key': JSONBIN_CONFIG.API_KEY
       },
-      body: JSON.stringify(currentData.record)
+      body: JSON.stringify(allData)
     });
     
-    if(!saveResponse.ok) {
-      console.error('Failed to save lobbies, status:', saveResponse.status);
-      throw new Error('Failed to save lobbies');
-    }
+  } catch(e) {
+    console.error("Error saving multiplayer game:", e);
+    throw e;
+  }
+}
+
+async function loadMultiplayerGame(code) {
+  try {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
+    });
     
-    console.log('Lobbies saved successfully');
-  } catch(error) {
-    console.error('Save lobbies error:', error);
-    throw error;
+    const data = await response.json();
+    const allData = data.record || {};
+    
+    return allData.games ? allData.games[code] : null;
+    
+  } catch(e) {
+    console.error("Error loading multiplayer game:", e);
+    return null;
   }
 }
 
-async function updateLobby(lobby) {
-  const now = Date.now();
-  if(now - lastLobbyUpdate < MIN_UPDATE_INTERVAL) {
-    await new Promise(resolve => setTimeout(resolve, MIN_UPDATE_INTERVAL - (now - lastLobbyUpdate)));
+async function deleteMultiplayerGame(code) {
+  try {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
+    });
+    
+    const data = await response.json();
+    let allData = data.record || {};
+    
+    if(allData.games && allData.games[code]) {
+      delete allData.games[code];
+      
+      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_CONFIG.API_KEY
+        },
+        body: JSON.stringify(allData)
+      });
+    }
+  } catch(e) {
+    console.error("Error deleting multiplayer game:", e);
   }
-  
-  const lobbies = await getAllLobbies();
-  const index = lobbies.findIndex(l => l.id === lobby.id);
-  
-  if(index >= 0) {
-    lobbies[index] = lobby;
-  } else {
-    lobbies.push(lobby);
-  }
-  
-  await saveAllLobbies(lobbies);
-  lastLobbyUpdate = Date.now();
 }
 
-// Auto-update stats during game
-setInterval(() => {
-  if(multiplayerState.active && running) {
-    updateMultiplayerStats();
+// Seeded random for identical level generation
+!function(a,b,c,d,e,f){function k(a){var b,c=a.length,e=this,f=0,g=e.i=e.j=0,h=e.S=[];for(c||(a=[c++]);d>f;)h[f]=f++;for(f=0;d>f;f++)h[f]=h[g=j&g+a[f%c]+(b=h[f])],h[g]=b;(e.g=function(a){for(var b,c=0,f=e.i,g=e.j,h=e.S;a--;)b=h[f=j&f+1],c=c*d+h[j&(h[f]=h[g=j&g+b])+(h[g]=b)];return e.i=f,e.j=g,c})(d)}function l(a,b){var c,d=[],e=typeof a;if(b&&"object"==e)for(c in a)try{d.push(l(a[c],b-1))}catch(f){}return d.length?d:"string"==e?a:a+"\0"}function m(a,b){for(var c,d=a+"",e=0;e<d.length;)b[j&e]=j&(c^=19*b[j&e])+d.charCodeAt(e++);return o(b)}function n(c){try{return a.crypto.getRandomValues(c=new Uint8Array(d)),o(c)}catch(e){return[+new Date,a,(c=a.navigator)&&c.plugins,a.screen,o(b)]}}function o(a){return String.fromCharCode.apply(0,a)}var g=c.pow(d,e),h=c.pow(2,f),i=2*h,j=d-1;c.seedrandom=function(a,f){var j=[],p=m(l(f?[a,o(b)]:0 in arguments?a:n(),3),j),q=new k(j);return m(o(q.S),b),c.random=function(){for(var a=q.g(e),b=g,c=0;h>a;)a=(a+c)*d,b*=d,c=q.g(1);for(;a>=i;)a/=2,b/=2,c>>>=1;return(a+c)/b},p},m(c.random(),b)}([],[],.pow(256,6),Math,Math.pow(2,52));
+
+document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    submitCurrentScore();
   }
-}, 3000); // Update every 3 seconds
+});
 </script>
 </body>
 </html>
