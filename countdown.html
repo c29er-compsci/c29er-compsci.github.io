@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Countdown</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, Helvetica, sans-serif;
+    color: white;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 40px;
+    letter-spacing: 2px;
+  }
+
+  #countdown {
+    font-size: 6rem;
+    font-weight: bold;
+    display: flex;
+    gap: 30px;
+  }
+
+  .time-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .number {
+    font-size: 6rem;
+  }
+
+  .label {
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    opacity: 0.8;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Countdown to Peggle Update</h1>
+
+<div id="countdown">
+  <div class="time-box">
+    <div class="number" id="days">0</div>
+    <div class="label">Days</div>
+  </div>
+  <div class="time-box">
+    <div class="number" id="hours">0</div>
+    <div class="label">Hours</div>
+  </div>
+  <div class="time-box">
+    <div class="number" id="minutes">0</div>
+    <div class="label">Minutes</div>
+  </div>
+  <div class="time-box">
+    <div class="number" id="seconds">0</div>
+    <div class="label">Seconds</div>
+  </div>
+</div>
+
+<script>
+  // 🔧 EDIT THIS DATE
+  const targetDate = new Date("January 31, 2026 12:00:00").getTime();
+
+  function updateCountdown() {
+    const now = new Date().getTime();
+    const distance = targetDate - now;
+
+    if (distance < 0) {
+      document.getElementById("countdown").innerHTML = "🎉 TIME'S UP 🎉";
+      return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    document.getElementById("days").textContent = days;
+    document.getElementById("hours").textContent = hours;
+    document.getElementById("minutes").textContent = minutes;
+    document.getElementById("seconds").textContent = seconds;
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+</script>
+
+</body>
+</html>

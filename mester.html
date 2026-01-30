@@ -505,9 +505,10 @@ function setSeed(seed) {
   rngSeed = seed;
 }
 
-  const JSONBIN_CONFIG = {
- API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi', 
-  BIN_ID: '6979386dd0ea881f408b4c12'             // ← PASTE YOUR BIN ID HERE
+ const JSONBIN_CONFIG = {
+  API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi',
+  SCORES_BIN_ID: '6979386dd0ea881f408b4c12',
+  LOBBIES_BIN_ID: '697b985643b1c97be9555ea8'
 };
 
 let lastSubmitTime = 0;
@@ -886,7 +887,6 @@ portals.forEach(p=>{
     ctx.shadowColor="#a020f0";
     ctx.shadowBlur=20;
     ctx.setLineDash([8,8]);
-    // portalUsesThisLevel++;  // ← REMOVE THIS LINE
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.shadowBlur=0;
@@ -1850,7 +1850,7 @@ async function loadLeaderboard() {
   listDiv.innerHTML = '';
   
   try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.SCORES_BIN_ID}/latest`, {
       method: 'GET',
       headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
     });
@@ -1911,7 +1911,7 @@ async function submitCurrentScore() {
   
   try {
     // Get current scores
-    const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+    const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.SCORES_BIN_ID}/latest`, {
       headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
     });
     
@@ -1940,7 +1940,7 @@ async function submitCurrentScore() {
     const top100 = scores.slice(0, 100);
     
     // Update
-    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
+    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.SCORES_BIN_ID}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -2419,15 +2419,11 @@ document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
 // MULTIPLAYER SYSTEM
 // ============================================
 
-const MP_CONFIG = {
-  BIN_ID: '697b985643b1c97be9555ea8', // Use same bin or create new one
-  POLL_INTERVAL: 1000,  // Check every second
-  COUNTDOWN_TIME: 15  // 15 second countdown
-};
-// Rate limiting for API calls
-let lastLobbyUpdate = 0;
-const MIN_UPDATE_INTERVAL = 1000; // 1 second minimum between updates
 
+
+
+let lastLobbyUpdate = 0;
+const MIN_UPDATE_INTERVAL = 1000;
 let multiplayerState = {
   active: false,
   lobbyId: null,
@@ -2690,6 +2686,25 @@ async function refreshLobbies() {
     console.error('Refresh error:', error);
   }
 }
+async function cleanupOldLobbies() {
+  try {
+    const lobbies = await getAllLobbies();
+    const now = Date.now();
+    
+    const activeLobbies = lobbies.filter(l => {
+      const age = now - l.createdAt;
+      return age < 3600000 && l.status !== 'finished';
+    });
+    
+    if(activeLobbies.length !== lobbies.length) {
+      await saveAllLobbies(activeLobbies);
+    }
+  } catch(error) {
+    console.error('Cleanup error:', error);
+  }
+}
+
+setInterval(cleanupOldLobbies, 300000);
 
 // Cleanup old lobbies (runs separately, not during refresh)
 async function cleanupOldLobbies() {
@@ -2780,10 +2795,13 @@ function startMultiplayerGame(levelSeed) {
   // Start game loop
   loop();
 }
-
+let lastStatsUpdate = 0;
 // Update player stats
 async function updateMultiplayerStats() {
   if (!multiplayerState.active || !running) return;
+  const now = Date.now();
+  if (now - lastStatsUpdate < 3000) return;
+  lastStatsUpdate = now;
 
   try {
     const lobbies = await getAllLobbies();
@@ -2925,7 +2943,7 @@ function stopPolling() {
 // JSONBin API calls
 async function getAllLobbies() {
   try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${MP_CONFIG.BIN_ID}/latest`, {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.LOBBIES_BIN_ID}/latest`, {
       headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
     });
     
@@ -2945,7 +2963,7 @@ async function getAllLobbies() {
 
 async function saveAllLobbies(lobbies) {
   try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${MP_CONFIG.BIN_ID}/latest`, {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.LOBBIES_BIN_ID}/latest`, {
       headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
     });
     
@@ -2954,7 +2972,7 @@ async function saveAllLobbies(lobbies) {
     
     console.log('Saving lobbies:', lobbies.length);
     
-    const saveResponse = await fetch(`https://api.jsonbin.io/v3/b/${MP_CONFIG.BIN_ID}`, {
+    const saveResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.LOBBIES_BIN_ID}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -2976,10 +2994,8 @@ async function saveAllLobbies(lobbies) {
 }
 
 async function updateLobby(lobby) {
-  // Rate limit updates
   const now = Date.now();
   if(now - lastLobbyUpdate < MIN_UPDATE_INTERVAL) {
-    console.log('Update rate limited, waiting...');
     await new Promise(resolve => setTimeout(resolve, MIN_UPDATE_INTERVAL - (now - lastLobbyUpdate)));
   }
   
@@ -2988,10 +3004,8 @@ async function updateLobby(lobby) {
   
   if(index >= 0) {
     lobbies[index] = lobby;
-    console.log('Updated existing lobby:', lobby.id);
   } else {
     lobbies.push(lobby);
-    console.log('Added new lobby:', lobby.id);
   }
   
   await saveAllLobbies(lobbies);
