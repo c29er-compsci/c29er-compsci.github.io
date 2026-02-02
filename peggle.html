@@ -2127,6 +2127,58 @@ function loadStoryProgress() {
     }
   } catch(e) {}
 }
+// Add this function temporarily
+async function cleanupDuplicates() {
+  const loadingDiv = document.getElementById('loadingIndicator');
+  loadingDiv.style.display = 'block';
+  
+  try {
+    const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
+    });
+    
+    const data = await getResponse.json();
+    let scores = data.record.scores || [];
+    
+    // Remove duplicates - keep only the most recent one for each name+score combo
+    const seen = new Map();
+    const cleaned = [];
+    
+    // Sort by timestamp descending (newest first)
+    scores.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    
+    scores.forEach(entry => {
+      const key = `${entry.name}|${entry.score}`;
+      if (!seen.has(key)) {
+        seen.set(key, true);
+        cleaned.push(entry);
+      }
+    });
+    
+    // Sort by score descending
+    cleaned.sort((a, b) => b.score - a.score);
+    const top100 = cleaned.slice(0, 100);
+    
+    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_CONFIG.API_KEY
+      },
+      body: JSON.stringify({ scores: top100 })
+    });
+    
+    loadingDiv.style.display = 'none';
+    alert(`✅ Cleaned up duplicates! Removed ${scores.length - cleaned.length} duplicate entries.`);
+    await loadLeaderboard();
+    
+  } catch (error) {
+    loadingDiv.style.display = 'none';
+    alert('Error cleaning duplicates: ' + error.message);
+    console.error('Cleanup error:', error);
+  }
+}
+
 
 function shuffle(a){
   for(let i=a.length-1;i>0;i--){
