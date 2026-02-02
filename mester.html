@@ -5,7 +5,13 @@
 <title>Peggle – Portal Edition</title>
 patch notes
 
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
+
   #scorePrompt {
   background: linear-gradient(135deg, rgba(255, 215, 0, .95), rgba(255, 237, 78, .9));
   padding: 15px 20px;
@@ -16,116 +22,6 @@ patch notes
   color: #333;
   font-weight: bold;
   border: 2px solid rgba(255, 215, 0, .5);
-}
-
-/* MULTIPLAYER STYLES */
-#multiplayerMenu {
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  z-index: 1000;
-}
-
-#multiplayerMenu h1 {
-  color: white;
-  font-size: 64px;
-  margin: 20px;
-  text-shadow: 0 0 20px rgba(255,255,255,.5);
-}
-
-#gameCodeInput {
-  padding: 15px 25px;
-  font-size: 24px;
-  border: 3px solid white;
-  border-radius: 15px;
-  margin: 15px;
-  text-align: center;
-  background: rgba(255,255,255,.95);
-  min-width: 300px;
-}
-
-#waitingRoom {
-  display: none;
-  background: rgba(255,255,255,.95);
-  padding: 30px;
-  border-radius: 20px;
-  margin: 20px;
-  text-align: center;
-  max-width: 500px;
-}
-
-#waitingRoom h3 {
-  margin: 0 0 15px 0;
-  color: #7b2cbf;
-  font-size: 24px;
-}
-
-#gameCode {
-  font-size: 48px;
-  font-weight: bold;
-  color: #f5576c;
-  margin: 20px 0;
-  letter-spacing: 8px;
-}
-
-#opponentBoard {
-  position: fixed;
-  right: 20px;
-  top: 100px;
-  width: 300px;
-  background: rgba(0,0,0,.85);
-  border: 3px solid rgba(255,215,0,.5);
-  border-radius: 15px;
-  padding: 15px;
-  display: none;
-  z-index: 50;
-}
-
-#opponentBoard h3 {
-  color: #ffd700;
-  margin: 0 0 10px 0;
-  text-align: center;
-  font-size: 18px;
-}
-
-#opponentStats {
-  color: white;
-  font-size: 14px;
-}
-
-#opponentStats div {
-  margin: 8px 0;
-  display: flex;
-  justify-content: space-between;
-}
-
-#multiplayerResult {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.95);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  z-index: 2000;
-}
-
-#multiplayerResult h1 {
-  font-size: 72px;
-  margin: 30px;
-  text-shadow: 0 0 30px currentColor;
-}
-
-#multiplayerResult.winner h1 {
-  color: #ffd700;
-}
-
-#multiplayerResult.loser h1 {
-  color: #ff6666;
 }
   /* Add this to your existing <style> section */
 
@@ -474,62 +370,57 @@ canvas{display:block}
 
 <body>
 
-<!-- MULTIPLAYER MENU -->
-<div id="multiplayerMenu">
-  <h1>🎮 MULTIPLAYER 🎮</h1>
-  <button class="btn" onclick="createMultiplayerGame()">CREATE GAME</button>
-  <div style="color:white;margin:20px;font-size:20px">- OR -</div>
-  <input type="text" id="gameCodeInput" placeholder="Enter Game Code" maxlength="6">
-  <button class="btn" onclick="joinMultiplayerGame()">JOIN GAME</button>
-  <button class="btn" onclick="backToMenu()" style="margin-top:30px;font-size:18px;padding:12px 30px;background:linear-gradient(135deg,#666,#444)">
-    ← BACK
-  </button>
-  
-  <div id="waitingRoom">
-    <h3>🎯 Waiting for Opponent...</h3>
-    <div>Share this code:</div>
-    <div id="gameCode"></div>
-    <div class="spinner"></div>
-    <button class="btn" onclick="cancelMultiplayer()" style="margin-top:20px;font-size:16px;padding:10px 25px;background:linear-gradient(135deg,#ff6666,#cc0000)">
-      CANCEL
-    </button>
-  </div>
-</div>
-
-<!-- OPPONENT STATS -->
-<div id="opponentBoard">
-  <h3>👤 <span id="opponentName">Opponent</span></h3>
-  <div id="opponentStats">
-    <div>
-      <span>Score:</span>
-      <span id="oppScore">0</span>
-    </div>
-    <div>
-      <span>Orange Left:</span>
-      <span id="oppOrange">0</span>
-    </div>
-    <div>
-      <span>Balls Left:</span>
-      <span id="oppBalls">10</span>
-    </div>
-  </div>
-</div>
-
-<!-- MULTIPLAYER RESULT -->
-<div id="multiplayerResult">
-  <h1 id="mpResultText"></h1>
-  <p style="font-size:32px;margin:25px" id="mpResultDetails"></p>
-  <button class="btn" onclick="backToMenuFromMP()">BACK TO MENU</button>
-</div>
-
 <div id="menu">
   <h1>🎯 PEGGLE PORTAL 🎯</h1>
-  <button class="btn" onclick="startGame(false)">SINGLEPLAYER</button>
-  <button class="btn" onclick="showMultiplayerMenu()" style="margin-top:15px;background:linear-gradient(135deg,#00d9ff,#0099cc)">🌐 MULTIPLAYER</button>
+  <button class="btn" onclick="startGame(false)">START GAME</button>
   <button class="btn" onclick="startGame(true)" style="margin-top:15px;background:linear-gradient(135deg,#ff4444,#cc0000)">🔥 OG MODE</button>
   <button class="btn" onclick="startStoryMode()" style="margin-top:15px;background:linear-gradient(135deg,#9d4edd,#7b2cbf)">📖 STORY MODE</button>
   <button class="btn" onclick="showAchievements()" style="margin-top:15px;font-size:20px;padding:12px 35px">🏆 ACHIEVEMENTS</button>
-  <button class="btn" onclick="showSkins()" style="margin-top:15px;font-size:20px;padding:12px 35px">🎨 SKINS</button> 
+  <button class="btn" onclick="showSkins()" style="margin-top:15px;font-size:20px;padding:12px 35px">🎨 SKINS</button>
+  <div id="skinSelector" style="display:none">
+    <h3>🎨 SKINS</h3>
+    <div id="skinGrid"></div>
+  </div>
+  <div id="achievements" style="display:none"></div>
+  <a href="notes.html"><div id="patchnotes"></div></a>
+  <button class="btn" onclick="showLeaderboard()" style="margin-top:15px;font-size:20px;padding:12px 35px">
+  🏆 LEADERBOARD
+</button>
+
+<div id="leaderboard">
+  <h2>🏆 TOP 10 SCORES 🏆</h2>
+  <div id="scorePrompt" style="display:none"></div>
+  <div id="submitScoreForm">
+    <input type="text" id="playerNameInput" placeholder="Your Name" maxlength="20">
+    <button class="btn" onclick="submitCurrentScore()" style="padding:10px 25px;font-size:16px">
+      Submit Score
+    </button>
+  </div>
+  <button class="btn" onclick="showMultiplayerMenu()" style="margin-top:15px;background:linear-gradient(135deg,#00d9ff,#0099cc)">
+  👥 MULTIPLAYER 1v1
+</button>
+
+<div id="multiplayerMenu" style="display:none;margin-top:20px;background:rgba(0,0,0,.3);padding:20px;border-radius:15px;max-width:500px;">
+  <h3 style="color:white;margin:0 0 15px 0">Multiplayer Mode</h3>
+  <button class="btn" onclick="createRoom()" style="margin:10px;padding:12px 30px;font-size:18px">
+    Create Room
+  </button>
+  <div style="margin:20px 0;color:white">OR</div>
+  <input type="text" id="roomCodeInput" placeholder="Enter Room Code" maxlength="6" 
+    style="padding:12px;border-radius:8px;border:2px solid #fff;font-size:16px;text-align:center;text-transform:uppercase">
+  <button class="btn" onclick="joinRoom()" style="margin:10px;padding:12px 30px;font-size:18px">
+    Join Room
+  </button>
+</div>
+
+  <div id="loadingIndicator" style="display:none">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+  <div id="leaderboardList"></div>
+</div>
+</div>
+ 
 
 
 <div id="ui">
@@ -559,23 +450,72 @@ canvas{display:block}
   <button class="btn" onclick="overlayAction()">CONTINUE</button>
 </div>
 
+<div id="multiplayerUI" style="display:none;">
+  <div style="position:fixed;top:15px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(0,217,255,.95),rgba(0,153,204,.9));padding:15px 30px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.3);border:2px solid rgba(255,255,255,.3);z-index:10;text-align:center;">
+    <div style="font-size:24px;font-weight:bold;color:white;margin-bottom:8px">
+      <span id="currentTurnText">YOUR TURN</span>
+    </div>
+    <div style="font-size:14px;color:rgba(255,255,255,.8)">
+      Room: <span id="roomCodeDisplay"></span>
+    </div>
+  </div>
+  
+  <div style="position:fixed;top:150px;left:15px;background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(240,240,255,.9));padding:16px 20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.3);border:2px solid rgba(255,255,255,.3);z-index:10;">
+    <h4 style="margin:0 0 10px 0;color:#7b2cbf">You</h4>
+    <div style="color:#ff6600">⭐ <span id="mpYourScore">0</span></div>
+    <div style="color:#4da6ff">⚾ <span id="mpYourBalls">10</span> balls</div>
+  </div>
+  
+  <div style="position:fixed;top:150px;right:15px;background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(240,240,255,.9));padding:16px 20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.3);border:2px solid rgba(255,255,255,.3);z-index:10;">
+    <h4 style="margin:0 0 10px 0;color:#7b2cbf">Opponent</h4>
+    <div style="color:#ff6600">⭐ <span id="mpOppScore">0</span></div>
+    <div style="color:#4da6ff">⚾ <span id="mpOppBalls">10</span> balls</div>
+  </div>
+</div>
+
+<div id="waitingOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);align-items:center;justify-content:center;flex-direction:column;z-index:100;">
+  <div class="spinner" style="width:60px;height:60px;border-width:6px;margin-bottom:20px"></div>
+  <h2 style="color:white;font-size:36px;margin:20px">Waiting for opponent...</h2>
+  <p style="color:rgba(255,255,255,.7);font-size:20px" id="waitingRoomCode"></p>
+</div>
+
+
 <canvas id="game"></canvas>
 
 <script>
+  // Multiplayer variables
+let multiplayerMode = false;
+let isMyTurn = false;
+let currentRoomId = null;
+let currentRoomCode = null;
+let myPlayerId = null;
+let opponentPlayerId = null;
+let supabaseClient = null;
+let gameStateSubscription = null;
+
+// Initialize Supabase
+const { createClient } = window.supabase || {};
+if (!window.supabase) {
+  console.warn('Supabase library not loaded - multiplayer disabled');
+}
+const supabase = createClient(
+  'https://chzmxwhubeeazvevefti.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoem14d2h1YmVlYXp2ZXZlZnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3ODYyNDYsImV4cCI6MjA4NTM2MjI0Nn0.uw3_aeiNz3Oecf2FT1XEZZEuxUiaF5NulmVVF6COIPY'
+);
+myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+
+// Ensure waiting overlay is hidden on page load
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById("waitingOverlay").style.display = "none";
+});
+
+
+
 
   const JSONBIN_CONFIG = {
-  API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi', 
-  BIN_ID: '6979386dd0ea881f408b4c12'
+ API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi', 
+  BIN_ID: '6979386dd0ea881f408b4c12'             // ← PASTE YOUR BIN ID HERE
 };
-
-// MULTIPLAYER STATE
-let multiplayerMode = false;
-let isHost = false;
-let gameCode = null;
-let opponentData = null;
-let multiplayerCheckInterval = null;
-let myPlayerNumber = null;
-let multiplayerSeed = null;
 
 let lastSubmitTime = 0;
 
@@ -983,6 +923,8 @@ function evaluateExtraAchievements(levelComplete=false){
 }
 
 function shoot(){
+  if(multiplayerMode && !isMyTurn) return;
+
   if(!running||!canShoot||balls.length||ballsLeft<=0)return;
   ballsLeft--;
   canShoot=false;
@@ -1038,10 +980,7 @@ shotFireballHit = false;
   
   beep(400,.08,"square");
   updateUI();
-// Send state to opponent if multiplayer
-  if(multiplayerMode) {
-    updateMultiplayerState();
-  }
+
   {
   if(pegsHitThisTurn >= 15) unlockAchievement("chaos");
   if(portalUsesThisTurn >= 10) unlockAchievement("portal_lover");
@@ -1086,13 +1025,12 @@ function endTurn(){
   pegs=pegs.filter(p=>!p.hit);
   balls=[];
 
- setTimeout(()=>{
-    const orangeLeft = pegs.filter(p=>p.type==="orange").length;
-    
-    if(orangeLeft === 0){
-      if(multiplayerMode) {
-        endMultiplayerGame(true); // We won!
-      } else {
+  if(multiplayerMode){
+    endMultiplayerTurn();
+  } else {
+    setTimeout(()=>{
+      // Check for level completion
+      if(!pegs.some(p=>p.type==="orange")){
         // Track hard mode level completions
         if(hardMode) {
           hardModeLevelsBeaten++;
@@ -1105,8 +1043,10 @@ function endTurn(){
           unlockSkin("rainbow");
         }
 
+        // Check portal lover achievement
         if(portalUsesThisLevel >= 10) unlockAchievement("portal_lover");
         
+        // Check if all special peg types were used this level
         if(levelSpecialTypesHit.has("green") && 
            levelSpecialTypesHit.has("purple") && 
            levelSpecialTypesHit.has("multiball") && 
@@ -1114,6 +1054,7 @@ function endTurn(){
           unlockAchievement("specialist");
         }
         
+        // Check if NO special pegs were hit
         if(levelSpecialTypesHit.size === 0) {
           unlockAchievement("minimalist");
         }
@@ -1129,21 +1070,15 @@ function endTurn(){
         if(score >= 250000) unlockAchievement("immortal");
         if(unlockedAchievements.length >= 20) unlockAchievement("collector");
         if(unlockedAchievements.length >= ACHIEVEMENTS.length - 1) unlockAchievement("completionist");
-        
+
         showOverlay("🎊 LEVEL COMPLETE! 🎊");
-      }
-    } else if(ballsLeft<=0){
-      if(multiplayerMode) {
-        endMultiplayerGame(false); // We lost
-      } else {
+      } else if(ballsLeft<=0){
         showOverlay("💀 GAME OVER 💀");
       }
-    } else if(multiplayerMode) {
-      updateMultiplayerState(); // Update our state
-    }
-  },100);
-
-
+    },100);
+  }
+}
+ 
 function collide(b,p){
   if(p.hit)return;
   const dx=b.x-p.x,dy=b.y-p.y,d=Math.hypot(dx,dy);
@@ -1752,6 +1687,10 @@ function updateUI(){
     unlockSkin("gold");
   }
 }
+if(multiplayerMode){
+  updateMultiplayerUI();
+}
+
 
 function unlockSkin(skinId){
   const skin = BALL_SKINS.find(s => s.id === skinId);
@@ -1940,6 +1879,14 @@ function showOverlay(title){
   if(title.includes("COMPLETE")){ beep(1500,.3,"triangle"); }
 }
 function overlayAction(){
+  if(multiplayerMode){
+  multiplayerMode = false;
+  menu.style.display = "flex";
+  document.getElementById("multiplayerUI").style.display = "none";
+  document.getElementById("ui").style.display = "block";
+  return;
+}
+
   overlay.style.display="none";
   
   if(overlayTitle.textContent.includes("COMPLETE")){
@@ -2053,10 +2000,6 @@ function startGame(isHardMode = false){
   score=0; ballsLeft=10; level=1; running=true; generateLevel(); loop();
 }
 function generateLevel(){
-   // Use seed for multiplayer to generate identical levels
-  if(multiplayerMode && multiplayerSeed) {
-    Math.seedrandom(multiplayerSeed);
-  }
   // Story mode uses specific themes
   if(storyMode && storyLevel <= 10) {
     const config = STORY_LEVELS[storyLevel - 1];
@@ -2168,11 +2111,6 @@ function generateLevel(){
   specialPegs.slice(specialCount,specialCount*2).forEach(p=>p.type="purple");
   specialPegs.slice(specialCount*2,specialCount*3).forEach(p=>p.type="multiball");
   specialPegs.slice(specialCount*3,specialCount*4).forEach(p=>p.type="fireball");
-  
-  // Reset Math.random if we used seed
-  if(multiplayerMode && multiplayerSeed) {
-    Math.seedrandom();
-  }
   
   totalOrangePegsThisLevel = pegs.filter(p => p.type === "orange").length;
   totalLevelPegsAtStart = pegs.length;
@@ -2324,333 +2262,240 @@ try{
   renderSkinSelector();
 }catch(e){}
 // Allow Enter key to submit score
-// ============================================
-// MULTIPLAYER FUNCTIONS
-// ============================================
-
-function showMultiplayerMenu() {
-  menu.style.display = "none";
-  document.getElementById("multiplayerMenu").style.display = "flex";
-  document.getElementById("waitingRoom").style.display = "none";
-  document.getElementById("gameCodeInput").value = "";
-}
-
-function backToMenu() {
-  document.getElementById("multiplayerMenu").style.display = "none";
-  document.getElementById("waitingRoom").style.display = "none";
-  menu.style.display = "flex";
-  cancelMultiplayer();
-}
-
-async function createMultiplayerGame() {
-  gameCode = generateGameCode();
-  isHost = true;
-  myPlayerNumber = 1;
-  multiplayerSeed = Date.now();
-  
-  document.getElementById("gameCode").textContent = gameCode;
-  document.getElementById("waitingRoom").style.display = "block";
-  
-  const gameData = {
-    gameCode: gameCode,
-    host: {
-      score: 0,
-      orangeLeft: 0,
-      ballsLeft: 10,
-      finished: false
-    },
-    opponent: null,
-    seed: multiplayerSeed,
-    status: "waiting",
-    createdAt: Date.now()
-  };
-  
-  try {
-    await saveMultiplayerGame(gameCode, gameData);
-    startWaitingForOpponent();
-  } catch(e) {
-    alert("Error creating game: " + e.message);
-    backToMenu();
+document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    submitCurrentScore();
   }
+});
+function showMultiplayerMenu(){
+  const mpMenu = document.getElementById("multiplayerMenu");
+  mpMenu.style.display = mpMenu.style.display === "block" ? "none" : "block";
 }
 
-async function joinMultiplayerGame() {
-  const code = document.getElementById("gameCodeInput").value.trim().toUpperCase();
-  
-  if(!code || code.length !== 6) {
-    alert("Please enter a valid 6-character game code!");
+async function createRoom(){
+  if(!supabase){
+    alert("Supabase not configured!");
     return;
   }
   
-  try {
-    const gameData = await loadMultiplayerGame(code);
+  const roomCode = Math.random().toString(36).substr(2, 6).toUpperCase();
+  
+  const { data, error } = await supabase
+    .from('game_rooms')
+    .insert({
+      room_code: roomCode,
+      player1_id: myPlayerId,
+      status: 'waiting',
+      current_turn: 'player1'
+    })
+    .select()
+    .maybeSingle();
+  
+  if(error){
+    alert("Error creating room: " + error.message);
+    return;
+  }
+  
+  currentRoomId = data.id;
+  currentRoomCode = roomCode;
+  
+  document.getElementById("waitingOverlay").style.display = "flex";
+  document.getElementById("waitingRoomCode").textContent = `Room Code: ${roomCode}`;
+  
+  subscribeToRoom(data.id);
+}
+
+async function joinRoom(){
+  if(!supabase){
+    alert("Supabase not configured!");
+    return;
+  }
+  
+  const roomCode = document.getElementById("roomCodeInput").value.trim().toUpperCase();
+  
+  if(!roomCode){
+    alert("Please enter a room code!");
+    return;
+  }
+  
+  const { data, error } = await supabase
+    .from('game_rooms')
+    .select()
+    .eq('room_code', roomCode)
+    .eq('status', 'waiting')
+    .maybeSingle();
+  
+  if(error || !data){
+    alert("Room not found or already started!");
+    return;
+  }
+  
+  await supabase
+    .from('game_rooms')
+    .update({
+      player2_id: myPlayerId,
+      status: 'active'
+    })
+    .eq('id', data.id);
+  
+  currentRoomId = data.id;
+  currentRoomCode = roomCode;
+  opponentPlayerId = data.player1_id;
+  
+  subscribeToRoom(data.id);
+  startMultiplayerGame(false);
+}
+
+function subscribeToRoom(roomId){
+  if(!supabase) return;
+  
+  gameStateSubscription = supabase
+    .channel('game-room-' + roomId)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'game_rooms',
+      filter: `id=eq.${roomId}`
+    }, (payload) => {
+      handleRoomUpdate(payload.new);
+    })
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'game_state'
+    }, (payload) => {
+      handleGameStateUpdate(payload.new);
+    })
+    .subscribe();
+}
+
+function handleRoomUpdate(room){
+  if(room.status === 'active' && room.player2_id && !opponentPlayerId){
+    opponentPlayerId = room.player2_id;
+    document.getElementById("waitingOverlay").style.display = "none";
+    startMultiplayerGame(true);
+  }
+  
+  if(room.current_turn){
+    const imPlayer1 = room.player1_id === myPlayerId;
+    const turnPlayer = room.current_turn;
+    isMyTurn = (imPlayer1 && turnPlayer === 'player1') || (!imPlayer1 && turnPlayer === 'player2');
     
-    if(!gameData) {
-      alert("Game not found! Please check the code.");
-      return;
-    }
-    
-    if(gameData.opponent) {
-      alert("This game is already full!");
-      return;
-    }
-    
-    if(gameData.status !== "waiting") {
-      alert("This game has already started!");
-      return;
-    }
-    
-    gameCode = code;
-    isHost = false;
-    myPlayerNumber = 2;
-    multiplayerSeed = gameData.seed;
-    
-    gameData.opponent = {
-      score: 0,
-      orangeLeft: 0,
-      ballsLeft: 10,
-      finished: false
-    };
-    gameData.status = "playing";
-    
-    await saveMultiplayerGame(gameCode, gameData);
-    startMultiplayerGame();
-    
-  } catch(e) {
-    alert("Error joining game: " + e.message);
+    updateMultiplayerUI();
   }
 }
 
-function startWaitingForOpponent() {
-  multiplayerCheckInterval = setInterval(async () => {
-    try {
-      const gameData = await loadMultiplayerGame(gameCode);
-      
-      if(gameData && gameData.opponent && gameData.status === "playing") {
-        clearInterval(multiplayerCheckInterval);
-        startMultiplayerGame();
-      }
-    } catch(e) {
-      console.error("Error checking for opponent:", e);
-    }
-  }, 2000);
+function handleGameStateUpdate(state){
+  if(!state || state.player_id === myPlayerId) return;
+  
+  document.getElementById("mpOppScore").textContent = state.score || 0;
+  document.getElementById("mpOppBalls").textContent = state.balls_left || 0;
+  
+  if(state.last_shot && isMyTurn){
+    // Opponent finished their turn
+    canShoot = true;
+  }
 }
 
-function startMultiplayerGame() {
-  clearInterval(multiplayerCheckInterval);
-  
+function startMultiplayerGame(isPlayer1){
+  menu.style.display = "none";
   multiplayerMode = true;
-  document.getElementById("multiplayerMenu").style.display = "none";
-  document.getElementById("opponentBoard").style.display = "block";
-  document.getElementById("opponentName").textContent = isHost ? "Player 2" : "Player 1";
+  isMyTurn = isPlayer1;
+  
+  document.getElementById("ui").style.display = "none";
+  document.getElementById("multiplayerUI").style.display = "block";
+  document.getElementById("roomCodeDisplay").textContent = currentRoomCode;
   
   score = 0;
   ballsLeft = 10;
   level = 1;
   running = true;
   
+  updateMultiplayerUI();
   generateLevel();
   loop();
-  startOpponentPolling();
 }
 
-function startOpponentPolling() {
-  multiplayerCheckInterval = setInterval(async () => {
-    if(!multiplayerMode || !running) return;
-    
-    try {
-      const gameData = await loadMultiplayerGame(gameCode);
-      if(!gameData) return;
-      
-      const oppData = isHost ? gameData.opponent : gameData.host;
-      if(!oppData) return;
-      
-      document.getElementById("oppScore").textContent = oppData.score || 0;
-      document.getElementById("oppOrange").textContent = oppData.orangeLeft || 0;
-      document.getElementById("oppBalls").textContent = oppData.ballsLeft || 0;
-      
-      if(oppData.finished) {
-        const myOrangeLeft = pegs.filter(p=>p.type==="orange"&&!p.hit).length;
-        
-        if(myOrangeLeft > 0) {
-          endMultiplayerGame(false);
-        } else {
-          const myData = isHost ? gameData.host : gameData.opponent;
-          if(myData && myData.finishTime && oppData.finishTime) {
-            const iWon = myData.finishTime < oppData.finishTime;
-            endMultiplayerGame(iWon);
-          }
-        }
-      }
-      
-    } catch(e) {
-      console.error("Error polling opponent:", e);
-    }
-  }, 1000);
+function updateMultiplayerUI(){
+  document.getElementById("mpYourScore").textContent = Math.floor(score);
+  document.getElementById("mpYourBalls").textContent = ballsLeft;
+  document.getElementById("currentTurnText").textContent = isMyTurn ? "YOUR TURN ✅" : "OPPONENT'S TURN ⏳";
+  document.getElementById("currentTurnText").style.color = isMyTurn ? "#00ff88" : "#ff8888";
 }
 
-async function updateMultiplayerState() {
-  if(!multiplayerMode || !gameCode) return;
+async function endMultiplayerTurn(){
+  if(!supabase || !currentRoomId) return;
   
-  try {
-    const gameData = await loadMultiplayerGame(gameCode);
-    if(!gameData) return;
-    
-    const myData = {
+  await supabase
+    .from('game_state')
+    .upsert({
+      room_id: currentRoomId,
+      player_id: myPlayerId,
       score: score,
-      orangeLeft: pegs.filter(p=>p.type==="orange"&&!p.hit).length,
-      ballsLeft: ballsLeft,
-      finished: pegs.filter(p=>p.type==="orange"&&!p.hit).length === 0,
-      finishTime: pegs.filter(p=>p.type==="orange"&&!p.hit).length === 0 ? Date.now() : null
-    };
+      balls_left: ballsLeft,
+      level: level,
+      pegs_data: pegs,
+      last_shot: { timestamp: Date.now() },
+      updated_at: new Date().toISOString()
+    });
+  
+  const { data: room } = await supabase
+    .from('game_rooms')
+    .select()
+    .eq('id', currentRoomId)
+    .maybeSingle();
+  
+  if(room){
+    const imPlayer1 = room.player1_id === myPlayerId;
+    const newTurn = imPlayer1 ? 'player2' : 'player1';
     
-    if(isHost) {
-      gameData.host = myData;
-    } else {
-      gameData.opponent = myData;
-    }
+    await supabase
+      .from('game_rooms')
+      .update({ current_turn: newTurn })
+      .eq('id', currentRoomId);
     
-    await saveMultiplayerGame(gameCode, gameData);
-  } catch(e) {
-    console.error("Error updating multiplayer state:", e);
+    isMyTurn = false;
+    canShoot = false;
+    updateMultiplayerUI();
+  }
+  
+  if(ballsLeft <= 0){
+    await checkMultiplayerGameOver();
   }
 }
 
-function endMultiplayerGame(won) {
-  running = false;
-  clearInterval(multiplayerCheckInterval);
+async function checkMultiplayerGameOver(){
+  const { data: states } = await supabase
+    .from('game_state')
+    .select()
+    .eq('room_id', currentRoomId);
   
-  const resultDiv = document.getElementById("multiplayerResult");
-  const resultText = document.getElementById("mpResultText");
-  const resultDetails = document.getElementById("mpResultDetails");
-  
-  resultDiv.className = won ? "winner" : "loser";
-  resultText.textContent = won ? "🏆 YOU WIN! 🏆" : "💀 YOU LOSE 💀";
-  resultDetails.textContent = `Final Score: ${Math.floor(score)}`;
-  
-  resultDiv.style.display = "flex";
-  document.getElementById("opponentBoard").style.display = "none";
-  
-  beep(won ? 1800 : 600, .4, "triangle");
-  
-  setTimeout(() => {
-    deleteMultiplayerGame(gameCode);
-  }, 30000);
-}
-
-function backToMenuFromMP() {
-  document.getElementById("multiplayerResult").style.display = "none";
-  document.getElementById("opponentBoard").style.display = "none";
-  multiplayerMode = false;
-  clearInterval(multiplayerCheckInterval);
-  menu.style.display = "flex";
-}
-
-function cancelMultiplayer() {
-  clearInterval(multiplayerCheckInterval);
-  if(gameCode) {
-    deleteMultiplayerGame(gameCode);
-  }
-  gameCode = null;
-  multiplayerMode = false;
-}
-
-function generateGameCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for(let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
-}
-
-async function saveMultiplayerGame(code, gameData) {
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
-      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
-    });
+  if(states && states.length === 2){
+    const allOut = states.every(s => s.balls_left <= 0);
     
-    const data = await response.json();
-    let allData = data.record || {};
-    
-    if(!allData.games) allData.games = {};
-    if(!allData.scores) allData.scores = [];
-    
-    const now = Date.now();
-    Object.keys(allData.games).forEach(key => {
-      if(allData.games[key].createdAt && now - allData.games[key].createdAt > 3600000) {
-        delete allData.games[key];
-      }
-    });
-    
-    allData.games[code] = gameData;
-    
-    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_CONFIG.API_KEY
-      },
-      body: JSON.stringify(allData)
-    });
-    
-  } catch(e) {
-    console.error("Error saving multiplayer game:", e);
-    throw e;
-  }
-}
-
-async function loadMultiplayerGame(code) {
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
-      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
-    });
-    
-    const data = await response.json();
-    const allData = data.record || {};
-    
-    return allData.games ? allData.games[code] : null;
-    
-  } catch(e) {
-    console.error("Error loading multiplayer game:", e);
-    return null;
-  }
-}
-
-async function deleteMultiplayerGame(code) {
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`, {
-      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
-    });
-    
-    const data = await response.json();
-    let allData = data.record || {};
-    
-    if(allData.games && allData.games[code]) {
-      delete allData.games[code];
+    if(allOut){
+      const myState = states.find(s => s.player_id === myPlayerId);
+      const oppState = states.find(s => s.player_id !== myPlayerId);
       
-      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': JSONBIN_CONFIG.API_KEY
-        },
-        body: JSON.stringify(allData)
-      });
+      const winner = myState.score > oppState.score ? "YOU WIN! 🎉" : 
+                     myState.score < oppState.score ? "YOU LOSE 😢" : "TIE GAME! 🤝";
+      
+      showOverlay(winner);
+      
+      await supabase
+        .from('game_rooms')
+        .update({ status: 'finished' })
+        .eq('id', currentRoomId);
+      
+      if(gameStateSubscription){
+        gameStateSubscription.unsubscribe();
+      }
+      
+      multiplayerMode = false;
     }
-  } catch(e) {
-    console.error("Error deleting multiplayer game:", e);
   }
 }
 
-// Seeded random for identical level generation
-!function(a,b,c,d,e,f){function k(a){var b,c=a.length,e=this,f=0,g=e.i=e.j=0,h=e.S=[];for(c||(a=[c++]);d>f;)h[f]=f++;for(f=0;d>f;f++)h[f]=h[g=j&g+a[f%c]+(b=h[f])],h[g]=b;(e.g=function(a){for(var b,c=0,f=e.i,g=e.j,h=e.S;a--;)b=h[f=j&f+1],c=c*d+h[j&(h[f]=h[g=j&g+b])+(h[g]=b)];return e.i=f,e.j=g,c})(d)}function l(a,b){var c,d=[],e=typeof a;if(b&&"object"==e)for(c in a)try{d.push(l(a[c],b-1))}catch(f){}return d.length?d:"string"==e?a:a+"\0"}function m(a,b){for(var c,d=a+"",e=0;e<d.length;)b[j&e]=j&(c^=19*b[j&e])+d.charCodeAt(e++);return o(b)}function n(c){try{return a.crypto.getRandomValues(c=new Uint8Array(d)),o(c)}catch(e){return[+new Date,a,(c=a.navigator)&&c.plugins,a.screen,o(b)]}}function o(a){return String.fromCharCode.apply(0,a)}var g=c.pow(d,e),h=c.pow(2,f),i=2*h,j=d-1;c.seedrandom=function(a,f){var j=[],p=m(l(f?[a,o(b)]:0 in arguments?a:n(),3),j),q=new k(j);return m(o(q.S),b),c.random=function(){for(var a=q.g(e),b=g,c=0;h>a;)a=(a+c)*d,b*=d,c=q.g(1);for(;a>=i;)a/=2,b/=2,c>>>=1;return(a+c)/b},p},m(c.random(),b)}([],[],.pow(256,6),Math,Math.pow(2,52));
-
-document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    submitCurrentScore();
-  }
-});
 </script>
 </body>
 </html>

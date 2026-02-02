@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Silly Hold’em</title>
+
+<style>
+:root{
+  --felt:#0f6b3f;
+  --felt-dark:#083d25;
+  --gold:#f7b733;
+}
+
+body{
+  margin:0;
+  background:#071c13;
+  color:#fff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  text-align:center;
+}
+
+/* ===== HEADER ===== */
+h1{margin:10px 0 4px}
+#status{font-size:14px;opacity:.85}
+
+/* ===== TABLE ===== */
+.table{
+  width:820px;
+  height:520px;
+  margin:20px auto;
+  position:relative;
+  background:radial-gradient(circle,var(--felt),var(--felt-dark));
+  border-radius:50%;
+  border:10px solid #042b19;
+}
+
+/* ===== COMMUNITY ===== */
+#board{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  display:flex;
+  gap:8px;
+}
+
+/* ===== CARDS ===== */
+.card{
+  width:46px;
+  height:66px;
+  background:#fff;
+  color:#000;
+  border-radius:6px;
+  padding:4px;
+  font-weight:700;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  box-shadow:0 2px 6px #0006;
+}
+.red{color:#c1121f}
+.hidden{background:#1b1b1b}
+
+/* ===== PLAYERS ===== */
+.player{
+  position:absolute;
+  width:120px;
+  font-size:11px;
+}
+.name{font-weight:600}
+.chips{opacity:.75;margin-bottom:4px}
+.hand{display:flex;justify-content:center;gap:4px}
+
+/* POSITIONS */
+.p1{top:18px;left:50%;transform:translateX(-50%)}
+.p2{top:95px;right:70px}
+.p3{bottom:95px;right:70px}
+.p4{bottom:18px;left:50%;transform:translateX(-50%)}
+.p5{bottom:95px;left:70px}
+.p6{top:95px;left:70px}
+
+/* ===== YOU ===== */
+#you{margin-top:6px}
+
+/* ===== CONTROLS ===== */
+.controls{margin:14px}
+.controls button{
+  padding:10px 18px;
+  margin:6px;
+  font-size:14px;
+  font-weight:600;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  color:#fff;
+  background:linear-gradient(135deg,#1fa36b,#157347);
+  box-shadow:0 4px 10px #0007;
+  transition:.12s;
+}
+.controls button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 14px #0009;
+}
+.controls button:active{
+  transform:translateY(1px);
+  box-shadow:0 2px 6px #0006;
+}
+.controls .deal{
+  font-size:16px;
+  padding:12px 26px;
+  background:linear-gradient(135deg,#f7b733,#f79f1f);
+  color:#222;
+}
+.controls .fold{
+  background:linear-gradient(135deg,#b12a2a,#7a1a1a);
+}
+</style>
+</head>
+
+<body>
+
+<h1>🃏 Silly Hold’em</h1>
+<div id="status"></div>
+
+<div class="table">
+  <div id="cpu1" class="player p1"></div>
+  <div id="cpu2" class="player p2"></div>
+  <div id="cpu3" class="player p3"></div>
+  <div id="cpu4" class="player p4"></div>
+  <div id="cpu5" class="player p5"></div>
+  <div id="cpu6" class="player p6"></div>
+  <div id="board"></div>
+</div>
+
+<div id="you">
+  <div class="name">You</div>
+  <div class="hand" id="playerCards"></div>
+</div>
+
+<div class="controls">
+  <button class="deal" onclick="newHand()">🃏 DEAL HAND</button><br>
+  <button onclick="playerAction('check')">✔ Check / Call</button>
+  <button onclick="playerAction('raise')">⬆ Raise</button>
+  <button class="fold" onclick="playerAction('fold')">✖ Fold</button>
+</div>
+
+<script>
+/* =================== SETUP =================== */
+const suits=["♠","♥","♦","♣"];
+const values=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+const map={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+
+const aiProfiles=[
+ {name:"Sir Shoves-A-Lot",aggr:.9,tight:.2,bluff:.1,chaos:.05},
+ {name:"Foldy McFoldFace",aggr:.1,tight:.85,bluff:.02,chaos:0},
+ {name:"Bluffasaurus Rex",aggr:.6,tight:.4,bluff:.75,chaos:.1},
+ {name:"Calculator Goblin",aggr:.45,tight:.5,bluff:.1,chaos:0},
+ {name:"Grandma River",aggr:.25,tight:.3,bluff:.05,chaos:.05},
+ {name:"Sleepy Kevin",aggr:.4,tight:.4,bluff:.2,chaos:.6}
+];
+
+let players=[{name:"You",chips:1000,cards:[],fold:false,isAI:false}];
+aiProfiles.forEach(p=>players.push({...p,cards:[],chips:1000,fold:false,isAI:true}));
+
+let deck=[],board=[],stage=0;
+
+/* =================== CARDS =================== */
+function buildDeck(){
+ deck=[]; suits.forEach(s=>values.forEach(v=>deck.push({v,s})));
+ deck.sort(()=>Math.random()-0.5);
+}
+const draw=()=>deck.pop();
+
+function renderCard(c,hide){
+ if(hide) return `<div class="card hidden"></div>`;
+ let r=c.s=="♥"||c.s=="♦"?"red":"";
+ return `<div class="card ${r}"><div>${c.v}</div><div>${c.s}</div></div>`;
+}
+
+/* =================== GAME FLOW =================== */
+function newHand(){
+ buildDeck();
+ board=[]; stage=0;
+ players.forEach(p=>{
+  p.cards=[draw(),draw()];
+  p.fold=false;
+ });
+ status("New hand dealt");
+ render();
+}
+
+function nextStage(){
+ stage++;
+ if(stage==1) board.push(draw(),draw(),draw());
+ if(stage==2||stage==3) board.push(draw());
+ if(stage==4) showdown();
+ render();
+}
+
+function playerAction(type){
+ if(type==="fold"){
+  players[0].fold=true;
+  status("You folded");
+  return;
+ }
+ aiActions();
+ nextStage();
+}
+
+/* =================== AI =================== */
+function aiActions(){
+ players.slice(1).forEach(ai=>{
+  if(ai.fold) return;
+
+  if(Math.random()<ai.chaos){
+    if(Math.random()<.5){ai.fold=true; status(`${ai.name} dozes off 😴`);}
+    return;
+  }
+
+  let strength=Math.random();
+
+  if(strength<ai.tight){
+    ai.fold=true;
+    status(`${ai.name} folds`);
+    return;
+  }
+
+  if(strength>0.65 && Math.random()<ai.aggr){
+    status(`${ai.name} bets boldly`);
+    return;
+  }
+
+  if(Math.random()<ai.bluff){
+    status(`${ai.name} bluffs 😏`);
+    return;
+  }
+
+  status(`${ai.name} checks`);
+ });
+}
+
+/* =================== SHOWDOWN =================== */
+function showdown(){
+ let alive=players.filter(p=>!p.fold);
+ let winner=alive[Math.floor(Math.random()*alive.length)];
+ status(`${winner.name} wins the hand! 🏆`);
+}
+
+/* =================== RENDER =================== */
+function render(){
+ document.getElementById("board").innerHTML=board.map(c=>renderCard(c)).join("");
+ document.getElementById("playerCards").innerHTML=
+  players[0].cards.map(c=>renderCard(c)).join("");
+
+ players.slice(1).forEach((p,i)=>{
+  document.getElementById("cpu"+(i+1)).innerHTML=`
+   <div class="name">${p.name}</div>
+   <div class="chips">💰 ${p.chips}</div>
+   <div class="hand">${p.fold?"":renderCard(null,true)+renderCard(null,true)}</div>
+  `;
+ });
+}
+
+const status=t=>document.getElementById("status").textContent=t;
+
+newHand();
+</script>
+
+</body>
+</html>

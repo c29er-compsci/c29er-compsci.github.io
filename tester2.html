@@ -363,6 +363,8 @@ canvas{display:block}
 </head>
 
 <body>
+  <audio id="bgMusicMenu" loop src="Yeat X Playboi Carti Type Drums 151 BPM (1).mp3"></audio>
+<audio id="bgMusicHard" loop src="Yeat X Playboi Carti Type Drums 151 BPM (1).mp3"></audio>
 
 <div id="menu">
   <h1>🎯 PEGGLE PORTAL 🎯</h1>
@@ -371,9 +373,6 @@ canvas{display:block}
   <button class="btn" onclick="startStoryMode()" style="margin-top:15px;background:linear-gradient(135deg,#9d4edd,#7b2cbf)">📖 STORY MODE</button>
   <button class="btn" onclick="showAchievements()" style="margin-top:15px;font-size:20px;padding:12px 35px">🏆 ACHIEVEMENTS</button>
   <button class="btn" onclick="showSkins()" style="margin-top:15px;font-size:20px;padding:12px 35px">🎨 SKINS</button>
-  <button class="btn" onclick="showMultiplayer()" style="margin-top:15px;font-size:20px;padding:12px 35px; background:linear-gradient(135deg,#00d9ff,#0099cc)">
-  🎮 MULTIPLAYER
-</button>
   <div id="skinSelector" style="display:none">
     <h3>🎨 SKINS</h3>
     <div id="skinGrid"></div>
@@ -399,49 +398,6 @@ canvas{display:block}
   </div>
   <div id="leaderboardList"></div>
 </div>
-</div>
-<div id="multiplayerMenu" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.95); z-index:300; overflow-y:auto; padding:40px;">
-  <div style="max-width:800px; margin:0 auto; color:white;">
-    <h2 style="text-align:center; margin-bottom:30px;">🎮 1v1 MULTIPLAYER 🎮</h2>
-    
-    <div id="lobbyList" style="margin-bottom:30px;">
-      <h3>Available Lobbies</h3>
-      <div id="lobbiesContainer"></div>
-      <button class="btn" onclick="refreshLobbies()" style="margin-top:15px; padding:12px 25px; font-size:16px;">
-        🔄 Refresh
-      </button>
-    </div>
-    
-    <div style="text-align:center; margin:30px 0;">
-      <input type="text" id="lobbyNameInput" placeholder="Your Name" maxlength="20" style="padding:12px; border-radius:8px; margin-right:10px; font-size:16px;">
-      <button class="btn" onclick="createLobby()" style="padding:12px 25px; font-size:16px;">
-        ➕ Create Lobby
-      </button>
-    </div>
-    
-    <div id="activeGame" style="display:none; background:rgba(255,255,255,.1); padding:20px; border-radius:15px;">
-      <h3 id="gameStatus">Waiting for opponent...</h3>
-      <div style="display:flex; justify-content:space-around; margin:20px 0;">
-        <div style="text-align:center;">
-          <h4 id="player1Name">You</h4>
-          <p style="font-size:24px; color:#ffd700;">Score: <span id="player1Score">0</span></p>
-          <p style="font-size:18px;">Level: <span id="player1Level">1</span></p>
-        </div>
-        <div style="text-align:center;">
-          <h4 id="player2Name">Opponent</h4>
-          <p style="font-size:24px; color:#ffd700;">Score: <span id="player2Score">0</span></p>
-          <p style="font-size:18px;">Level: <span id="player2Level">1</span></p>
-        </div>
-      </div>
-      <button class="btn" onclick="leaveLobby()" style="padding:10px 20px; font-size:14px; background:linear-gradient(135deg,#ff4444,#cc0000);">
-        ❌ Leave Game
-      </button>
-    </div>
-    
-    <button class="btn" onclick="closeMultiplayer()" style="margin-top:20px; padding:10px 20px; font-size:14px;">
-      ◀️ Back to Menu
-    </button>
-  </div>
 </div>
  
 
@@ -476,16 +432,6 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
-  // Seeded random number generator for identical levels
-let rngSeed = 0;
-function seededRandom() {
-  rngSeed = (rngSeed * 9301 + 49297) % 233280;
-  return rngSeed / 233280;
-}
-
-function setSeed(seed) {
-  rngSeed = seed;
-}
 
   const JSONBIN_CONFIG = {
  API_KEY: '$2a$10$0gUNr5G0YVh2bsMYQEM0D.0ktdaBhf5ymxzh5ghDLQuOFvVJy/XMi', 
@@ -635,6 +581,20 @@ let levelStartTime=0;
 let totalOrangePegsThisLevel=0;
 let orangePegsHitWithoutMiss=0;
 let lastBallY=0;
+
+const menuMusic = document.getElementById('bgMusicMenu');
+  const hardMusic = document.getElementById('bgMusicHard');
+  let currentMusic = null;
+
+  function playMusic(track) {
+    menuMusic.pause();
+    hardMusic.pause();
+    if (track) {
+      track.currentTime = 0; 
+      track.play().catch(e => console.log("Waiting for user interaction..."));
+      currentMusic = track;
+    }
+  }
 
 const BALL_SKINS = [
   {id:"classic", name:"Classic", unlocked:true, gradient:["#ff8888","#ff4444","#cc2222"]},
@@ -1242,92 +1202,6 @@ function collide(b,p){
     
     updateUI();
   }
-}
-function generateMultiplayerLevel(seed) {
-  setSeed(seed); // Set the seed so both players get same level
-  
-  pegs = [];
-  balls = [];
-  particles = [];
-  bucket.x = field.left();
-  multiballActive = false;
-  slowmo = 0;
-  specialTypesHitThisLevel.clear();
-  shotsThisLevel = 0;
-  bigBucketCatches = 0;
-  totalBucketCatches = 0;
-  portalUsesThisLevel = 0;
-  levelStartTime = Date.now();
-  totalOrangePegsThisLevel = 0;
-  orangePegsHitWithoutMiss = 0;
-  
-  const padding = 80;
-  const spawnPortal = () => ({
-    x: field.left() + padding + seededRandom() * (800 - padding * 2),
-    y: field.top + 100 + seededRandom() * (canvas.height - field.top - 300),
-    r: 28
-  });
-
-  // Create portals using seeded random
-  const p1 = spawnPortal();
-  const p2 = spawnPortal();
-  
-  while(Math.hypot(p1.x - p2.x, p1.y - p2.y) < 200) {
-    p2.x = field.left() + padding + seededRandom() * (800 - padding * 2);
-    p2.y = field.top + 100 + seededRandom() * (canvas.height - field.top - 300);
-  }
-  
-  portals = [
-    {x: p1.x, y: p1.y, tx: p2.x, ty: p2.y, r: p1.r, pulse: 0},
-    {x: p2.x, y: p2.y, tx: p1.x, ty: p1.y, r: p2.r, pulse: Math.PI}
-  ];
-  
-  // Generate pegs using seeded random
-  for(let r = 0; r < 9; r++) {
-    for(let c = 0; c < 10; c++) {
-      if(seededRandom() < .1) continue; // Use seeded random instead of Math.random()
-      
-      const px = field.left() + 80 + c * 75 + (r % 2) * 37;
-      const py = field.top + r * 60;
-      const nearPortal = portals.some(port => Math.hypot(px - port.x, py - port.y) < 50);
-      
-      if(!nearPortal) {
-        pegs.push({
-          x: px, y: py, r: 9,
-          hit: false, type: "blue", wobble: 0,
-          pulse: seededRandom() * Math.PI * 2
-        });
-      }
-    }
-  }
-  
-  // Shuffle using seeded random
-  for(let i = pegs.length - 1; i > 0; i--) {
-    const j = (seededRandom() * (i + 1)) | 0;
-    [pegs[i], pegs[j]] = [pegs[j], pegs[i]];
-  }
-  
-  // Set orange pegs
-  pegs.slice(0, Math.floor(pegs.length * 0.2)).forEach(p => p.type = "orange");
-  
-  // Set special pegs
-  const specialPegs = pegs.filter(p => p.type === "blue");
-  for(let i = specialPegs.length - 1; i > 0; i--) {
-    const j = (seededRandom() * (i + 1)) | 0;
-    [specialPegs[i], specialPegs[j]] = [specialPegs[j], specialPegs[i]];
-  }
-  
-  specialPegs.slice(0, 2).forEach(p => p.type = "green");
-  specialPegs.slice(2, 4).forEach(p => p.type = "purple");
-  specialPegs.slice(4, 6).forEach(p => p.type = "multiball");
-  specialPegs.slice(6, 8).forEach(p => p.type = "fireball");
-  
-  totalOrangePegsThisLevel = pegs.filter(p => p.type === "orange").length;
-  totalLevelPegsAtStart = pegs.length;
-  levelOrangeHitCount = 0;
-  levelSpecialTypesHit.clear();
-  
-  updateUI();
 }
 
 function loop(){
@@ -2041,7 +1915,15 @@ function startGame(isHardMode = false){
   hardModeLevelsBeaten = 0;
   document.getElementById("storyInfo").style.display="none";
   score=0; ballsLeft=10; level=1; running=true; generateLevel(); loop();
+  if (hardMode) {
+    playMusic(hardMusic);
+  } else {
+    playMusic(menuMusic); 
+  }
+  
+  initLevel();
 }
+
 function generateLevel(){
   // Story mode uses specific themes
   if(storyMode && storyLevel <= 10) {
@@ -2309,467 +2191,16 @@ document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
     submitCurrentScore();
   }
-});// ============================================
-// MULTIPLAYER SYSTEM
-// ============================================
+});
 
-const MP_CONFIG = {
-  BIN_ID: '697b985643b1c97be9555ea8', // Use same bin or create new one
-  POLL_INTERVAL: 2000, // Check for updates every 2 seconds
-  GAME_DURATION: 300000 // 5 minutes per game
-};
-
-let multiplayerState = {
-  active: false,
-  lobbyId: null,
-  playerId: null,
-  playerName: '',
-  isHost: false,
-  pollInterval: null,
-  gameStartTime: null
-};
-
-// Show multiplayer menu
-function showMultiplayer() {
-  document.getElementById('multiplayerMenu').style.display = 'block';
-  refreshLobbies();
-}
-
-function closeMultiplayer() {
-  if(multiplayerState.active) {
-    if(confirm('Leave current game?')) {
-      leaveLobby();
-    } else {
-      return;
+// PLACE AT THE VERY BOTTOM
+  document.addEventListener('click', () => {
+    if (!currentMusic && !running) {
+      playMusic(menuMusic);
     }
-  }
-  document.getElementById('multiplayerMenu').style.display = 'none';
-}
+  }, { once: true });
 
-// Generate unique IDs
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
 
-// Create a new lobby
-async function createLobby() {
-  const nameInput = document.getElementById('lobbyNameInput');
-  const name = nameInput.value.trim();
-  
-  if(!name) {
-    alert('Please enter your name!');
-    return;
-  }
-  
-  multiplayerState.playerId = generateId();
-  multiplayerState.playerName = name;
-  multiplayerState.lobbyId = generateId();
-  multiplayerState.isHost = true;
-  
-  const lobby = {
-    id: multiplayerState.lobbyId,
-    host: {
-      id: multiplayerState.playerId,
-      name: name,
-      score: 0,
-      level: 1,
-      ballsLeft: 10,
-      orangeLeft: 0,
-      finished: false
-    },
-    guest: null,
-    status: 'waiting',
-    createdAt: Date.now(),
-    startedAt: null,
-    winner: null,
-    levelSeed: Math.random() * 999999 | 0 // ✅ Shared seed for identical levels
-  };
-  
-  try {
-    await updateLobby(lobby);
-    multiplayerState.active = true;
-    showActiveGame();
-    startPolling();
-    
-    document.getElementById('gameStatus').textContent = '⏳ Waiting for opponent to join...';
-    
-  } catch(error) {
-    alert('Error creating lobby: ' + error.message);
-  }
-}
-
-// Join existing lobby
-async function joinLobby(lobbyId) {
-  const nameInput = document.getElementById('lobbyNameInput');
-  const name = nameInput.value.trim();
-  
-  if(!name) {
-    alert('Please enter your name!');
-    return;
-  }
-  
-  multiplayerState.playerId = generateId();
-  multiplayerState.playerName = name;
-  multiplayerState.lobbyId = lobbyId;
-  multiplayerState.isHost = false;
-  
-  try {
-    const lobbies = await getAllLobbies();
-    const lobby = lobbies.find(l => l.id === lobbyId);
-    
-    if(!lobby) {
-      alert('Lobby not found!');
-      return;
-    }
-    
-    if(lobby.guest) {
-      alert('Lobby is full!');
-      return;
-    }
-    
-    lobby.guest = {
-      id: multiplayerState.playerId,
-      name: name,
-      score: 0,
-      level: 1,
-      ballsLeft: 10,
-      orangeLeft: 0,
-      finished: false
-    };
-    lobby.status = 'playing';
-    lobby.startedAt = Date.now();
-    
-    await updateLobby(lobby);
-    multiplayerState.active = true;
-    multiplayerState.gameStartTime = Date.now();
-    showActiveGame();
-    startPolling();
-    
-  } catch(error) {
-    alert('Error joining lobby: ' + error.message);
-  }
-}
-// Leave current lobby
-async function leaveLobby() {
-  if(!multiplayerState.active) return;
-  
-  try {
-    const lobbies = await getAllLobbies();
-    const updatedLobbies = lobbies.filter(l => l.id !== multiplayerState.lobbyId);
-    await saveAllLobbies(updatedLobbies);
-  } catch(error) {
-    console.error('Error leaving lobby:', error);
-  }
-  
-  stopPolling();
-  multiplayerState.active = false;
-  multiplayerState.lobbyId = null;
-  document.getElementById('activeGame').style.display = 'none';
-  document.getElementById('lobbyList').style.display = 'block';
-  
-  // Stop the game if running
-  if(running) {
-    running = false;
-    menu.style.display = 'flex';
-  }
-  
-  refreshLobbies();
-}
-
-// Refresh lobby list
-async function refreshLobbies() {
-  const container = document.getElementById('lobbiesContainer');
-  container.innerHTML = '<p style="color:white;">Loading...</p>';
-  
-  try {
-    const lobbies = await getAllLobbies();
-    
-    // Clean up old/finished lobbies (older than 10 minutes)
-    const cleanLobbies = lobbies.filter(l => 
-      Date.now() - l.createdAt < 600000 && 
-      l.status !== 'finished'
-    );
-    
-    if(cleanLobbies.length !== lobbies.length) {
-      await saveAllLobbies(cleanLobbies);
-    }
-    
-    const waitingLobbies = cleanLobbies.filter(l => l.status === 'waiting');
-    
-    if(waitingLobbies.length === 0) {
-      container.innerHTML = '<p style="color:white;">No lobbies available. Create one!</p>';
-      return;
-    }
-    
-    container.innerHTML = waitingLobbies.map(lobby => `
-      <div style="background:rgba(255,255,255,.1); padding:15px; margin:10px 0; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <strong style="color:#ffd700;">${escapeHtml(lobby.host.name)}'s Game</strong>
-          <p style="margin:5px 0; font-size:14px; color:#ccc;">Created ${Math.floor((Date.now() - lobby.createdAt)/1000)}s ago</p>
-        </div>
-        <button class="btn" onclick="joinLobby('${lobby.id}')" style="padding:10px 20px; font-size:14px;">
-          ▶️ Join
-        </button>
-      </div>
-    `).join('');
-    
-  } catch(error) {
-    container.innerHTML = '<p style="color:#ff6666;">Error loading lobbies</p>';
-    console.error('Refresh error:', error);
-  }
-}
-
-// Show active game UI
-function showActiveGame() {
-  document.getElementById('lobbyList').style.display = 'none';
-  document.getElementById('activeGame').style.display = 'block';
-  document.getElementById('player1Name').textContent = multiplayerState.playerName + ' (You)';
-  updateMultiplayerUI();
-}
-
-function updateMultiplayerUI(lobby = null) {
-  if(!lobby) return;
-  
-  const isHost = multiplayerState.isHost;
-  const you = isHost ? lobby.host : lobby.guest;
-  const opponent = isHost ? lobby.guest : lobby.host;
-  
-  document.getElementById('player1Score').textContent = you?.score || 0;
-  document.getElementById('player1Level').textContent = you?.level || 1;
-  
-  if(opponent) {
-    document.getElementById('player2Name').textContent = opponent.name;
-    document.getElementById('player2Score').textContent = opponent.score || 0;
-    document.getElementById('player2Level').textContent = opponent.level || 1;
-    
-    // ✅ Show orange pegs remaining for both players
-    const yourOrange = you?.orangeLeft ?? 0;
-    const theirOrange = opponent?.orangeLeft ?? 0;
-    
-    if(lobby.status === 'playing') {
-      document.getElementById('gameStatus').textContent = 
-        `🟠 You: ${yourOrange} oranges | Opponent: ${theirOrange} oranges`;
-    }
-  } else {
-    document.getElementById('player2Name').textContent = 'Waiting...';
-    document.getElementById('gameStatus').textContent = 'Waiting for opponent...';
-  }
-}
-// Start multiplayer game
-function startMultiplayerGame(levelSeed) {
-  menu.style.display = 'none';
-  document.getElementById('multiplayerMenu').style.display = 'none';
-  hardMode = false;
-  storyMode = false;
-  score = 0;
-  ballsLeft = 10;
-  level = 1;
-  running = true;
-  multiplayerState.gameStartTime = Date.now();
-  
-  // ✅ Generate level with shared seed
-  generateMultiplayerLevel(levelSeed);
-  loop();
-}
-
-// Update player stats
-async function updateMultiplayerStats() {
-  if(!multiplayerState.active || !running) return;
-  
-  try {
-    const lobbies = await getAllLobbies();
-    const lobby = lobbies.find(l => l.id === multiplayerState.lobbyId);
-    
-    if(!lobby) return;
-    
-    const orangeLeft = pegs.filter(p => p.type === "orange" && !p.hit).length;
-    const finished = orangeLeft === 0;
-    
-    const playerData = {
-      id: multiplayerState.playerId,
-      name: multiplayerState.playerName,
-      score: score,
-      level: level,
-      ballsLeft: ballsLeft,
-      orangeLeft: orangeLeft,
-      finished: finished
-    };
-    
-    if(multiplayerState.isHost) {
-      lobby.host = playerData;
-    } else {
-      lobby.guest = playerData;
-    }
-    
-    // ✅ Check if someone won (cleared all oranges first)
-    if(lobby.status === 'playing' && finished) {
-      lobby.status = 'finished';
-      lobby.winner = multiplayerState.playerName;
-      await updateLobby(lobby);
-      
-      showOverlay("🎉 YOU WIN! 🎉");
-      stopPolling();
-      multiplayerState.active = false;
-      return;
-    }
-    
-    // Check if opponent won
-    const opponent = multiplayerState.isHost ? lobby.guest : lobby.host;
-    if(opponent && opponent.finished && lobby.status === 'finished') {
-      showOverlay("💀 OPPONENT WON 💀");
-      stopPolling();
-      multiplayerState.active = false;
-      return;
-    }
-    
-    await updateLobby(lobby);
-  } catch(error) {
-    console.error('Error updating stats:', error);
-  }
-}
-async function endMultiplayerGame(lobby) {
-  lobby.status = 'finished';
-  
-  const hostScore = lobby.host?.score || 0;
-  const guestScore = lobby.guest?.score || 0;
-  
-  if(hostScore > guestScore) {
-    lobby.winner = lobby.host.name;
-  } else if(guestScore > hostScore) {
-    lobby.winner = lobby.guest.name;
-  } else {
-    lobby.winner = 'TIE';
-  }
-  
-  await updateLobby(lobby);
-  
-  const isWinner = lobby.winner === multiplayerState.playerName;
-  const message = lobby.winner === 'TIE' ? 
-    "🤝 IT'S A TIE! 🤝" : 
-    isWinner ? "🎉 YOU WIN! 🎉" : "💀 YOU LOSE 💀";
-  
-  showOverlay(message);
-  stopPolling();
-  multiplayerState.active = false;
-}
-
-// Polling system
-function startPolling() {
-  stopPolling();
-  let gameStarted = false;
-  
-  multiplayerState.pollInterval = setInterval(async () => {
-    if(!multiplayerState.active) {
-      stopPolling();
-      return;
-    }
-    
-    try {
-      const lobbies = await getAllLobbies();
-      const lobby = lobbies.find(l => l.id === multiplayerState.lobbyId);
-      
-      if(!lobby) {
-        alert('Lobby was closed!');
-        leaveLobby();
-        return;
-      }
-      
-      updateMultiplayerUI(lobby);
-      
-      // ✅ When guest joins, start game for BOTH players with same seed
-      if(lobby.guest && lobby.status === 'playing' && !gameStarted) {
-        gameStarted = true;
-        multiplayerState.gameStartTime = Date.now();
-        
-        // Countdown
-        document.getElementById('gameStatus').textContent = '🎮 Starting in 3...';
-        setTimeout(() => {
-          document.getElementById('gameStatus').textContent = '🎮 Starting in 2...';
-        }, 1000);
-        setTimeout(() => {
-          document.getElementById('gameStatus').textContent = '🎮 Starting in 1...';
-        }, 2000);
-        setTimeout(() => {
-          document.getElementById('gameStatus').textContent = '🎮 GO! 🎮';
-          startMultiplayerGame(lobby.levelSeed); // ✅ Use shared seed
-        }, 3000);
-      }
-      
-      // Check if game finished
-      if(lobby.status === 'finished' && running) {
-        const isWinner = lobby.winner === multiplayerState.playerName;
-        const message = isWinner ? "🎉 YOU WIN! 🎉" : "💀 OPPONENT WON 💀";
-        showOverlay(message);
-        stopPolling();
-        multiplayerState.active = false;
-      }
-      
-    } catch(error) {
-      console.error('Polling error:', error);
-    }
-  }, MP_CONFIG.POLL_INTERVAL);
-}
-function stopPolling() {
-  if(multiplayerState.pollInterval) {
-    clearInterval(multiplayerState.pollInterval);
-    multiplayerState.pollInterval = null;
-  }
-}
-
-// JSONBin API calls
-async function getAllLobbies() {
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${MP_CONFIG.BIN_ID}/latest`, {
-      headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
-    });
-    
-    if(!response.ok) throw new Error('Failed to fetch lobbies');
-    
-    const data = await response.json();
-    return data.record.lobbies || [];
-  } catch(error) {
-    console.error('Get lobbies error:', error);
-    return [];
-  }
-}
-
-async function saveAllLobbies(lobbies) {
-  const response = await fetch(`https://api.jsonbin.io/v3/b/${MP_CONFIG.BIN_ID}/latest`, {
-    headers: { 'X-Master-Key': JSONBIN_CONFIG.API_KEY }
-  });
-  
-  const currentData = await response.json();
-  currentData.record.lobbies = lobbies;
-  
-  await fetch(`https://api.jsonbin.io/v3/b/${MP_CONFIG.BIN_ID}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Master-Key': JSONBIN_CONFIG.API_KEY
-    },
-    body: JSON.stringify(currentData.record)
-  });
-}
-
-async function updateLobby(lobby) {
-  const lobbies = await getAllLobbies();
-  const index = lobbies.findIndex(l => l.id === lobby.id);
-  
-  if(index >= 0) {
-    lobbies[index] = lobby;
-  } else {
-    lobbies.push(lobby);
-  }
-  
-  await saveAllLobbies(lobbies);
-}
-
-// Auto-update stats during game
-setInterval(() => {
-  if(multiplayerState.active && running) {
-    updateMultiplayerStats();
-  }
-}, 3000); // Update every 3 seconds
 </script>
 </body>
 </html>
