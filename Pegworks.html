@@ -1,329 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PegWorks Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --neon-cyan: #00ffff;
-            --neon-magenta: #ff00ff;
-            --neon-yellow: #ffff00;
-            --dark-bg: #0a0a0f;
-            --darker-bg: #050508;
-            --card-bg: #1a1a24;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0c8;
-            --border-color: #2a2a3e;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Rajdhani', sans-serif;
-            background: var(--dark-bg);
-            color: var(--text-primary);
-            overflow-x: hidden;
-            min-height: 100vh;
-            background-image: 
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 255, 0.03) 2px, rgba(0, 255, 255, 0.03) 4px),
-                radial-gradient(ellipse at 50% 0%, rgba(0, 255, 255, 0.1), transparent 70%),
-                radial-gradient(ellipse at 100% 100%, rgba(255, 0, 255, 0.08), transparent 60%);
-        }
-
-        .scanline {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.15),
-                rgba(0, 0, 0, 0.15) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            pointer-events: none;
-            z-index: 1000;
-            animation: scanline 8s linear infinite;
-        }
-
-        @keyframes scanline {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(10px); }
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            padding: 60px 20px;
-            position: relative;
-        }
-
-        .studio-name {
-            font-family: 'Orbitron', sans-serif;
-            font-size: clamp(3rem, 10vw, 6rem);
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 20px;
-            position: relative;
-            display: inline-block;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: glitch 3s infinite;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .studio-name:hover {
-            filter: drop-shadow(0 0 20px var(--neon-cyan));
-        }
-
-        @keyframes glitch {
-            0%, 90%, 100% {
-                transform: translate(0);
-            }
-            92% {
-                transform: translate(-2px, 2px);
-            }
-            94% {
-                transform: translate(2px, -2px);
-            }
-            96% {
-                transform: translate(-2px, -2px);
-            }
-        }
-
-        .studio-tagline {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-
-
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 30px;
-            padding: 40px 20px;
-        }
-
-        .game-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
-        }
-
-        .game-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--neon-cyan);
-            box-shadow: 0 20px 60px rgba(0, 255, 255, 0.3);
-        }
-
-        .game-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .game-card:hover::before {
-            left: 100%;
-        }
-
-        .game-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            display: block;
-            filter: brightness(0.8);
-            transition: all 0.4s;
-        }
-
-        .game-card:hover .game-image {
-            filter: brightness(1) contrast(1.1);
-        }
-
-        .game-content {
-            padding: 25px;
-        }
-
-        .game-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: var(--neon-cyan);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .game-bio {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 20px;
-            font-size: 1rem;
-        }
-
-        .game-link {
-            display: inline-block;
-            padding: 10px 20px;
-            background: transparent;
-            border: 2px solid var(--neon-magenta);
-            color: var(--neon-magenta);
-            text-decoration: none;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .game-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: var(--neon-magenta);
-            transition: left 0.3s;
-            z-index: -1;
-        }
-
-        .game-link:hover::before {
-            left: 0;
-        }
-
-        .game-link:hover {
-            color: var(--dark-bg);
-            box-shadow: 0 0 20px var(--neon-magenta);
-        }
-
-
-
-
-
-        @media (max-width: 768px) {
-            .games-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .studio-name {
-                font-size: 2.5rem;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PegWorks Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --neon-cyan:#00ffff;
+    --neon-magenta:#ff00ff;
+    --neon-orange:#ff9900;
+    --dark-bg:#0a0a0f;
+    --card-bg:#1a1a24;
+    --text-primary:#fff;
+    --text-secondary:#b0b0c8;
+    --border-color:#2a2a3e;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Rajdhani',sans-serif;background:var(--dark-bg);color:var(--text-primary);overflow-x:hidden;min-height:100vh;}
+.container{max-width:1400px;margin:0 auto;padding:20px;}
+.header{text-align:center;padding:60px 20px;}
+.studio-name{font-family:'Orbitron',sans-serif;font-size:clamp(3rem,10vw,6rem);font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:20px;display:inline-block;background:linear-gradient(135deg,var(--neon-cyan),var(--neon-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:glitch 3s infinite;cursor:pointer;transition:all 0.3s;}
+.studio-name:hover{filter:drop-shadow(0 0 20px var(--neon-cyan));}
+#peg-o{cursor:pointer;}
+@keyframes glitch{0%,90%,100%{transform:translate(0);}92%{transform:translate(-2px,2px);}94%{transform:translate(2px,-2px);}96%{transform:translate(-2px,-2px);}}
+.studio-tagline{font-size:1.2rem;color:var(--text-secondary);letter-spacing:0.3em;text-transform:uppercase;font-weight:600;}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:30px;padding:40px 20px;}
+.game-card{background:var(--card-bg);border:2px solid var(--border-color);position:relative;overflow:hidden;transition:all 0.4s;clip-path: polygon(20px 0,100% 0,100% calc(100%-20px),calc(100%-20px) 100%,0 100%,0 20px);}
+.game-card:hover{transform:translateY(-10px);border-color:var(--neon-cyan);box-shadow:0 20px 60px rgba(0,255,255,0.3);}
+.game-image{width:100%;height:250px;object-fit:cover;filter:brightness(0.8);transition:all 0.4s;}
+.game-card:hover .game-image{filter:brightness(1) contrast(1.1);}
+.game-content{padding:25px;}
+.game-title{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:700;margin-bottom:5px;color:var(--neon-cyan);text-transform:uppercase;letter-spacing:0.05em;}
+.game-bio{color:var(--text-secondary);line-height:1.6;margin-bottom:10px;font-size:1rem;}
+.game-link{display:inline-block;padding:10px 20px;background:transparent;border:2px solid var(--neon-magenta);color:var(--neon-magenta);text-decoration:none;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;font-size:0.9rem;transition:all 0.3s;position:relative;overflow:hidden;}
+.game-link:hover{color:var(--dark-bg);box-shadow:0 0 20px var(--neon-magenta);}
+#orange-ball{position:fixed;top:20px;right:20px;width:30px;height:30px;border-radius:50%;background:var(--neon-orange);cursor:pointer;z-index:1000;}
+.peggle-ball{position:fixed;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,var(--neon-cyan),var(--neon-magenta));pointer-events:none;z-index:999;}
+@media(max-width:768px){.games-grid{grid-template-columns:1fr}.studio-name{font-size:2.5rem;}}
+</style>
 </head>
 <body>
-    <div class="scanline"></div>
-    
-    <div class="container">
-        <div class="header">
-            <h1 class="studio-name">PegWorks</h1>
-            <p class="studio-tagline">Feel the bounce</p>
-        </div>
+<div class="container">
+  <div class="header">
+    <h1 class="studio-name">PegW<span id="peg-o">o</span>rks</h1>
+    <p class="studio-tagline">Feel the bounce</p>
+  </div>
+  <div class="games-grid" id="gamesGrid"></div>
+</div>
+<div id="orange-ball" title="Click me!"></div>
 
-        <div class="games-grid" id="gamesGrid">
-            <!-- Sample games will be populated here -->
-        </div>
-    </div>
+<script>
+// Game data
+const games=[
+  {title:"Peggle – Portal Edition",image:"https://upload.wikimedia.org/wikipedia/en/c/c5/Peggle_Steam.jpg",bio:"Launch balls and hit pegs to clear the board. Portals warp balls across the board for wild combos. It’s a fun, physics-based puzzle game that’s easy to learn and addictive. By Evren",link:"https://c29er-compsci.github.io/peggle.html"},
+  {title:"Balatro",image:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjL3XpI3kCS3gjTy5R3R0Ur3PnNX0YFKWYABcPGmy1kn_LVB1chVIOseg8L0QjpjmnFHre&s=10",bio:"Balatro is a roguelike deck-builder with a poker twist. You use cards, Jokers, and multipliers to create winning combos. Every run is a strategic gamble that challenges your math and strategy skills. By Evren",link:"https://c29er-compsci.github.io/balatro.html"}
+];
 
-    <script>
-        // ============================================================
-        // EASY CUSTOMIZATION SECTION - EDIT YOUR GAMES HERE!
-        // ============================================================
-        
-        // TO CHANGE STUDIO NAME: Edit the name below
-        const STUDIO_NAME = "PegWorks";
-        
-        // TO ADD/EDIT GAMES: Modify this array
-        // Each game needs: title, image (URL), bio (description), and link
-        const games = [
-            {
-                title: "Peggle – Portal Edition",
-                image: "https://upload.wikimedia.org/wikipedia/en/c/c5/Peggle_Steam.jpg",
-                bio: "Peggle is a physics-based puzzle game built around bouncing balls, satisfying chaos, and perfectly timed shots. Its iconic portals add strategy and spectacle, warping balls across the board in moments that feel both lucky and earned. Simple to learn and endlessly replayable, Peggle turns physics into pure joy. By Evren",
-                link: "https://c29er-compsci.github.io/peggle.html"
-            },
-            {
-                title: "Balatro",
-                image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjL3XpI3kCS3gjTy5R3R0Ur3PnNX0YFKWYABcPGmy1kn_LVB1chVIOseg8L0QjpjmnFHre&s=10",
-                bio: "Balatro is a roguelike deck-builder that twists poker into a high-stakes numbers game of combos, multipliers, and wild synergies. By breaking the rules of traditional poker with Jokers and escalating blinds, it turns familiar hands into explosive strategies. Every run feels like gambling with math—and winning by being clever. By Evren",
-                link: "https://c29er-compsci.github.io/balatro.html"
-            },
-            // {
-            //     title: "Neon Drift",
-            //     image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&h=500&fit=crop",
-            //     bio: "Arcade racing game featuring anti-gravity vehicles and synthwave aesthetics. Master impossible tracks floating through neon-soaked cityscapes at breakneck speeds.",
-            //     link: "#"
-            // }
-            // TO ADD MORE GAMES: Copy the block above, add a comma after the closing }, and paste below
-            // Example:
-            // ,
-            // {
-            //     title: "Your Game Name",
-            //     image: "https://your-image-url.com/image.jpg",
-            //     bio: "Your game description goes here.",
-            //     link: "https://your-game-link.com"
-            // }
-        ];
+// Render games
+function renderGames(){
+  const grid=document.getElementById('gamesGrid'); grid.innerHTML='';
+  games.forEach(game=>{
+    const card=document.createElement('div'); card.className='game-card';
+    card.innerHTML=`
+      <img src="${game.image}" class="game-image">
+      <div class="game-content">
+        <h3 class="game-title">${game.title}</h3>
+        <p class="game-bio">${game.bio}</p>
+        <a href="${game.link}" class="game-link" target="_blank">Play Now</a>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
 
-        // ============================================================
-        // END OF CUSTOMIZATION SECTION
-        // (You don't need to edit anything below this line)
-        // ============================================================
+// Peggle balls
+function spawnBalls(x,y){
+  for(let i=0;i<10;i++){
+    const ball=document.createElement('div'); ball.className='peggle-ball';
+    ball.style.left=x+Math.random()*40-20+'px';
+    ball.style.top=y+'px';
+    document.body.appendChild(ball);
+    const rx=(Math.random()-0.5)*200;
+    ball.animate([{transform:'translate(0,0)'},{transform:`translate(${rx}px,500px)`}],{duration:2000+Math.random()*1000,easing:'ease-in'});
+    setTimeout(()=>ball.remove(),3000);
+  }
+}
 
-        function renderGames() {
-            const grid = document.getElementById('gamesGrid');
-            grid.innerHTML = '';
+document.getElementById('peg-o').addEventListener('click',e=>{
+  const rect=e.target.getBoundingClientRect();
+  spawnBalls(rect.left+rect.width/2,rect.top);
+});
+document.getElementById('orange-ball').addEventListener('click',e=>{
+  spawnBalls(window.innerWidth-50,50);
+});
 
-            games.forEach((game) => {
-                const card = document.createElement('div');
-                card.className = 'game-card';
-                card.innerHTML = `
-                    <img src="${game.image}" alt="${game.title}" class="game-image">
-                    <div class="game-content">
-                        <h3 class="game-title">${game.title}</h3>
-                        <p class="game-bio">${game.bio}</p>
-                        <a href="${game.link}" class="game-link" target="_blank">Play Now</a>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        // Update studio name from constant
-        document.querySelector('.studio-name').textContent = STUDIO_NAME;
-
-        // Initialize the page
-        renderGames();
-    </script>
+renderGames();
+</script>
 </body>
 </html>
