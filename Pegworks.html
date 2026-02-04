@@ -37,6 +37,9 @@ body{font-family:'Rajdhani',sans-serif;background:var(--dark-bg);color:var(--tex
 .game-link:hover{color:var(--dark-bg);box-shadow:0 0 20px var(--neon-magenta);}
 #orange-ball{position:fixed;top:20px;right:20px;width:30px;height:30px;border-radius:50%;background:var(--neon-orange);cursor:pointer;z-index:1000;}
 .peggle-ball{position:fixed;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,var(--neon-cyan),var(--neon-magenta));pointer-events:none;z-index:999;}
+.submit-game{display:flex;justify-content:center;margin:40px 0;}
+.submit-game a{padding:15px 30px;background:var(--neon-orange);color:#000;font-weight:bold;text-decoration:none;border-radius:10px;transition:all 0.3s;}
+.submit-game a:hover{box-shadow:0 0 20px var(--neon-orange);}
 @media(max-width:768px){.games-grid{grid-template-columns:1fr}.studio-name{font-size:2.5rem;}}
 </style>
 </head>
@@ -47,14 +50,20 @@ body{font-family:'Rajdhani',sans-serif;background:var(--dark-bg);color:var(--tex
     <p class="studio-tagline">Feel the bounce</p>
   </div>
   <div class="games-grid" id="gamesGrid"></div>
+
+  <!-- Submit your own game section -->
+  <div class="submit-game">
+    <a href="https://forms.gle/rUN2vrK71uXw78xH7" target="_blank">Submit Your Own Game</a>
+  </div>
 </div>
+
 <div id="orange-ball" title="Click me!"></div>
 
 <script>
 // Game data
 const games=[
-  {title:"Peggle – Portal Edition",image:"https://upload.wikimedia.org/wikipedia/en/c/c5/Peggle_Steam.jpg",bio:"Launch balls and hit pegs to clear the board. Portals warp balls across the board for wild combos. It’s a fun, physics-based puzzle game that’s easy to learn and addictive. By Evren",link:"https://c29er-compsci.github.io/peggle.html"},
-  {title:"Balatro",image:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjL3XpI3kCS3gjTy5R3R0Ur3PnNX0YFKWYABcPGmy1kn_LVB1chVIOseg8L0QjpjmnFHre&s=10",bio:"Balatro is a roguelike deck-builder with a poker twist. You use cards, Jokers, and multipliers to create winning combos. Every run is a strategic gamble that challenges your math and strategy skills. By Evren",link:"https://c29er-compsci.github.io/balatro.html"}
+  {title:"Peggle – Portal Edition",image:"https://upload.wikimedia.org/wikipedia/en/c/c5/Peggle_Steam.jpg",bio:"Launch balls and hit pegs to clear the board. Portals warp balls for wild combos. Fun, physics-based, and addictive.",link:"https://c29er-compsci.github.io/peggle.html"},
+  {title:"Balatro",image:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjL3XpI3kCS3gjTy5R3R0Ur3PnNX0YFKWYABcPGmy1kn_LVB1chVIOseg8L0QjpjmnFHre&s=10",bio:"A roguelike deck-builder with a poker twist. Use cards, Jokers, and multipliers to create combos. Every run challenges strategy and math.",link:"https://c29er-compsci.github.io/balatro.html"}
 ];
 
 // Render games
