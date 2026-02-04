@@ -380,7 +380,7 @@ canvas{display:block}
  <a href="notes.html"><div id="patchnotes"></div></a>
 
 <button class="btn" onclick="showLeaderboard()" style="margin-top:15px;font-size:20px;padding:12px 35px">
-  🏆 LEADERBOARD
+  🏆 LEADERBOARD 
 </button>
 
 
@@ -1647,10 +1647,9 @@ async function loadLeaderboard() {
     }
     
     scores.sort((a, b) => b.score - a.score);
-    // ⭐ CHANGED: Show all scores instead of just top 10
-    const allScores = scores; // Shows everything
+    const top10 = scores.slice(0, 10); // Only show top 10
     
-    listDiv.innerHTML = allScores.map((entry, index) => {
+    listDiv.innerHTML = top10.map((entry, index) => {
       const rank = index + 1;
       const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
       
@@ -1714,19 +1713,19 @@ async function submitCurrentScore() {
     // Add new score
     scores.push(newScore);
     
-    // Keep top 100
-    scores.sort((a, b) => b.score - a.score);
-    const top100 = scores.slice(0, 100);
-    
-    // Update
-    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_CONFIG.API_KEY
-      },
-      body: JSON.stringify({ scores: top100 })
-    });
+   // Keep top 25
+scores.sort((a, b) => b.score - a.score);
+const top100 = scores.slice(0, 100);
+
+// Update
+await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Master-Key': JSONBIN_CONFIG.API_KEY
+  },
+  body: JSON.stringify({ scores: top100 })
+});
     
     lastSubmitTime = now;
     loadingDiv.style.display = 'none';
@@ -2156,7 +2155,7 @@ async function cleanupDuplicates() {
     
     // Sort by score descending
     cleaned.sort((a, b) => b.score - a.score);
-    const top100 = cleaned.slice(0, 100);
+   const top25 = cleaned.slice(0, 25);
     
     await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`, {
       method: 'PUT',
@@ -2164,7 +2163,7 @@ async function cleanupDuplicates() {
         'Content-Type': 'application/json',
         'X-Master-Key': JSONBIN_CONFIG.API_KEY
       },
-      body: JSON.stringify({ scores: top100 })
+      body: JSON.stringify({ scores: top25 })
     });
     
     loadingDiv.style.display = 'none';
