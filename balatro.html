@@ -592,7 +592,7 @@ body::before{
     <span class="gameIcon">🎲</span>
     <span class="gameIcon">🏆</span>
   </div>
-  <p>Check out our collection of awesome games!</p>
+  <p>Check out our collection of awesome games at Pegworks!</p>
 </a>
     <button class="home-btn" id="startBtn">Start Game</button>
   </div>
@@ -1197,7 +1197,7 @@ function playHand(){
       dealHand();
       renderStats();updatePreview();updateButtons();
       saveGame();
-      if(!G.handsLeft)setTimeout(endRound,700);
+      if(G.handsLeft<=0)setTimeout(endRound,700);
     },800);
     return;
   }
@@ -1245,7 +1245,10 @@ function playHand(){
   });
   
   const total=Math.floor(chips*mult);
-  G.roundScore+=total;
+  const newScore = G.roundScore + total;
+  const willWin = newScore >= G.targetScore;
+  
+  G.roundScore = newScore;
   G.handsLeft--;
 
   const strip=document.getElementById('playedStrip');
@@ -1267,27 +1270,34 @@ function playHand(){
   const particleColor=total>=300?'#ffd700':total>=150?'#ef5350':'#4fc3f7';
   burst(rect.left+rect.width/2,rect.top+rect.height/2,particleColor,50);
 
- setTimeout(()=>{
+  setTimeout(()=>{
     hideBreakdown();
     [...G.selected].sort((a,b)=>b-a).forEach(i=>G.hand.splice(i,1));
     G.selected.clear();
-    const need=8-G.hand.length;
-    for(let i=0;i<need&&G.deck.length;i++)G.hand.push(G.deck.pop());
-    strip.innerHTML='';
-    dealHand();
-    renderStats();updatePreview();updateButtons();renderJokers();
-    G.busy=false;
-    saveGame();
     
-    // Check for win immediately after scoring
-    if(G.roundScore>=G.targetScore){
+    if(willWin){
+      // WON - go straight to shop, don't draw new cards
+      strip.innerHTML='';
+      G.busy=false;
+      saveGame();
       setTimeout(()=>{
         G.money+=8;
         renderStats();
         showShop();
       },700);
-    }else if(!G.handsLeft){
-      setTimeout(endRound,700);
+    }else{
+      // Didn't win yet - continue playing
+      const need=8-G.hand.length;
+      for(let i=0;i<need&&G.deck.length;i++)G.hand.push(G.deck.pop());
+      strip.innerHTML='';
+      dealHand();
+      renderStats();updatePreview();updateButtons();renderJokers();
+      G.busy=false;
+      saveGame();
+      
+      if(G.handsLeft<=0){
+        setTimeout(endRound,700);
+      }
     }
   },2800);
 }
@@ -1465,33 +1475,39 @@ function showShop(){
     sellSec.innerHTML='<div class="shop-section-title">💸 Sell Your Jokers</div><div class="shop-sub" style="margin:4px 0 0 0;font-size:10px;">Click to sell for half price</div><div class="joker-sell-grid" id="jokerSellGrid"></div>';
     content.appendChild(sellSec);
     
-    const sellGrid=sellSec.querySelector('#jokerSellGrid');
-    G.jokers.forEach((j,idx)=>{
-      const baseCost={common:5,uncommon:8,rare:12,legendary:20}[j.rarity];
-      const sellPrice=Math.floor(baseCost*G.jokerDiscount/2);
-      const el=document.createElement('div');
-      el.className=`joker-sell-card ${j.rarity}`;
-      el.innerHTML=`<div class="joker-sell-price">+$${sellPrice}</div>
-        <div class="sc-name" style="font-size:10px;margin-bottom:3px;">${j.name}</div>
-        <div class="sc-icon" style="font-size:32px;margin:2px 0;">${j.icon}</div>
-        <div class="sc-desc" style="font-size:8px;min-height:20px;">${j.effect}</div>`;
-      el.onclick=()=>{
-        if(el.classList.contains('sold'))return;
-        if(confirm(`Sell ${j.name} for $${sellPrice}?`)){
-          G.money+=sellPrice;
-          G.jokers.splice(idx,1);
-          G.jokersSold=(G.jokersSold||0)+1;
-          el.classList.add('sold');
-          el.querySelector('.joker-sell-price').textContent='SOLD';
-          document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
-          renderJokers();
-          renderStats();
-          burst(innerWidth/2,innerHeight/2,'#ffd700',30);
-          saveGame();
-        }
-      };
-      sellGrid.appendChild(el);
-    });
+  const sellGrid=sellSec.querySelector('#jokerSellGrid');
+// Create a snapshot of jokers to avoid index issues
+const jokersSnapshot=[...G.jokers];
+jokersSnapshot.forEach((j,snapshotIdx)=>{
+  const baseCost={common:5,uncommon:8,rare:12,legendary:20}[j.rarity];
+  const sellPrice=Math.floor(baseCost*G.jokerDiscount/2);
+  const el=document.createElement('div');
+  el.className=`joker-sell-card ${j.rarity}`;
+  el.innerHTML=`<div class="joker-sell-price">+$${sellPrice}</div>
+    <div class="sc-name" style="font-size:10px;margin-bottom:3px;">${j.name}</div>
+    <div class="sc-icon" style="font-size:32px;margin:2px 0;">${j.icon}</div>
+    <div class="sc-desc" style="font-size:8px;min-height:20px;">${j.effect}</div>`;
+  el.onclick=()=>{
+    if(el.classList.contains('sold'))return;
+    // Find the actual current index of this joker
+    const currentIdx=G.jokers.findIndex(joker=>joker===j);
+    if(currentIdx===-1)return; // Already sold
+    
+    if(confirm(`Sell ${j.name} for $${sellPrice}?`)){
+      G.money+=sellPrice;
+      G.jokers.splice(currentIdx,1);
+      G.jokersSold=(G.jokersSold||0)+1;
+      el.classList.add('sold');
+      el.querySelector('.joker-sell-price').textContent='SOLD';
+      document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+      renderJokers();
+      renderStats();
+      burst(innerWidth/2,innerHeight/2,'#ffd700',30);
+      saveGame();
+    }
+  };
+ sellGrid.appendChild(el);
+});
   }
   
   // Jokers
