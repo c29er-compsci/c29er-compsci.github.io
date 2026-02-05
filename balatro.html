@@ -731,7 +731,7 @@ body::before{
 <div class="shop-overlay" id="shopOverlay">
   <div class="shop-panel">
     <div class="shop-title">🃏 Shop 🃏</div>
-    <div class="shop-sub">Spend wisely!</div>
+    <div class="shop-sub" id="shopMoney">💰 $0</div>
     <div id="shopContent"></div>
     <div class="shop-btn-wrap"><button class="shop-btn" id="shopClose">Continue</button></div>
   </div>
@@ -971,7 +971,7 @@ function initState(){
      selected:new Set(),jokers:[],busy:false,sortMode:null,
      baseHands:4,baseDiscards:3,maxJokers:5,jokerDiscount:1,
      tarots:[],planets:[],handUpgrades:{},selectedDeck:null,
-     bossBlind:null,firstHandPlayed:false};
+     bossBlind:null,firstHandPlayed:false,roundWon:false};
 }
 
 /* ════ DECK ════ */
@@ -1157,9 +1157,9 @@ function updatePreview(){
 }
 
 function updateButtons(){
-  const ok=G.selected.size>0&&G.selected.size<=5;
+  const ok=G.selected.size>0&&G.selected.size<=5&&!G.roundWon&&G.handsLeft>0;
   document.getElementById('playBtn').disabled =!ok||G.busy;
-  document.getElementById('discBtn').disabled =!ok||!G.discardsLeft||G.busy;
+  document.getElementById('discBtn').disabled =!ok||!G.discardsLeft||G.busy||G.roundWon;
 }
 
 function fmt(n){return n.toLocaleString();}
@@ -1178,8 +1178,8 @@ document.getElementById('handRow').addEventListener('click',e=>{
 
 /* ════ PLAY HAND ════ */
 function playHand(){
-  if(G.busy||!G.selected.size)return;
-  
+  if(G.busy||!G.selected.size||G.roundWon||G.handsLeft<=0)return;
+
   // Boss blind: first hand zero
   if(G.bossBlind&&G.bossBlind.name==='The House'&&!G.firstHandPlayed){
     G.firstHandPlayed=true;
@@ -1270,15 +1270,17 @@ function playHand(){
   const particleColor=total>=300?'#ffd700':total>=150?'#ef5350':'#4fc3f7';
   burst(rect.left+rect.width/2,rect.top+rect.height/2,particleColor,50);
 
-  setTimeout(()=>{
+  
+   setTimeout(()=>{
     hideBreakdown();
     [...G.selected].sort((a,b)=>b-a).forEach(i=>G.hand.splice(i,1));
     G.selected.clear();
     
     if(willWin){
+      G.roundWon = true;
+      G.busy = true;  // Keep busy state locked
       // WON - go straight to shop, don't draw new cards
       strip.innerHTML='';
-      G.busy=false;
       saveGame();
       setTimeout(()=>{
         G.money+=8;
@@ -1322,7 +1324,7 @@ function hideBreakdown(){
 
 /* ════ DISCARD ════ */
 function discardCards(){
-  if(G.busy||!G.selected.size||!G.discardsLeft)return;
+  if(G.busy||!G.selected.size||!G.discardsLeft||G.roundWon||G.handsLeft<=0)return;
   G.busy=true;
   const row=document.getElementById('handRow');
   [...G.selected].forEach(i=>{
@@ -1604,6 +1606,8 @@ function buyJoker(j,cost,el){
 function startNewRound(){
   document.getElementById('shopOverlay').classList.remove('open');
   G.round++;
+  G.roundWon = false;
+  G.busy = false;  // ADD THIS LINE - Reset busy state!
   G.handsLeft=G.baseHands;
   G.discardsLeft=G.baseDiscards;
   G.roundScore=0;
