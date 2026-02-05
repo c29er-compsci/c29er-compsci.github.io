@@ -37,7 +37,26 @@ body{font-family:'Rajdhani',sans-serif;background:var(--dark-bg);color:var(--tex
 .game-link:hover{color:var(--dark-bg);box-shadow:0 0 20px var(--neon-magenta);}
 #orange-ball{position:fixed;top:20px;right:20px;width:30px;height:30px;border-radius:50%;background:var(--neon-orange);cursor:pointer;z-index:1000;}
 .peggle-ball{position:fixed;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,var(--neon-cyan),var(--neon-magenta));pointer-events:none;z-index:999;}
-.submit-game{display:flex;justify-content:center;margin:40px 0;}
+.submit-game {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1001;
+}
+.submit-game a {
+  padding: 10px 20px;
+  background: var(--neon-orange);
+  color: #000;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+.submit-game a:hover {
+  box-shadow: 0 0 20px var(--neon-orange);
+}
+
+
 .submit-game a{padding:15px 30px;background:var(--neon-orange);color:#000;font-weight:bold;text-decoration:none;border-radius:10px;transition:all 0.3s;}
 .submit-game a:hover{box-shadow:0 0 20px var(--neon-orange);}
 @media(max-width:768px){.games-grid{grid-template-columns:1fr}.studio-name{font-size:2.5rem;}}

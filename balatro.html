@@ -35,6 +35,66 @@ body::before{
   pointer-events:none;z-index:0;
 }
 
+#moreGamesBox{
+  position:fixed;
+  left:15px;
+  bottom:15px;
+  width:280px;
+  background:linear-gradient(135deg,rgba(255,100,255,.95),rgba(157,78,221,.9));
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 8px 32px rgba(157,78,221,.5);
+  border:3px solid rgba(255,215,0,.6);
+  z-index:101;
+  cursor:pointer;
+  transition:all .3s;
+  text-decoration:none;
+  display:block;
+}
+#moreGamesBox:hover{
+  transform:scale(1.05) translateY(-5px);
+  box-shadow:0 12px 40px rgba(157,78,221,.7);
+  border-color:#ffd700;
+}
+#moreGamesBox h3{
+  margin:0 0 10px 0;
+  color:white;
+  font-size:20px;
+  text-align:center;
+  text-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+#moreGamesBox p{
+  margin:0;
+  color:#fff;
+  font-size:14px;
+  text-align:center;
+  line-height:1.4;
+}
+.gameIcons{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:12px 0 8px 0;
+  font-size:28px;
+}
+.gameIcon{
+  animation:iconBounce 2s ease-in-out infinite;
+}
+.gameIcon:nth-child(2){
+  animation-delay:.2s;
+}
+.gameIcon:nth-child(3){
+  animation-delay:.4s;
+}
+.gameIcon:nth-child(4){
+  animation-delay:.6s;
+}
+@keyframes iconBounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+
+
 #particles{position:fixed;inset:0;pointer-events:none;z-index:500;}
 
 /* ═══ HOME ═══ */
@@ -418,6 +478,53 @@ body::before{
 .shop-card.uncommon{border-color:var(--uncommon);}
 .shop-card.rare{border-color:var(--rare);}
 .shop-card.legendary{border-color:var(--legendary);}
+.joker-sell-section{
+  background:rgba(255,100,100,.1);
+  border:2px solid rgba(255,100,100,.3);
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:16px;
+}
+.joker-sell-grid{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.joker-sell-card{
+  width:110px;
+  background:#fff;
+  border:3px solid #111;
+  border-radius:12px;
+  padding:10px 6px;
+  text-align:center;
+  cursor:pointer;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+  position:relative;
+}
+.joker-sell-card:hover{
+  transform:translateY(-6px) scale(1.05);
+  box-shadow:0 8px 20px rgba(255,100,100,.6);
+}
+.joker-sell-card.sold{
+  opacity:.3;
+  cursor:not-allowed;
+  transform:none !important;
+}
+.joker-sell-price{
+  position:absolute;
+  top:4px;
+  right:4px;
+  background:#ef5350;
+  color:#fff;
+  font-size:10px;
+  font-weight:900;
+  padding:2px 6px;
+  border-radius:6px;
+  box-shadow:0 2px 4px rgba(0,0,0,.3);
+}
 .shop-btn-wrap{text-align:center;margin-top:16px;}
 .shop-btn{background:linear-gradient(160deg,#4fc3f7,#0277bd);border:none;border-radius:12px;padding:12px 48px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:16px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 0 #01579b,0 6px 16px rgba(0,0,0,.4);transition:transform .12s,box-shadow .12s;}
 .shop-btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 #01579b;}
@@ -467,6 +574,8 @@ body::before{
 <body>
 <canvas id="particles"></canvas>
 
+
+
 <div class="home" id="home">
   <div class="home-deco d1">♠</div>
   <div class="home-deco d2">♥</div>
@@ -475,9 +584,20 @@ body::before{
   <div class="home-title">BALATRO</div>
   <div class="home-sub">Ultimate Edition</div>
   <div class="home-btn-wrap">
+    <a id="moreGamesBox" href="https://c29er-compsci.github.io/Pegworks.html" target="_blank">
+  <h3>🎮 PLAY MORE GAMES! 🎮</h3>
+  <div class="gameIcons">
+    <span class="gameIcon">🕹️</span>
+    <span class="gameIcon">🎯</span>
+    <span class="gameIcon">🎲</span>
+    <span class="gameIcon">🏆</span>
+  </div>
+  <p>Check out our collection of awesome games!</p>
+</a>
     <button class="home-btn" id="startBtn">Start Game</button>
   </div>
 </div>
+
 
 <div class="deck-overlay" id="deckOverlay">
   <div class="deck-panel">
@@ -549,6 +669,7 @@ body::before{
       </table>
     </div>
     <button class="rules-close" id="rulesClose">Got it!</button>
+
   </div>
 </div>
 
@@ -637,7 +758,10 @@ body::before{
   </div>
 </div>
 
+
+
 <script>
+
 /* ════ PARTICLES ════ */
 const canvas=document.getElementById('particles'),ctx=canvas.getContext('2d');
 let particles=[];
@@ -1143,7 +1267,7 @@ function playHand(){
   const particleColor=total>=300?'#ffd700':total>=150?'#ef5350':'#4fc3f7';
   burst(rect.left+rect.width/2,rect.top+rect.height/2,particleColor,50);
 
-  setTimeout(()=>{
+ setTimeout(()=>{
     hideBreakdown();
     [...G.selected].sort((a,b)=>b-a).forEach(i=>G.hand.splice(i,1));
     G.selected.clear();
@@ -1154,7 +1278,17 @@ function playHand(){
     renderStats();updatePreview();updateButtons();renderJokers();
     G.busy=false;
     saveGame();
-    if(!G.handsLeft)setTimeout(endRound,700);
+    
+    // Check for win immediately after scoring
+    if(G.roundScore>=G.targetScore){
+      setTimeout(()=>{
+        G.money+=8;
+        renderStats();
+        showShop();
+      },700);
+    }else if(!G.handsLeft){
+      setTimeout(endRound,700);
+    }
   },2800);
 }
 
@@ -1320,13 +1454,50 @@ function endRound(){
 }
 
 function showShop(){
+  document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
   const content=document.getElementById('shopContent');
   content.innerHTML='';
+  
+  // Sell Jokers Section
+  if(G.jokers.length>0){
+    const sellSec=document.createElement('div');
+    sellSec.className='joker-sell-section';
+    sellSec.innerHTML='<div class="shop-section-title">💸 Sell Your Jokers</div><div class="shop-sub" style="margin:4px 0 0 0;font-size:10px;">Click to sell for half price</div><div class="joker-sell-grid" id="jokerSellGrid"></div>';
+    content.appendChild(sellSec);
+    
+    const sellGrid=sellSec.querySelector('#jokerSellGrid');
+    G.jokers.forEach((j,idx)=>{
+      const baseCost={common:5,uncommon:8,rare:12,legendary:20}[j.rarity];
+      const sellPrice=Math.floor(baseCost*G.jokerDiscount/2);
+      const el=document.createElement('div');
+      el.className=`joker-sell-card ${j.rarity}`;
+      el.innerHTML=`<div class="joker-sell-price">+$${sellPrice}</div>
+        <div class="sc-name" style="font-size:10px;margin-bottom:3px;">${j.name}</div>
+        <div class="sc-icon" style="font-size:32px;margin:2px 0;">${j.icon}</div>
+        <div class="sc-desc" style="font-size:8px;min-height:20px;">${j.effect}</div>`;
+      el.onclick=()=>{
+        if(el.classList.contains('sold'))return;
+        if(confirm(`Sell ${j.name} for $${sellPrice}?`)){
+          G.money+=sellPrice;
+          G.jokers.splice(idx,1);
+          G.jokersSold=(G.jokersSold||0)+1;
+          el.classList.add('sold');
+          el.querySelector('.joker-sell-price').textContent='SOLD';
+          document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+          renderJokers();
+          renderStats();
+          burst(innerWidth/2,innerHeight/2,'#ffd700',30);
+          saveGame();
+        }
+      };
+      sellGrid.appendChild(el);
+    });
+  }
   
   // Jokers
   const jokerSec=document.createElement('div');
   jokerSec.className='shop-section';
-  jokerSec.innerHTML='<div class="shop-section-title">🃏 Jokers</div><div class="shop-grid" id="jokerShop"></div>';
+  jokerSec.innerHTML='<div class="shop-section-title">🃏 Buy Jokers</div><div class="shop-grid" id="jokerShop"></div>';
   content.appendChild(jokerSec);
   
   const jokerGrid=jokerSec.querySelector('#jokerShop');
@@ -1361,8 +1532,10 @@ function showShop(){
         G.tarots.push({...t});
         el.classList.add('sold');
         el.querySelector('.sc-price').textContent='Sold';
+        document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
         renderStats();renderInventory();
         burst(innerWidth/2,innerHeight/2,'#9c27b0',24);
+        saveGame();
       }
     };
     tarotGrid.appendChild(el);
@@ -1387,8 +1560,10 @@ function showShop(){
         G.planets.push({...p});
         el.classList.add('sold');
         el.querySelector('.sc-price').textContent='Sold';
+        document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
         renderStats();renderInventory();
         burst(innerWidth/2,innerHeight/2,'#9c27b0',24);
+        saveGame();
       }
     };
     planetGrid.appendChild(el);
@@ -1403,6 +1578,7 @@ function buyJoker(j,cost,el){
   G.jokers.push({...j});
   el.classList.add('sold');
   el.querySelector('.sc-price').textContent='Sold';
+  document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
   renderJokers();renderStats();
   const r=document.getElementById('jokerRow').getBoundingClientRect();
   burst(r.left+r.width/2,r.top+r.height/2,'#ffd700',24);
@@ -1593,6 +1769,7 @@ document.getElementById('menuBtn').onclick=()=>{
   saveGame();
   goHome();
 };
+//need to fix the fact that once that rounds keep going even once you run out of turns and when you beat the ante.//
 </script>
 </body>
 </html>

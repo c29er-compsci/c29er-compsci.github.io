@@ -359,6 +359,64 @@ canvas{display:block}
   font-size:13px;
   line-height:1.4;
 }
+#moreGamesBox{
+  position:fixed;
+  left:15px;
+  bottom:15px;
+  width:280px;
+  background:linear-gradient(135deg,rgba(255,100,255,.95),rgba(157,78,221,.9));
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 8px 32px rgba(157,78,221,.5);
+  border:3px solid rgba(255,215,0,.6);
+  z-index:101;
+  cursor:pointer;
+  transition:all .3s;
+  text-decoration:none;
+  display:block;
+}
+#moreGamesBox:hover{
+  transform:scale(1.05) translateY(-5px);
+  box-shadow:0 12px 40px rgba(157,78,221,.7);
+  border-color:#ffd700;
+}
+#moreGamesBox h3{
+  margin:0 0 10px 0;
+  color:white;
+  font-size:20px;
+  text-align:center;
+  text-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+#moreGamesBox p{
+  margin:0;
+  color:#fff;
+  font-size:14px;
+  text-align:center;
+  line-height:1.4;
+}
+.gameIcons{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:12px 0 8px 0;
+  font-size:28px;
+}
+.gameIcon{
+  animation:iconBounce 2s ease-in-out infinite;
+}
+.gameIcon:nth-child(2){
+  animation-delay:.2s;
+}
+.gameIcon:nth-child(3){
+  animation-delay:.4s;
+}
+.gameIcon:nth-child(4){
+  animation-delay:.6s;
+}
+@keyframes iconBounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
 
 </style>
 </head>
@@ -382,6 +440,18 @@ canvas{display:block}
 <button class="btn" onclick="showLeaderboard()" style="margin-top:15px;font-size:20px;padding:12px 35px">
   🏆 LEADERBOARD 
 </button>
+
+<!-- Play More Games Box -->
+<a id="moreGamesBox" href="https://c29er-compsci.github.io/Pegworks.html" target="_blank">
+  <h3>🎮 PLAY MORE GAMES! 🎮</h3>
+  <div class="gameIcons">
+    <span class="gameIcon">🕹️</span>
+    <span class="gameIcon">🎯</span>
+    <span class="gameIcon">🎲</span>
+    <span class="gameIcon">🏆</span>
+  </div>
+  <p>Check out our collection of awesome games!</p>
+</a>
 
 
 <div id="leaderboard">
