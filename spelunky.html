@@ -45,11 +45,6 @@
       50% { transform: translateY(-10px); }
     }
     
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
-    }
-    
     body { 
       margin: 0; 
       background: radial-gradient(ellipse at center, #2a1810 0%, #000000 100%);
@@ -352,8 +347,8 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const TILE = 40;
 const GRAVITY = 0.6;
-const mapWidth = 40;
-const mapHeight = 30;
+const mapWidth = 60;
+const mapHeight = 40;
 
 ctx.imageSmoothingEnabled = false;
 
@@ -483,79 +478,168 @@ function updateTheme() {
   else if (gameState.level === 3) currentTheme = THEMES.ICE;
   else currentTheme = THEMES.VOLCANO;
 }
-
-function generateCaveMap() {
-  map = [];
-  
-  for (let y = 0; y < mapHeight; y++) {
-    let row = [];
-    for (let x = 0; x < mapWidth; x++) {
-      row.push(1);
-    }
-    map.push(row);
-  }
-  
-  let caves = [];
-  for (let y = 0; y < mapHeight; y++) {
-    caves[y] = [];
-    for (let x = 0; x < mapWidth; x++) {
-      caves[y][x] = Math.random() > 0.47 ? 1 : 0;
-    }
-  }
-  
-  for (let iter = 0; iter < 5; iter++) {
-    let newCaves = [];
-    for (let y = 0; y < mapHeight; y++) {
-      newCaves[y] = [];
-      for (let x = 0; x < mapWidth; x++) {
-        let neighbors = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (caves[y + dy] && caves[y + dy][x + dx]) neighbors++;
-          }
-        }
-        newCaves[y][x] = neighbors >= 5 ? 1 : 0;
+function carveVerticalTunnel(x, yStart, yEnd, width = 2) {
+  for (let y = yStart; y <= yEnd; y++) {
+    for (let w = -width; w <= width; w++) {
+      if (map[y] && map[y][x + w] !== undefined) {
+        map[y][x + w] = 0;
       }
-    }
-    caves = newCaves;
-  }
-  
-  map = caves;
-  
-  // Starting area
-  for (let y = 1; y < 5; y++) {
-    for (let x = 2; x < 6; x++) {
-      if (map[y]) map[y][x] = 0;
-    }
-  }
-  
-  // Main shaft
-  let shaftX = Math.floor(mapWidth / 2);
-  for (let y = 5; y < mapHeight - 3; y++) {
-    if (Math.random() > 0.25 && map[y]) {
-      map[y][shaftX] = 0;
-      if (Math.random() > 0.4 && map[y][shaftX + 1] !== undefined) map[y][shaftX + 1] = 0;
-    }
-  }
-  
-  // Exit area
-  door.x = mapWidth - 5;
-  door.y = mapHeight - 3;
-  for (let y = door.y; y <= door.y + 1; y++) {
-    for (let x = door.x - 1; x <= door.x + 2; x++) {
-      if (map[y] && map[y][x] !== undefined) map[y][x] = 0;
     }
   }
 }
 
+function carveStaircase(x, yStart, yEnd, direction = 1) {
+  let step = 0;
+  for (let y = yStart; y <= yEnd; y++) {
+    let stairX = x + step * direction;
+    if (map[y] && map[y][stairX] !== undefined) {
+      map[y][stairX] = 0;
+      if (map[y + 1]) map[y + 1][stairX] = 1; // step floor
+    }
+    if (y % 3 === 0) step++;
+  }
+}
+
+function carvePlatformRow(y, spacing = 5) {
+  for (let x = 2; x < mapWidth - 2; x++) {
+    if (x % spacing === 0) {
+      map[y][x] = 1;
+      map[y - 1][x] = 0;
+    }
+  }
+}
+
+
+function generateCaveMap() {
+  map = [];
+
+  // =========================
+  // 1. SOLID FILL
+  // =========================
+  for (let y = 0; y < mapHeight; y++) {
+    map[y] = [];
+    for (let x = 0; x < mapWidth; x++) {
+      map[y][x] = 1;
+    }
+  }
+
+  const mainX = Math.floor(mapWidth / 2);
+
+  // =========================
+  // 2. MAIN SHAFT (SAFE)
+  // =========================
+  for (let y = 1; y < mapHeight - 2; y++) {
+    map[y][mainX] = 0;
+    map[y][mainX - 1] = 0;
+    map[y][mainX + 1] = 0;
+
+    // Every 4 tiles, add a landing
+    if (y % 4 === 0) {
+      map[y + 1][mainX - 1] = 1;
+      map[y + 1][mainX] = 1;
+      map[y + 1][mainX + 1] = 1;
+    }
+  }
+
+  // =========================
+  // 3. SIDE CAVES (SAFE CA)
+  // =========================
+  let caves = [];
+  for (let y = 0; y < mapHeight; y++) {
+    caves[y] = [];
+    for (let x = 0; x < mapWidth; x++) {
+      caves[y][x] = Math.random() > 0.5 ? 1 : 0;
+    }
+  }
+
+  for (let i = 0; i < 3; i++) {
+    let next = [];
+    for (let y = 0; y < mapHeight; y++) {
+      next[y] = [];
+      for (let x = 0; x < mapWidth; x++) {
+        let count = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            let ny = y + dy;
+            let nx = x + dx;
+            if (ny < 0 || ny >= mapHeight || nx < 0 || nx >= mapWidth) {
+              count++;
+            } else if (caves[ny][nx]) {
+              count++;
+            }
+          }
+        }
+        next[y][x] = count >= 5 ? 1 : 0;
+      }
+    }
+    caves = next;
+  }
+
+  // Apply caves AWAY from main shaft
+  for (let y = 1; y < mapHeight - 1; y++) {
+    for (let x = 1; x < mapWidth - 1; x++) {
+      if (Math.abs(x - mainX) > 3 && caves[y][x] === 0) {
+        map[y][x] = 0;
+      }
+    }
+  }
+
+  // =========================
+  // 4. START AREA
+  // =========================
+  for (let y = 1; y < 6; y++) {
+    for (let x = 2; x < 8; x++) {
+      map[y][x] = 0;
+    }
+  }
+  for (let x = 2; x < 8; x++) {
+    map[6][x] = 1;
+  }
+
+  // =========================
+  // 5. EXIT (ALWAYS REACHABLE)
+  // =========================
+  door.x = mapWidth - 6;
+  door.y = mapHeight - 4;
+
+  for (let y = door.y - 2; y <= door.y + 2; y++) {
+    for (let x = door.x - 3; x <= door.x + 3; x++) {
+      map[y][x] = 0;
+    }
+  }
+
+  for (let x = door.x - 3; x <= door.x + 3; x++) {
+    map[door.y + 3][x] = 1;
+  }
+
+  // Connect to shaft
+  for (let x = mainX; x <= door.x; x++) {
+    map[door.y][x] = 0;
+  }
+
+  // =========================
+  // 6. BORDERS
+  // =========================
+  for (let x = 0; x < mapWidth; x++) {
+    map[0][x] = 1;
+    map[mapHeight - 1][x] = 1;
+  }
+  for (let y = 0; y < mapHeight; y++) {
+    map[y][0] = 1;
+    map[y][mapWidth - 1] = 1;
+  }
+}
+
+
+        
 function generateTraps() {
   traps = [];
   arrows = [];
   
-  let trapCount = Math.min(5, 3 + gameState.level);
+  let trapCount = Math.min(8, 4 + gameState.level);
   for (let i = 0; i < trapCount; i++) {
-    let x = Math.floor(Math.random() * (mapWidth - 4) + 2);
-    let y = Math.floor(Math.random() * (mapHeight - 6) + 3);
+    let x = Math.floor(Math.random() * (mapWidth - 8) + 4);
+    let y = Math.floor(Math.random() * (mapHeight - 10) + 5);
     
     if (map[y] && map[y][x] === 1 && map[y][x-1] === 0) {
       traps.push({ 
@@ -578,9 +662,9 @@ function generateTraps() {
     }
   }
   
-  for (let i = 0; i < Math.min(8, 5 + gameState.level); i++) {
-    let x = Math.floor(Math.random() * mapWidth);
-    let y = Math.floor(Math.random() * (mapHeight - 5) + 3);
+  for (let i = 0; i < Math.min(12, 6 + gameState.level); i++) {
+    let x = Math.floor(Math.random() * (mapWidth - 4) + 2);
+    let y = Math.floor(Math.random() * (mapHeight - 8) + 4);
     
     if (map[y] && map[y][x] === 0 && map[y+1] && map[y+1][x] === 1) {
       traps.push({ 
@@ -595,9 +679,9 @@ function generateTraps() {
 
 function generateCrates() {
   crates = [];
-  for (let i = 0; i < 5 + gameState.level; i++) {
-    let x = Math.floor(Math.random() * mapWidth) * TILE;
-    let y = Math.floor(Math.random() * mapHeight) * TILE;
+  for (let i = 0; i < 8 + gameState.level * 2; i++) {
+    let x = Math.floor(Math.random() * (mapWidth - 4) + 2) * TILE;
+    let y = Math.floor(Math.random() * (mapHeight - 4) + 2) * TILE;
     
     if (!solidAt(x, y) && solidAt(x, y + TILE)) {
       crates.push({ x, y, broken: false });
@@ -607,9 +691,9 @@ function generateCrates() {
 
 function generateGems() {
   gems = [];
-  for (let i = 0; i < 3 + gameState.level; i++) {
-    let x = Math.floor(Math.random() * mapWidth) * TILE;
-    let y = Math.floor(Math.random() * mapHeight) * TILE;
+  for (let i = 0; i < 5 + gameState.level * 2; i++) {
+    let x = Math.floor(Math.random() * (mapWidth - 4) + 2) * TILE;
+    let y = Math.floor(Math.random() * (mapHeight - 4) + 2) * TILE;
     
     if (!solidAt(x, y)) {
       let type = Math.random();
@@ -627,19 +711,23 @@ function generateGems() {
 function generateShop() {
   shops = [];
   
-  if (Math.random() > 0.65) {
+  if (Math.random() > 0.6) {
     let shopX = Math.floor(mapWidth / 3);
     let shopY = Math.floor(mapHeight / 2);
     
+    // Clear shop area
     for (let y = shopY; y < shopY + 4; y++) {
       for (let x = shopX; x < shopX + 6; x++) {
-        if (map[y] && map[y][x] !== undefined) map[y][x] = 0;
+        if (y >= 0 && y < mapHeight && x >= 0 && x < mapWidth) {
+          map[y][x] = 0;
+        }
       }
     }
     
-    if (map[shopY + 4]) {
-      for (let x = shopX; x < shopX + 6; x++) {
-        if (map[shopY + 4][x] !== undefined) map[shopY + 4][x] = 1;
+    // Add floor
+    for (let x = shopX; x < shopX + 6; x++) {
+      if (shopY + 4 < mapHeight && x < mapWidth) {
+        map[shopY + 4][x] = 1;
       }
     }
     
@@ -679,18 +767,18 @@ let enemies = [];
 
 function spawnEnemies() {
   enemies = [];
-  let count = Math.min(6, 3 + gameState.level);
+  let count = Math.min(10, 5 + gameState.level * 2);
   
   for (let i = 0; i < count; i++) {
     let x, y;
     let attempts = 0;
     do {
-      x = Math.floor(Math.random() * (mapWidth - 10) + 5) * TILE;
-      y = Math.floor(Math.random() * (mapHeight - 10) + 5) * TILE;
+      x = Math.floor(Math.random() * (mapWidth - 12) + 6) * TILE;
+      y = Math.floor(Math.random() * (mapHeight - 12) + 6) * TILE;
       attempts++;
-    } while ((solidAt(x, y) || solidAt(x, y + TILE)) && attempts < 50);
+    } while ((solidAt(x, y) || solidAt(x, y + TILE)) && attempts < 100);
     
-    if (attempts < 50) {
+    if (attempts < 100) {
       let type = 'spider';
       let rand = Math.random();
       
@@ -719,17 +807,17 @@ function spawnEnemies() {
 
 function spawnGold() {
   gold = [];
-  let count = 6 + gameState.level;
+  let count = 10 + gameState.level * 3;
   for (let i = 0; i < count; i++) {
     let x, y;
     let attempts = 0;
     do {
-      x = Math.floor(Math.random() * mapWidth) * TILE;
-      y = Math.floor(Math.random() * mapHeight) * TILE;
+      x = Math.floor(Math.random() * (mapWidth - 4) + 2) * TILE;
+      y = Math.floor(Math.random() * (mapHeight - 4) + 2) * TILE;
       attempts++;
-    } while (solidAt(x, y) && attempts < 50);
+    } while (solidAt(x, y) && attempts < 100);
     
-    if (attempts < 50) {
+    if (attempts < 100) {
       gold.push({ 
         x, 
         y, 
@@ -743,27 +831,27 @@ function spawnGold() {
 function spawnItems() {
   items = [];
   
-  if (Math.random() > 0.5) {
-    let x = Math.floor(Math.random() * mapWidth) * TILE;
-    let y = Math.floor(Math.random() * mapHeight) * TILE;
+  if (Math.random() > 0.4) {
+    let x = Math.floor(Math.random() * (mapWidth - 4) + 2) * TILE;
+    let y = Math.floor(Math.random() * (mapHeight - 4) + 2) * TILE;
     items.push({ x, y, type: 'bombs', collected: false });
   }
   
-  if (Math.random() > 0.5) {
-    let x = Math.floor(Math.random() * mapWidth) * TILE;
-    let y = Math.floor(Math.random() * mapHeight) * TILE;
+  if (Math.random() > 0.4) {
+    let x = Math.floor(Math.random() * (mapWidth - 4) + 2) * TILE;
+    let y = Math.floor(Math.random() * (mapHeight - 4) + 2) * TILE;
     items.push({ x, y, type: 'ropes', collected: false });
   }
   
-  if (Math.random() > 0.8 && !gameState.hasSpikeBboots) {
-    let x = Math.floor(Math.random() * mapWidth) * TILE;
-    let y = Math.floor(Math.random() * mapHeight) * TILE;
+  if (Math.random() > 0.75 && !gameState.hasSpikeBboots) {
+    let x = Math.floor(Math.random() * (mapWidth - 4) + 2) * TILE;
+    let y = Math.floor(Math.random() * (mapHeight - 4) + 2) * TILE;
     items.push({ x, y, type: 'spikeboots', collected: false });
   }
   
-  if (Math.random() > 0.85 && !gameState.hasSpectacles) {
-    let x = Math.floor(Math.random() * mapWidth) * TILE;
-    let y = Math.floor(Math.random() * mapHeight) * TILE;
+  if (Math.random() > 0.8 && !gameState.hasSpectacles) {
+    let x = Math.floor(Math.random() * (mapWidth - 4) + 2) * TILE;
+    let y = Math.floor(Math.random() * (mapHeight - 4) + 2) * TILE;
     items.push({ x, y, type: 'spectacles', collected: false });
   }
 }
@@ -953,15 +1041,19 @@ function destroyBlock(tx, ty) {
 }
 
 function updateCamera() {
+  // Smooth camera follow with proper bounds
   let targetX = player.x - canvas.width / 2 + player.width / 2;
   let targetY = player.y - canvas.height / 2 + player.height / 2;
   
+  // Clamp camera to map bounds
   targetX = Math.max(0, Math.min(targetX, mapWidth * TILE - canvas.width));
   targetY = Math.max(0, Math.min(targetY, mapHeight * TILE - canvas.height));
   
-  camera.x += (targetX - camera.x) * 0.1;
-  camera.y += (targetY - camera.y) * 0.1;
+  // Smooth interpolation
+  camera.x += (targetX - camera.x) * 0.15;
+  camera.y += (targetY - camera.y) * 0.15;
   
+  // Screen shake
   if (screenShake.intensity > 0) {
     screenShake.x = (Math.random() - 0.5) * screenShake.intensity;
     screenShake.y = (Math.random() - 0.5) * screenShake.intensity;
@@ -1106,7 +1198,7 @@ function update() {
       let playerTileY = Math.floor(player.y / TILE);
       let trapTileY = Math.floor(trap.y / TILE);
 
-      if (Math.abs(playerTileY - trapTileY) === 0 && Math.abs(playerTileX - trapTileX) < 4 && trap.cooldown === 0) {
+      if (Math.abs(playerTileY - trapTileY) === 0 && Math.abs(playerTileX - trapTileX) < 5 && trap.cooldown === 0) {
         arrows.push({
           x: trap.x,
           y: trap.y + TILE / 2,
@@ -1217,7 +1309,7 @@ function update() {
     p.life--;
   });
   particles = particles.filter(p => p && p.life > 0);
-  if (particles.length > 100) particles = particles.slice(-100);
+  if (particles.length > 200) particles = particles.slice(-200);
 
   gold = gold.filter(g => {
     if (!g) return false;
@@ -1325,7 +1417,7 @@ function update() {
         e.x += e.vx;
         e.y += Math.sin(Date.now() / 200 + e.x) * 2;
         if (Math.random() < 0.03) e.vx *= -1;
-        if (solidAt(e.x, e.y)) e.vx *= -1;
+        if (solidAt(e.x, e.y) || solidAt(e.x + TILE, e.y)) e.vx *= -1;
       } else {
         e.vy += GRAVITY;
         e.x += e.vx;
@@ -1428,8 +1520,8 @@ function nextLevel() {
 }
 
 function resetLevel() {
-  player.x = 100;
-  player.y = 80;
+  player.x = 140;
+  player.y = 100;
   player.vx = 0;
   player.vy = 0;
   player.onGround = false;
@@ -1476,9 +1568,14 @@ function draw() {
   ctx.fillRect(camera.x, camera.y, canvas.width, canvas.height);
   
   // Draw map
-  for (let y = Math.floor(camera.y / TILE); y < Math.ceil((camera.y + canvas.height) / TILE); y++) {
-    for (let x = Math.floor(camera.x / TILE); x < Math.ceil((camera.x + canvas.width) / TILE); x++) {
-      if (y >= 0 && y < mapHeight && x >= 0 && x < mapWidth && map[y] && map[y][x] === 1) {
+  const startX = Math.max(0, Math.floor(camera.x / TILE));
+  const endX = Math.min(mapWidth, Math.ceil((camera.x + canvas.width) / TILE));
+  const startY = Math.max(0, Math.floor(camera.y / TILE));
+  const endY = Math.min(mapHeight, Math.ceil((camera.y + canvas.height) / TILE));
+  
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      if (map[y] && map[y][x] === 1) {
         ctx.fillStyle = currentTheme.rock;
         ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
         
@@ -1548,7 +1645,7 @@ function draw() {
     ctx.fill();
   });
   
-  // Ropes with better visuals
+  // Ropes
   ropes.forEach(rope => {
     if (!rope) return;
     ctx.strokeStyle = '#8b7355';
@@ -1561,7 +1658,6 @@ function draw() {
     ctx.stroke();
     ctx.shadowBlur = 0;
     
-    // Rope knots
     ctx.fillStyle = '#6a5335';
     ctx.fillRect(rope.x + TILE/2 - 3, rope.y + TILE/4, 6, 4);
     ctx.fillRect(rope.x + TILE/2 - 3, rope.y + TILE * 3/4, 6, 4);
