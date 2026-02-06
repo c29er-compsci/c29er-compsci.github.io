@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Sea Surfer</title>
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    background: radial-gradient(#001a2e, #000814);
+    font-family: system-ui, sans-serif;
+}
+#ui {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #7ffcff;
+    text-shadow: 0 0 10px #00ffff;
+    z-index: 10;
+}
+#gameover {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-items: center;
+    background: rgba(0,0,0,0.75);
+    color: white;
+    text-align: center;
+}
+button {
+    margin-top: 20px;
+    padding: 12px 30px;
+    font-size: 18px;
+    background: #00ffff;
+    border: none;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div id="ui">
+    <div>Distance: <span id="score">0</span> m</div>
+    <div>Combo: x<span id="combo">1</span></div>
+</div>
+
+<div id="gameover">
+    <div>
+        <h1>CAUGHT IN THE DEPTHS</h1>
+        <p id="final"></p>
+        <button onclick="location.reload()">Swim Again</button>
+    </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+
+/* -------------------------------------------------- */
+/* CORE SETUP                                         */
+/* -------------------------------------------------- */
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x001322, 10, 80);
+
+const camera = new THREE.PerspectiveCamera(65, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(0, 3.5, 8);
+camera.lookAt(0, 2, -10);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+/* -------------------------------------------------- */
+/* LIGHTING                                           */
+/* -------------------------------------------------- */
+scene.add(new THREE.AmbientLight(0x204060, 0.4));
+
+const keyLight = new THREE.DirectionalLight(0x88ffff, 2);
+keyLight.position.set(5, 10, 5);
+scene.add(keyLight);
+
+/* -------------------------------------------------- */
+/* PLAYER                                             */
+/* -------------------------------------------------- */
+const player = new THREE.Group();
+const pMat = new THREE.MeshStandardMaterial({
+    color: 0x00ffff,
+    emissive: 0x00aaff,
+    emissiveIntensity: 0.6
+});
+const pBody = new THREE.Mesh(
+    new THREE.CapsuleGeometry(0.4, 1.2, 4, 8),
+    pMat
+);
+pBody.position.y = 1.6;
+player.add(pBody);
+scene.add(player);
+
+/* -------------------------------------------------- */
+/* WORLD                                              */
+/* -------------------------------------------------- */
+const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(40, 200),
+    new THREE.MeshStandardMaterial({ color: 0x02080f })
+);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+/* -------------------------------------------------- */
+/* GAME STATE                                         */
+/* -------------------------------------------------- */
+const lanes = [-3, 0, 3];
+let lane = 1;
+
+let speed = 0.45;
+let distance = 0;
+let combo = 1;
+
+let jumping = false;
+let sliding = false;
+let yVel = 0;
+const GRAVITY = -0.03;
+
+let obstacles = [];
+let active = true;
+
+/* -------------------------------------------------- */
+/* INPUT                                              */
+/* -------------------------------------------------- */
+window.addEventListener("keydown", e => {
+    if (!active) return;
+    if (e.key === "a" || e.key === "ArrowLeft") lane = Math.max(0, lane-1);
+    if (e.key === "d" || e.key === "ArrowRight") lane = Math.min(2, lane+1);
+    if ((e.key === "w" || e.key === " ") && !jumping) {
+        jumping = true;
+        yVel = 0.55;
+        sliding = false;
+    }
+    if (e.key === "s" && !jumping) {
+        sliding = true;
+        setTimeout(()=>sliding=false, 600);
+    }
+});
+
+/* -------------------------------------------------- */
+/* OBSTACLES                                          */
+/* -------------------------------------------------- */
+function spawnObstacle() {
+    if (!active) return;
+
+    let type = Math.random();
+    let geo, mat, y;
+
+    if (type < 0.33) {
+        geo = new THREE.ConeGeometry(0.8, 3, 6);
+        mat = new THREE.MeshStandardMaterial({ color: 0xff5555, emissive: 0xff2222 });
+        y = 1.5;
+        type = "shark";
+    } else if (type < 0.66) {
+        geo = new THREE.SphereGeometry(1.2, 16, 12);
+        mat = new THREE.MeshStandardMaterial({ color: 0xcc66ff, emissive: 0xaa33ff, transparent:true, opacity:0.7 });
+        y = 4;
+        type = "jelly";
+    } else {
+        geo = new THREE.BoxGeometry(3, 1, 2);
+        mat = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0xff6600 });
+        y = 0.8;
+        type = "octopus";
+    }
+
+    const o = new THREE.Mesh(geo, mat);
+    o.position.set(lanes[Math.floor(Math.random()*3)], y, -70);
+    o.userData.type = type;
+    scene.add(o);
+    obstacles.push(o);
+
+    setTimeout(spawnObstacle, 900 - speed*300);
+}
+
+/* -------------------------------------------------- */
+/* MAIN LOOP                                          */
+/* -------------------------------------------------- */
+const clock = new THREE.Clock();
+
+function update() {
+    if (!active) return;
+    requestAnimationFrame(update);
+
+    const t = clock.getElapsedTime();
+
+    /* Player movement */
+    const targetX = lanes[lane];
+    player.position.x += (targetX - player.position.x) * 0.3;
+    player.rotation.z = (player.position.x - targetX) * 0.15;
+
+    if (jumping) {
+        player.position.y += yVel;
+        yVel += GRAVITY;
+        if (player.position.y <= 0) {
+            player.position.y = 0;
+            jumping = false;
+        }
+    } else if (sliding) {
+        player.scale.y = 0.4;
+    } else {
+        player.scale.y = 1;
+        player.position.y = Math.sin(t*3)*0.15;
+    }
+
+    /* World scroll */
+    distance += speed * 2;
+    floor.position.z += speed;
+    if (floor.position.z > 10) floor.position.z = 0;
+
+    /* Obstacles */
+    for (let i = obstacles.length-1; i>=0; i--) {
+        const o = obstacles[i];
+        o.position.z += speed;
+
+        const dx = Math.abs(o.position.x - player.position.x);
+        const dz = Math.abs(o.position.z - player.position.z);
+
+        let hit = false;
+        if (dx < 1.3 && dz < 1.2) {
+            if (o.userData.type === "shark") hit = true;
+            if (o.userData.type === "jelly" && !sliding) hit = true;
+            if (o.userData.type === "octopus" && !jumping) hit = true;
+        }
+
+        if (hit) {
+            active = false;
+            document.getElementById("gameover").style.display = "grid";
+            document.getElementById("final").innerText =
+                `Distance: ${Math.floor(distance)} m\nMax Combo: x${combo}`;
+            return;
+        }
+
+        if (o.position.z > 10) {
+            scene.remove(o);
+            obstacles.splice(i,1);
+            combo++;
+        }
+    }
+
+    speed += 0.0006;
+
+    document.getElementById("score").innerText = Math.floor(distance);
+    document.getElementById("combo").innerText = combo;
+
+    renderer.render(scene, camera);
+}
+
+spawnObstacle();
+update();
+</script>
+</body>
+</html>
