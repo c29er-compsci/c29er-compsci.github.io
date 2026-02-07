@@ -126,7 +126,7 @@
     #hud > div:nth-child(4) { animation-delay: 0.3s; }
     #hud > div:nth-child(5) { animation-delay: 0.4s; }
     
-    #menu {
+   #menu {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -140,6 +140,27 @@
         0 0 80px rgba(255, 215, 0, 0.8),
         inset 0 0 80px rgba(0, 0, 0, 0.8);
       z-index: 10;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    #menu::-webkit-scrollbar {
+      width: 12px;
+    }
+    
+    #menu::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 6px;
+    }
+    
+    #menu::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #ff8c00, #ffd700);
+      border-radius: 6px;
+      border: 2px solid #000;
+    }
+    
+    #menu::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #ffd700, #ffed4e);
     }
     
     #menu h1 {
@@ -203,6 +224,15 @@
     #menu button:active {
       transform: scale(1.08) translateY(-4px);
     }
+    /* External games ad button special effect */
+    #menu button[onclick*="window.open"] {
+      animation: pulse 2s infinite;
+    }
+    
+    #menu button[onclick*="window.open"]:hover {
+      transform: scale(1.2) translateY(-10px) rotate(-2deg) !important;
+      box-shadow: 0 20px 60px rgba(0, 255, 0, 0.9) !important;
+    }
     
     .controls {
       margin-top: 40px;
@@ -227,6 +257,27 @@
       padding-left: 35px;
       background: linear-gradient(90deg, rgba(255, 140, 0, 0.3), transparent);
       transform: translateX(10px);
+    }
+    .controls::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .controls::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+    }
+    
+    .controls::-webkit-scrollbar-thumb {
+      background: #ff8c00;
+      border-radius: 4px;
+    }
+    
+    .controls::-webkit-scrollbar-thumb:hover {
+      background: #ffd700;
+    }
+    
+    .controls h3, .controls h4 {
+      font-family: 'Bungee', cursive;
     }
     
     .hidden {
@@ -294,9 +345,23 @@
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     }
 
-    #notification.show {
+   #notification.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
+    }
+    
+    .powerup-badge {
+      background: linear-gradient(135deg, rgba(255, 140, 0, 0.95), rgba(255, 215, 0, 0.95));
+      color: #000;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 3px solid #000;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.5s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
   </style>
 </head>
@@ -309,27 +374,96 @@
   <div>🪢 <span id="ropes">3</span></div>
   <div>💰 <span id="gold">0</span></div>
   <div>📍 <span id="level">1-1</span></div>
+  <div onclick="togglePause()" style="cursor: pointer; background: linear-gradient(135deg, rgba(255, 0, 0, 0.3), rgba(139, 0, 0, 0.4));">⏸️ PAUSE</div>
+</div>
+
+<div id="powerups" style="position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 5; font-family: 'Bungee', cursive; font-size: 24px;">
 </div>
 <canvas id="game" width="960" height="720"></canvas>
 
 <div id="menu">
   <h1>⛏️ SPELUNKY ⛏️</h1>
   <div id="mainMenu">
+  <div id="mainMenu">
     <button onclick="startGame()">START GAME</button>
+    <button onclick="if(loadGame()) { document.getElementById('menu').classList.add('hidden'); document.getElementById('hud').classList.remove('hidden'); gameStarted = true; }">LOAD GAME</button>
     <button onclick="showControls()">CONTROLS</button>
+    <button onclick="deleteSave()" style="background: linear-gradient(135deg, #ff0000, #aa0000); color: #fff;">DELETE SAVE</button>
+    
+    <!-- ========================================= -->
+    <!-- AD SECTION - PUT YOUR LINK BELOW -->
+    <!-- ========================================= -->
+    <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, rgba(0, 100, 255, 0.2), rgba(0, 200, 255, 0.2)); border: 4px solid #00ffff; border-radius: 15px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);">
+      <h3 style="font-size: 36px; margin-bottom: 15px; color: #00ffff; text-shadow: 0 0 20px #00ffff, 3px 3px 0 #000; font-family: 'Bangers', cursive; letter-spacing: 4px;">🎮 MORE GAMES! 🎮</h3>
+      <p style="font-size: 20px; margin-bottom: 20px; color: #fff; text-shadow: 2px 2px 4px #000;">Want more awesome games?</p>
+      
+      <!-- 
+        ⭐ PUT YOUR WEBSITE LINK HERE ⭐
+        Replace "https://your-games-website.com" with your actual URL
+      -->
+      <button onclick="window.open('https://c29er-compsci.github.io/Pegworks.html', '_blank')" style="background: linear-gradient(135deg, #00ff00, #00aa00); color: #000; border: 5px solid #000; padding: 20px 50px; font-size: 32px; font-family: 'Bungee', cursive; cursor: pointer; font-weight: bold; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(0, 255, 0, 0.5); transition: all 0.3s ease;">
+        🌟 PLAY MORE GAMES! 🌟
+      </button>
+      
+      <p style="font-size: 16px; margin-top: 15px; color: #aaa; font-style: italic;">Tons of free games to play!</p>
+    </div>
+    <!-- ========================================= -->
+    <!-- END AD SECTION -->
+    <!-- ========================================= -->
   </div>
   <div id="controlsMenu" class="hidden">
-    <div class="controls">
-      <div><strong>WASD</strong> - Move & Climb</div>
-      <div><strong>SPACE</strong> - Attack with Whip</div>
-      <div><strong>B</strong> - Throw Bomb</div>
-      <div><strong>R</strong> - Deploy Rope</div>
-      <div><strong>E</strong> - Pick up items</div>
-      <div style="margin-top: 20px; color: #ff6b6b;">⚠️ Watch for traps!</div>
-      <div>💎 Collect gems for extra points!</div>
-      <div>🏃 Reach the exit door to advance!</div>
+    <div class="controls" style="max-height: 500px; overflow-y: auto; padding-right: 20px;">
+      <h3 style="font-size: 32px; margin-bottom: 20px; color: #ffd700; text-align: center;">⚔️ CONTROLS ⚔️</h3>
+      
+      <div style="margin-bottom: 30px;">
+        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🎮 MOVEMENT</h4>
+        <div><strong>WASD / ARROW KEYS</strong> - Move left/right, climb ropes</div>
+        <div><strong>W / UP</strong> (on ground) - Jump</div>
+        <div><strong>W / UP</strong> (on rope) - Climb up</div>
+        <div><strong>S / DOWN</strong> (on rope) - Climb down</div>
+        <div><strong>SPACE</strong> (on rope) - Jump off rope</div>
+      </div>
+      
+      <div style="margin-bottom: 30px;">
+        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">⚔️ COMBAT & TOOLS</h4>
+        <div><strong>CLICK MOUSE</strong> - Attack with whip (aim at enemies!)</div>
+        <div><strong>B</strong> - Throw bomb (destroys blocks & enemies)</div>
+        <div><strong>R</strong> - Deploy rope (climb up/down)</div>
+        <div><strong>E</strong> - Pick up items, break crates, talk to shopkeeper</div>
+      </div>
+      
+      <div style="margin-bottom: 30px;">
+        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">💰 COLLECTIBLES</h4>
+        <div>💰 <strong>Gold</strong> - Small coins ($100) & large coins ($500)</div>
+        <div>💎 <strong>Gems</strong> - Sapphire ($100), Emerald ($200), Ruby ($300)</div>
+        <div>📦 <strong>Crates</strong> - Break with E for gold inside</div>
+      </div>
+      
+      <div style="margin-bottom: 30px;">
+        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🛒 SHOP ITEMS (Last 2 Levels!)</h4>
+        <div>💣 <strong>Bombs ($200)</strong> - Destroy terrain & enemies</div>
+        <div>🪢 <strong>Ropes ($200)</strong> - Reach high places</div>
+        <div>👢 <strong>Spike Boots ($800)</strong> - Walk on spikes, stomp enemies</div>
+        <div>👓 <strong>Spectacles ($700)</strong> - Reveal hidden cyan gold coins!</div>
+        <div>🧭 <strong>Compass ($500)</strong> - Golden arrow points to exit door</div>
+        <div>🦸 <strong>Cape ($900)</strong> - Hold W/UP while jumping to glide slowly!</div>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">⚠️ DANGERS</h4>
+        <div style="color: #ff6b6b;">🔺 <strong>Spikes</strong> - Instant death (unless you have spike boots)</div>
+        <div style="color: #ff6b6b;">➡️ <strong>Arrow Traps</strong> - Shoot arrows when you're nearby</div>
+        <div style="color: #ff6b6b;">🦇 <strong>Enemies</strong> - Bat, Snake, Spider, Caveman, Skeleton</div>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🎯 GOAL</h4>
+        <div>🚪 Find and enter the <strong>EXIT DOOR</strong> to advance!</div>
+        <div>📍 Complete 4 sublevels to reach the next world</div>
+        <div>🌍 Worlds: Cave → Jungle → Ice → Volcano (then loops)</div>
+      </div>
     </div>
-    <button onclick="showMainMenu()">BACK</button>
+    <button onclick="showMainMenu()" style="margin-top: 20px;">⬅️ BACK TO MENU</button>
   </div>
 </div>
 
@@ -340,6 +474,12 @@
   <div class="stat-line">Gold Collected: $<span id="finalGold"></span></div>
   <div class="stat-line">Enemies Defeated: <span id="finalKills"></span></div>
   <button onclick="restartGame()" style="margin-top: 30px; background: linear-gradient(135deg, #ff0000, #ff6b6b); color: #fff; border: 5px solid #000; padding: 25px 60px; font-size: 36px; font-family: 'Bungee', cursive; cursor: pointer; font-weight: bold; letter-spacing: 2px;">TRY AGAIN</button>
+</div>
+<div id="pauseMenu" class="hidden" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(60, 30, 15, 0.98), rgba(30, 15, 8, 0.98)); border: 8px solid #ffd700; padding: 60px 100px; text-align: center; color: #ffd700; box-shadow: 0 0 80px rgba(255, 215, 0, 0.8), inset 0 0 80px rgba(0, 0, 0, 0.8); z-index: 10;">
+  <h1 style="font-size: 80px; margin: 0 0 40px 0; text-shadow: 0 0 30px #ffd700, 0 0 60px #ff8800, 6px 6px 0 #000; color: #ffed4e; font-family: 'Bangers', cursive; letter-spacing: 8px;">⏸️ PAUSED ⏸️</h1>
+  <button onclick="togglePause()" style="background: linear-gradient(135deg, #ff8c00, #ffd700); color: #000; border: 5px solid #000; padding: 25px 60px; font-size: 36px; font-family: 'Bungee', cursive; cursor: pointer; margin: 20px; font-weight: bold; letter-spacing: 2px;">▶️ RESUME</button>
+  <button onclick="saveGame(); showNotification('💾 GAME SAVED!');" style="background: linear-gradient(135deg, #00ff00, #00aa00); color: #000; border: 5px solid #000; padding: 25px 60px; font-size: 36px; font-family: 'Bungee', cursive; cursor: pointer; margin: 20px; font-weight: bold; letter-spacing: 2px;">💾 SAVE GAME</button>
+  <button onclick="quitToMenu()" style="background: linear-gradient(135deg, #ff0000, #aa0000); color: #fff; border: 5px solid #000; padding: 25px 60px; font-size: 36px; font-family: 'Bungee', cursive; cursor: pointer; margin: 20px; font-weight: bold; letter-spacing: 2px;">🚪 QUIT TO MENU</button>
 </div>
 
 <script>
@@ -355,6 +495,29 @@ ctx.imageSmoothingEnabled = false;
 let camera = { x: 0, y: 0 };
 let gameStarted = false;
 let screenShake = { x: 0, y: 0, intensity: 0 };
+let shopMenuOpen = false;
+let currentShop = null;
+let portalCooldown = 0;
+let mousePos = { x: 0, y: 0 };
+let player = {
+  x: 4 * TILE,
+  y: 2 * TILE,
+  vx: 0,
+  vy: 0,
+  width: TILE * 0.8,
+  height: TILE * 0.9,
+  onGround: false,
+  onRope: false,
+  climbing: false,
+  facingRight: true
+
+};
+let enemies = [];
+let portals = [];
+let waterTiles = [];
+let extraLives = [];
+let goldPiles = [];
+let miniBosses = [];
 
 const THEMES = {
   CAVE: { 
@@ -388,6 +551,468 @@ const THEMES = {
 };
 
 let currentTheme = THEMES.CAVE;
+// Room templates (15x15 tiles, 0 = air, 1 = solid, 2 = special markers)
+// Room templates (15x15 tiles, 0 = air, 1 = solid, 2 = water, 3 = boss, 4 = treasure, 5 = shop)
+// Room templates (10x10 tiles, 0 = air, 1 = solid, 2 = water, 3 = boss, 4 = treasure, 5 = shop, 6 = door)
+const ROOM_TEMPLATES = {
+  // ===== NORMAL ROOMS (Basic Platforming) =====
+  empty: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  platforms: [
+    "1111111111",
+    "1000000001",
+    "1001111001",
+    "1000000001",
+    "1000000001",
+    "1111001111",
+    "1000000001",
+    "1000111001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  staircase: [
+    "1111111111",
+    "1000000001",
+    "1000011111",
+    "1000000001",
+    "1111100001",
+    "1000000001",
+    "1111111001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  pit: [
+    "1111111111",
+    "1000000001",
+    "1110000111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1110000111",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  zigzag: [
+    "1111111111",
+    "1000000001",
+    "1111100001",
+    "1000000001",
+    "1000001111",
+    "1000000001",
+    "1111100001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  columns: [
+    "1111111111",
+    "1000000001",
+    "1010010101",
+    "1010010101",
+    "1000000001",
+    "1000000001",
+    "1010010101",
+    "1010010101",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  shelves: [
+    "1111111111",
+    "1000000001",
+    "1110001111",
+    "1000000001",
+    "1000000001",
+    "1111100111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  pyramid: [
+    "1111111111",
+    "1000000001",
+    "1000110001",
+    "1001111001",
+    "1011111101",
+    "1011111101",
+    "1001111001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  cavity: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1111111111",
+    "1000000001",
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  hollowBox: [
+    "1111111111",
+    "1000000001",
+    "1011111101",
+    "1010000101",
+    "1010000101",
+    "1010000101",
+    "1011111101",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  bridge: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  maze: [
+    "1111111111",
+    "1000000001",
+    "1011101101",
+    "1010001001",
+    "1010111001",
+    "1000100101",
+    "1110101101",
+    "1000001001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  steps: [
+    "1111111111",
+    "1000000001",
+    "1000001111",
+    "1000111111",
+    "1111111111",
+    "1111110001",
+    "1111000001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  tower: [
+    "1111111111",
+    "1000000001",
+    "1001111001",
+    "1001001001",
+    "1001001001",
+    "1001001001",
+    "1001111001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  ledges: [
+    "1111111111",
+    "1111000001",
+    "1000000001",
+    "1000001111",
+    "1000000001",
+    "1111000001",
+    "1000000001",
+    "1000001111",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  hourglass: [
+    "1111111111",
+    "1110001111",
+    "1000000001",
+    "1001001001",
+    "1000110001",
+    "1000110001",
+    "1001001001",
+    "1000000001",
+    "1110001111",
+    "1111111111"
+  ],
+  
+  // NEW ADDITIONAL ROOMS
+  corridor: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1111001111",
+    "1111001111",
+    "1111001111",
+    "1111001111",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  arena: [
+    "1111111111",
+    "1000000001",
+    "1100000011",
+    "1100000011",
+    "1000000001",
+    "1000000001",
+    "1100000011",
+    "1100000011",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  chamber: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1011111101",
+    "1010000101",
+    "1010000101",
+    "1011111101",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  cross: [
+    "1111111111",
+    "1000110001",
+    "1000110001",
+    "1000000001",
+    "1111001111",
+    "1111001111",
+    "1000000001",
+    "1000110001",
+    "1000110001",
+    "1111111111"
+  ],
+  
+  diagonal: [
+    "1111111111",
+    "1000000001",
+    "1110000001",
+    "1111000001",
+    "1111100001",
+    "1000110001",
+    "1000011001",
+    "1000001101",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  valley: [
+    "1111111111",
+    "1100000011",
+    "1110000111",
+    "1111001111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  // ===== SPECIAL ROOMS =====
+  waterPool: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1022222201",
+    "1022222201",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  waterCrossing: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1022222201",
+    "1022222201",
+    "1022222201",
+    "1022222201",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  waterPit: [
+    "1111111111",
+    "1000000001",
+    "1110000111",
+    "1022222201",
+    "1022222201",
+    "1022222201",
+    "1022222201",
+    "1110000111",
+    "1000000001",
+    "1111111111"
+  ],
+  
+ treasureVaultChallenge: [
+    "1111111111",
+    "1000000001",
+    "1044444401",
+    "1044444401",
+    "1044444401",
+    "1044444401",
+    "1044444401",
+    "1044444401",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  spikeVault: [
+    "1111111111",
+    "1000000001",
+    "1044444401",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1044444401",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  treasureRoom: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1111111111",
+    "1044444401",
+    "1044444401",
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  treasureVault: [
+    "1111111111",
+    "1000000001",
+    "1011111101",
+    "1010044401",
+    "1010044401",
+    "1010044401",
+    "1011111101",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  treasurePile: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000440001",
+    "1004444001",
+    "1044444401",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  shopRoom: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1005000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+ doorRoom: [
+    "1111111111",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1000066001",
+    "1000066001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  challenge: [
+    "1111111111",
+    "1000000001",
+    "1111100111",
+    "1000000001",
+    "1011111101",
+    "1000000001",
+    "1111100111",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  spikeGauntlet: [
+    "1111111111",
+    "1111000111",
+    "1000000001",
+    "1001111101",
+    "1000000001",
+    "1111100001",
+    "1000000001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ],
+  
+  parkour: [
+    "1111111111",
+    "1000000001",
+    "1110000001",
+    "1000000001",
+    "1000011001",
+    "1000000001",
+    "1001110001",
+    "1000000001",
+    "1000000001",
+    "1111111111"
+  ]
+};
 
 let gameState = {
   level: 1,
@@ -397,20 +1022,25 @@ let gameState = {
   health: 4,
   gold: 0,
   kills: 0,
-  hasSpikeBboots: false,
+  hasSpikeBoots: false,
   hasCape: false,
   hasCompass: false,
   hasSpectacles: false,
+  spikeBootsLevels: 0, // How many levels the powerup lasts
+  capeLevels: 0,
+  compassLevels: 0,
+  spectaclesLevels: 0,
   shopkeeperAngry: false,
   deathCause: '',
-  damageInvincibility: 0
+  damageInvincibility: 0,
+  capeSlowFall: false // Tracks if cape is currently active (holding jump)
 };
 
 let map = [];
 let door = { x: 0, y: 0 };
 let bombs = [];
 let ropes = [];
-let whip = { active: false, frames: 0, flip: false };
+let whip = { active: false, frames: 0, flip: false, angle: 0 };
 let particles = [];
 let gold = [];
 let items = [];
@@ -438,6 +1068,64 @@ function showMainMenu() {
   document.getElementById("mainMenu").classList.remove("hidden");
   document.getElementById("controlsMenu").classList.add("hidden");
 }
+function togglePause() {
+  if (!gameStarted) return;
+  
+  let pauseMenu = document.getElementById("pauseMenu");
+  if (pauseMenu.classList.contains("hidden")) {
+    // Pause game
+    pauseMenu.classList.remove("hidden");
+    gameStarted = false;
+  } else {
+    // Resume game
+    pauseMenu.classList.add("hidden");
+    gameStarted = true;
+  }
+}
+
+function quitToMenu() {
+  document.getElementById("pauseMenu").classList.add("hidden");
+  document.getElementById("hud").classList.add("hidden");
+  document.getElementById("menu").classList.remove("hidden");
+  gameStarted = false;
+  saveGame(); // Auto-save when quitting
+}
+
+function saveGame() {
+  const saveData = {
+    gameState: gameState,
+    playerPos: { x: player.x, y: player.y },
+    timestamp: Date.now()
+  };
+  localStorage.setItem('spelunky_save', JSON.stringify(saveData));
+  console.log('Game saved!');
+}
+
+function loadGame() {
+  const saveData = localStorage.getItem('spelunky_save');
+  if (saveData) {
+    try {
+      const data = JSON.parse(saveData);
+      gameState = data.gameState;
+      player.x = data.playerPos.x;
+      player.y = data.playerPos.y;
+      updateTheme();
+      resetLevel();
+      updateHUD();
+      showNotification('💾 GAME LOADED!');
+      return true;
+    } catch (e) {
+      console.error('Failed to load save:', e);
+      return false;
+    }
+  }
+  return false;
+}
+
+function deleteSave() {
+  localStorage.removeItem('spelunky_save');
+  showNotification('🗑️ SAVE DELETED!');
+}
 
 function startGame() {
   document.getElementById("menu").classList.add("hidden");
@@ -458,7 +1146,7 @@ function restartGame() {
     health: 4,
     gold: 0,
     kills: 0,
-    hasSpikeBboots: false,
+    hasSpikeBoots: false,
     hasCape: false,
     hasCompass: false,
     hasSpectacles: false,
@@ -478,148 +1166,70 @@ function updateTheme() {
   else if (gameState.level === 3) currentTheme = THEMES.ICE;
   else currentTheme = THEMES.VOLCANO;
 }
-function carveVerticalTunnel(x, yStart, yEnd, width = 2) {
-  for (let y = yStart; y <= yEnd; y++) {
-    for (let w = -width; w <= width; w++) {
-      if (map[y] && map[y][x + w] !== undefined) {
-        map[y][x + w] = 0;
-      }
-    }
-  }
-}
-
-function carveStaircase(x, yStart, yEnd, direction = 1) {
-  let step = 0;
-  for (let y = yStart; y <= yEnd; y++) {
-    let stairX = x + step * direction;
-    if (map[y] && map[y][stairX] !== undefined) {
-      map[y][stairX] = 0;
-      if (map[y + 1]) map[y + 1][stairX] = 1; // step floor
-    }
-    if (y % 3 === 0) step++;
-  }
-}
-
-function carvePlatformRow(y, spacing = 5) {
-  for (let x = 2; x < mapWidth - 2; x++) {
-    if (x % spacing === 0) {
-      map[y][x] = 1;
-      map[y - 1][x] = 0;
-    }
-  }
-}
-
 
 function generateCaveMap() {
+  const roomSize = 10;
+  const roomsWide = 6; // 6 rooms across = 60 tiles
+  const roomsHigh = 4; // 4 rooms down = 40 tiles
+  
+  // Initialize empty map
   map = [];
-
-  // =========================
-  // 1. SOLID FILL
-  // =========================
   for (let y = 0; y < mapHeight; y++) {
     map[y] = [];
     for (let x = 0; x < mapWidth; x++) {
-      map[y][x] = 1;
+      map[y][x] = 1; // Start solid
     }
   }
-
-  const mainX = Math.floor(mapWidth / 2);
-
-  // =========================
-  // 2. MAIN SHAFT (SAFE)
-  // =========================
-  for (let y = 1; y < mapHeight - 2; y++) {
-    map[y][mainX] = 0;
-    map[y][mainX - 1] = 0;
-    map[y][mainX + 1] = 0;
-
-    // Every 4 tiles, add a landing
-    if (y % 4 === 0) {
-      map[y + 1][mainX - 1] = 1;
-      map[y + 1][mainX] = 1;
-      map[y + 1][mainX + 1] = 1;
-    }
-  }
-
-  // =========================
-  // 3. SIDE CAVES (SAFE CA)
-  // =========================
-  let caves = [];
-  for (let y = 0; y < mapHeight; y++) {
-    caves[y] = [];
-    for (let x = 0; x < mapWidth; x++) {
-      caves[y][x] = Math.random() > 0.5 ? 1 : 0;
-    }
-  }
-
-  for (let i = 0; i < 3; i++) {
-    let next = [];
-    for (let y = 0; y < mapHeight; y++) {
-      next[y] = [];
-      for (let x = 0; x < mapWidth; x++) {
-        let count = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            let ny = y + dy;
-            let nx = x + dx;
-            if (ny < 0 || ny >= mapHeight || nx < 0 || nx >= mapWidth) {
-              count++;
-            } else if (caves[ny][nx]) {
-              count++;
-            }
-          }
-        }
-        next[y][x] = count >= 5 ? 1 : 0;
+  
+  // Create room layout (which rooms connect to create path)
+  let roomGrid = generateRoomLayout(roomsWide, roomsHigh);
+  
+  // Place rooms into the map
+  for (let ry = 0; ry < roomsHigh; ry++) {
+    for (let rx = 0; rx < roomsWide; rx++) {
+      let room = roomGrid[ry][rx];
+      if (room) {
+        placeRoom(room, rx * roomSize, ry * roomSize);
       }
     }
-    caves = next;
   }
-
-  // Apply caves AWAY from main shaft
-  for (let y = 1; y < mapHeight - 1; y++) {
-    for (let x = 1; x < mapWidth - 1; x++) {
-      if (Math.abs(x - mainX) > 3 && caves[y][x] === 0) {
-        map[y][x] = 0;
+  
+  // Carve connections between rooms
+  carveRoomConnections(roomGrid, roomsWide, roomsHigh, roomSize);
+  
+  // Place door room in bottom-right corner
+  placeRoom({ template: 'doorRoom', onPath: true }, (roomsWide - 1) * roomSize, (roomsHigh - 1) * roomSize);
+  
+  // Clear door area - MUCH LARGER
+  for (let dy = -4; dy <= 4; dy++) {
+    for (let dx = -5; dx <= 5; dx++) {
+      let nx = door.x + dx;
+      let ny = door.y + dy;
+      if (nx >= 0 && nx < mapWidth && ny >= 0 && ny < mapHeight) {
+        map[ny][nx] = 0;
+      }
+    }
+  }
+  
+  // Ensure floor under door - WIDER
+  for (let dx = -5; dx <= 5; dx++) {
+    let nx = door.x + dx;
+    if (nx >= 0 && nx < mapWidth && door.y + 5 < mapHeight) {
+      map[door.y + 5][nx] = 1;
+    }
+  }
+  
+  // Clear path TO the door (horizontal corridor)
+  let doorY = door.y;
+  for (let x = Math.max(0, door.x - 15); x <= Math.min(mapWidth - 1, door.x + 15); x++) {
+    for (let dy = -2; dy <= 2; dy++) {
+      if (doorY + dy >= 0 && doorY + dy < mapHeight) {
+        map[doorY + dy][x] = 0;
       }
     }
   }
 
-  // =========================
-  // 4. START AREA
-  // =========================
-  for (let y = 1; y < 6; y++) {
-    for (let x = 2; x < 8; x++) {
-      map[y][x] = 0;
-    }
-  }
-  for (let x = 2; x < 8; x++) {
-    map[6][x] = 1;
-  }
-
-  // =========================
-  // 5. EXIT (ALWAYS REACHABLE)
-  // =========================
-  door.x = mapWidth - 6;
-  door.y = mapHeight - 4;
-
-  for (let y = door.y - 2; y <= door.y + 2; y++) {
-    for (let x = door.x - 3; x <= door.x + 3; x++) {
-      map[y][x] = 0;
-    }
-  }
-
-  for (let x = door.x - 3; x <= door.x + 3; x++) {
-    map[door.y + 3][x] = 1;
-  }
-
-  // Connect to shaft
-  for (let x = mainX; x <= door.x; x++) {
-    map[door.y][x] = 0;
-  }
-
-  // =========================
-  // 6. BORDERS
-  // =========================
+  // Borders
   for (let x = 0; x < mapWidth; x++) {
     map[0][x] = 1;
     map[mapHeight - 1][x] = 1;
@@ -630,8 +1240,191 @@ function generateCaveMap() {
   }
 }
 
-
+function generateRoomLayout(roomsWide, roomsHigh) {
+  let grid = [];
+  
+  // Define room type pools
+ let normalRooms = [
+    'empty', 'platforms', 'staircase', 'pit', 'zigzag', 
+    'columns', 'shelves', 'pyramid', 'cavity', 'hollowBox',
+    'bridge', 'maze', 'steps', 'tower', 'ledges', 'hourglass',
+    'corridor', 'arena', 'chamber', 'cross', 'diagonal', 'valley'
+  ];
+  
+  let specialRooms = [
+    'waterPool', 'waterCrossing', 'waterPit',
+    'treasureRoom', 'treasureVault', 'treasurePile',
+    'treasureVaultChallenge', 'spikeVault',
+    'challenge', 'spikeGauntlet', 'parkour'
+  ];
+  
+  // Create guaranteed path from top-left to bottom-right
+  for (let y = 0; y < roomsHigh; y++) {
+    grid[y] = [];
+    for (let x = 0; x < roomsWide; x++) {
+      grid[y][x] = null;
+    }
+  }
+  
+  // Critical path: top-left to bottom-right
+  let pathX = 0;
+  let pathY = 0;
+  grid[pathY][pathX] = { template: 'empty', onPath: true }; // Start room
+  
+  while (pathY < roomsHigh - 1 || pathX < roomsWide - 1) {
+    // Randomly choose to go right or down (bias toward goal)
+    let goRight = pathX < roomsWide - 1 && (pathY >= roomsHigh - 1 || Math.random() > 0.5);
+    
+    if (goRight) {
+      pathX++;
+    } else {
+      pathY++;
+    }
+    
+    // Pick room type for this path segment
+    let roomType = normalRooms[Math.floor(Math.random() * normalRooms.length)];
+    grid[pathY][pathX] = { template: roomType, onPath: true };
+  }
+  
+  // Fill in extra rooms around the path (optional exploration)
+  for (let y = 0; y < roomsHigh; y++) {
+    for (let x = 0; x < roomsWide; x++) {
+      if (!grid[y][x] && Math.random() > 0.2) { // 80% chance to add side rooms
+        let roomType;
         
+        // 30% chance for special room if not on critical path
+        if (Math.random() > 0.7) {
+          roomType = specialRooms[Math.floor(Math.random() * specialRooms.length)];
+        } else {
+          roomType = normalRooms[Math.floor(Math.random() * normalRooms.length)];
+        }
+        
+        grid[y][x] = { template: roomType, onPath: false };
+      }
+    }
+  }
+  
+  // GUARANTEE: Always place exactly 1 shop room
+  let shopPlaced = false;
+  let attempts = 0;
+  while (!shopPlaced && attempts < 50) {
+    let rx = Math.floor(Math.random() * roomsWide);
+    let ry = Math.floor(Math.random() * roomsHigh);
+    
+    if (grid[ry][rx]) {
+      grid[ry][rx] = { template: 'shopRoom', onPath: grid[ry][rx].onPath };
+      shopPlaced = true;
+    }
+    attempts++;
+  }
+  
+  // GUARANTEE: Always place at least 1 other special room (treasure/vault/challenge)
+  let guaranteedSpecials = ['treasureRoom', 'treasureVault', 'treasureVaultChallenge', 'challenge'];
+  let specialPlaced = false;
+  attempts = 0;
+  while (!specialPlaced && attempts < 50) {
+    let rx = Math.floor(Math.random() * roomsWide);
+    let ry = Math.floor(Math.random() * roomsHigh);
+    
+    if (grid[ry][rx] && grid[ry][rx].template !== 'shopRoom') {
+      let special = guaranteedSpecials[Math.floor(Math.random() * guaranteedSpecials.length)];
+      grid[ry][rx] = { template: special, onPath: grid[ry][rx].onPath };
+      specialPlaced = true;
+    }
+    attempts++;
+  }
+  
+  return grid;
+}
+
+function placeRoom(room, offsetX, offsetY) {
+  let template = ROOM_TEMPLATES[room.template];
+  
+  for (let y = 0; y < template.length; y++) {
+    for (let x = 0; x < template[y].length; x++) {
+      let mapX = offsetX + x;
+      let mapY = offsetY + y;
+      
+      if (mapX >= mapWidth || mapY >= mapHeight) continue;
+      
+      let tile = template[y][x];
+      
+      if (tile === '0') {
+        map[mapY][mapX] = 0; // Air
+      } else if (tile === '1') {
+        map[mapY][mapX] = 1; // Solid
+      } else if (tile === '2') {
+        // Water marker
+        map[mapY][mapX] = 0;
+        waterTiles.push({ 
+          x: mapX * TILE, 
+          y: mapY * TILE, 
+          wave: Math.random() * Math.PI * 2 
+        });
+      } else if (tile === '3') {
+      } else if (tile === '4') {
+              // Treasure marker
+        map[mapY][mapX] = 0;
+        gold.push({
+          x: mapX * TILE,
+          y: mapY * TILE,
+          value: 1000,
+          pulse: Math.random() * Math.PI * 2
+        });
+      } else if (tile === '5') {
+        // Shop marker (handled by generateShop later)
+        map[mapY][mapX] = 0;
+      } else if (tile === '6') {
+        // Door marker
+        map[mapY][mapX] = 0;
+        door.x = mapX;
+        door.y = mapY;
+      }
+    }
+  }
+}
+
+function carveRoomConnections(roomGrid, roomsWide, roomsHigh, roomSize) {
+  // Connect adjacent rooms horizontally and vertically
+  for (let y = 0; y < roomsHigh; y++) {
+    for (let x = 0; x < roomsWide; x++) {
+      if (!roomGrid[y][x]) continue;
+      
+     // Connect to room on the right
+      if (x < roomsWide - 1 && roomGrid[y][x + 1]) {
+        let doorX = (x + 1) * roomSize;
+        let doorY = y * roomSize + 5; // Middle of room height (10/2 = 5)
+        
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            let nx = doorX + dx;
+            let ny = doorY + dy;
+            if (nx >= 0 && nx < mapWidth && ny >= 0 && ny < mapHeight) {
+              map[ny][nx] = 0;
+            }
+          }
+        }
+      }
+      
+      // Connect to room below
+      if (y < roomsHigh - 1 && roomGrid[y + 1][x]) {
+        let doorX = x * roomSize + 5; // Middle of room width (10/2 = 5)
+        let doorY = (y + 1) * roomSize;
+        
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            let nx = doorX + dx;
+            let ny = doorY + dy;
+            if (nx >= 0 && nx < mapWidth && ny >= 0 && ny < mapHeight) {
+              map[ny][nx] = 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 function generateTraps() {
   traps = [];
   arrows = [];
@@ -689,6 +1482,7 @@ function generateCrates() {
   }
 }
 
+
 function generateGems() {
   gems = [];
   for (let i = 0; i < 5 + gameState.level * 2; i++) {
@@ -701,73 +1495,244 @@ function generateGems() {
         x, 
         y, 
         type: type > 0.8 ? 'ruby' : type > 0.5 ? 'emerald' : 'sapphire',
-        value: type > 0.8 ? 1000 : type > 0.5 ? 500 : 300,
+        value: type > 0.8 ? 300 : type > 0.5 ? 200 : 100, // REDUCED VALUES
         pulse: Math.random() * Math.PI * 2
       });
     }
   }
 }
+// function generateSpecialFeatures() {
+//   portals = [];
+//   waterTiles = [];
+//   extraLives = [];
+//   goldPiles = [];
+//   miniBosses = [];
+  
+//   // PORTALS (2 connected portals)
+// if (Math.random() > 0.5) {
+//   let portal1X, portal1Y, portal2X, portal2Y;
+//   let attempts = 0;
+  
+//   // Find valid position for portal 1
+//   do {
+//     portal1X = Math.floor(Math.random() * (mapWidth - 10) + 5);
+//     portal1Y = Math.floor(Math.random() * (mapHeight - 10) + 5);
+//     attempts++;
+//   } while ((solidAt(portal1X * TILE, portal1Y * TILE) || 
+//             !solidAt(portal1X * TILE, (portal1Y + 1) * TILE)) && 
+//             attempts < 100);
+  
+//   // Find valid position for portal 2
+//   attempts = 0;
+//   do {
+//     portal2X = Math.floor(Math.random() * (mapWidth - 10) + 5);
+//     portal2Y = Math.floor(Math.random() * (mapHeight - 10) + 5);
+//     attempts++;
+//   } while ((solidAt(portal2X * TILE, portal2Y * TILE) || 
+//             !solidAt(portal2X * TILE, (portal2Y + 1) * TILE) ||
+//             (Math.abs(portal1X - portal2X) < 5 && Math.abs(portal1Y - portal2Y) < 5)) && 
+//             attempts < 100);
+  
+//   if (attempts < 100) {
+//     portals.push({ x: portal1X * TILE, y: portal1Y * TILE, linkedIndex: 1, pulse: 0 });
+//     portals.push({ x: portal2X * TILE, y: portal2Y * TILE, linkedIndex: 0, pulse: Math.PI });
+//   }
+// }
+  
+//   // WATER POOLS
+//   for (let i = 0; i < 3; i++) {
+//     let poolX = Math.floor(Math.random() * (mapWidth - 15) + 5);
+//     let poolY = Math.floor(Math.random() * (mapHeight - 8) + 4);
+//     let poolWidth = Math.floor(Math.random() * 5 + 3);
+    
+//     for (let x = poolX; x < poolX + poolWidth; x++) {
+//       for (let y = poolY; y < poolY + 2; y++) {
+//         if (map[y] && map[y][x] === 0 && map[y+1] && map[y+1][x] === 1) {
+//           waterTiles.push({ x: x * TILE, y: y * TILE, wave: Math.random() * Math.PI * 2 });
+//         }
+//       }
+//     }
+//   }
+  
+//   // EXTRA LIVES (rare)
+//   if (Math.random() > 0.7) {
+//     let x = Math.floor(Math.random() * (mapWidth - 4) + 2) * TILE;
+//     let y = Math.floor(Math.random() * (mapHeight - 4) + 2) * TILE;
+//     if (!solidAt(x, y)) {
+//       extraLives.push({ x, y, pulse: 0 });
+//     }
+//   }
+  
+//   // GOLD PILES (treasure rooms)
+//   if (Math.random() > 0.6) {
+//     let pileX = Math.floor(Math.random() * (mapWidth - 8) + 4) * TILE;
+//     let pileY = Math.floor(Math.random() * (mapHeight - 6) + 3) * TILE;
+    
+//     for (let i = 0; i < 10; i++) {
+//       gold.push({
+//         x: pileX + (Math.random() - 0.5) * TILE * 3,
+//         y: pileY + (Math.random() - 0.5) * TILE * 2,
+//         value: 500,
+//         pulse: Math.random() * Math.PI * 2
+//       });
+//     }
+//     goldPiles.push({ x: pileX, y: pileY });
+//   }
+  
+//   // MINI-BOSS IN SPECIAL ENCLOSED ROOM
+//   if (Math.random() > 0.85 || gameState.sublevel === 4) {
+//     // Choose a random location not too close to edges
+//     let roomX = Math.floor(Math.random() * (mapWidth - 20) + 10);
+//     let roomY = Math.floor(Math.random() * (mapHeight - 15) + 8);
+//     let roomWidth = 10;
+//     let roomHeight = 8;
+    
+//     // CREATE COMPLETELY ENCLOSED BOSS ROOM
+//     // Clear interior
+//     for (let y = roomY; y < roomY + roomHeight; y++) {
+//       for (let x = roomX; x < roomX + roomWidth; x++) {
+//         if (map[y] && map[y][x] !== undefined) {
+//           map[y][x] = 0;
+//         }
+//       }
+//     }
+    
+//     // Build COMPLETE walls (all 4 sides, no gaps)
+//     for (let y = roomY - 1; y <= roomY + roomHeight; y++) {
+//       if (map[y]) {
+//         map[y][roomX - 1] = 1; // Left wall
+//         map[y][roomX + roomWidth] = 1; // Right wall
+//       }
+//     }
+    
+//     for (let x = roomX - 1; x <= roomX + roomWidth; x++) {
+//       if (map[roomY - 1]) map[roomY - 1][x] = 1; // Ceiling
+//       if (map[roomY + roomHeight]) map[roomY + roomHeight][x] = 1; // Floor
+//     }
+    
+//     // Create SINGLE entrance door (3 tiles wide opening on one side)
+//     let doorSide = Math.random() > 0.5 ? 'left' : 'right';
+//     let doorX = doorSide === 'left' ? roomX - 1 : roomX + roomWidth;
+    
+//     for (let y = roomY + Math.floor(roomHeight / 2) - 1; y <= roomY + Math.floor(roomHeight / 2) + 1; y++) {
+//       if (map[y]) {
+//         map[y][doorX] = 0;
+//       }
+//     }
+    
+//     // Create a clear pathway TO the boss room entrance
+//     let pathY = roomY + Math.floor(roomHeight / 2);
+//     let pathStartX = doorSide === 'left' ? roomX - 2 : roomX + roomWidth + 1;
+//     let pathLength = 8;
+//     let pathEndX = doorSide === 'left' ? 
+//       Math.max(pathStartX - pathLength, 3) : 
+//       Math.min(pathStartX + pathLength, mapWidth - 3);
+    
+//     for (let x = Math.min(pathStartX, pathEndX); x <= Math.max(pathStartX, pathEndX); x++) {
+//       if (map[pathY] && map[pathY][x] !== undefined) {
+//         map[pathY][x] = 0;
+//         if (map[pathY - 1]) map[pathY - 1][x] = 0;
+//         if (map[pathY + 1]) map[pathY + 1][x] = 0;
+//       }
+//     }
+    
+//     // Add treasure in corners
+//     for (let i = 0; i < 4; i++) {
+//       gold.push({
+//         x: (roomX + 1) * TILE,
+//         y: (roomY + 1 + i) * TILE,
+//         value: 1000,
+//         pulse: Math.random() * Math.PI * 2
+//       });
+      
+//       gold.push({
+//         x: (roomX + roomWidth - 2) * TILE,
+//         y: (roomY + 1 + i) * TILE,
+//         value: 1000,
+//         pulse: Math.random() * Math.PI * 2
+//       });
+//     }
+    
+//     // Spawn boss in center of room
+//     miniBosses.push({
+//       x: (roomX + roomWidth / 2) * TILE,
+//       y: (roomY + roomHeight / 2) * TILE,
+//       vx: 3,
+//       vy: 0,
+//       health: 15,
+//       type: 'golem',
+//       onGround: false,
+//       attackCooldown: 0,
+//       roomX: roomX,
+//       roomY: roomY,
+//       roomWidth: roomWidth,
+//       roomHeight: roomHeight
+//     });
+    
+//     // Visual indicator - RED glowing entrance
+//     portals.push({ 
+//       x: doorX * TILE, 
+//       y: pathY * TILE, 
+//       linkedIndex: -1, 
+//       pulse: 0,
+//       isBossEntrance: true 
+//     });
+//   }
+//   }
+// }
+const SHOP_ITEM_POOL = [
+  { type: 'bombs', cost: 200 },
+  { type: 'ropes', cost: 200 },
+  { type: 'compass', cost: 500 },
+  { type: 'spikeboots', cost: 800 },
+  { type: 'spectacles', cost: 700 },
+  { type: 'cape', cost: 900 }
+];
 
 function generateShop() {
   shops = [];
-  
-  if (Math.random() > 0.6) {
+
+  // ALWAYS generate exactly one shop per level
+  if (true) {
     let shopX = Math.floor(mapWidth / 3);
     let shopY = Math.floor(mapHeight / 2);
-    
+
     // Clear shop area
     for (let y = shopY; y < shopY + 4; y++) {
       for (let x = shopX; x < shopX + 6; x++) {
-        if (y >= 0 && y < mapHeight && x >= 0 && x < mapWidth) {
-          map[y][x] = 0;
-        }
+        if (map[y] && map[y][x] !== undefined) map[y][x] = 0;
       }
     }
-    
-    // Add floor
+
+    // Floor
     for (let x = shopX; x < shopX + 6; x++) {
-      if (shopY + 4 < mapHeight && x < mapWidth) {
-        map[shopY + 4][x] = 1;
-      }
+      map[shopY + 4][x] = 1;
     }
-    
+
+    // Pick 3 random items
+    let shuffled = [...SHOP_ITEM_POOL].sort(() => Math.random() - 0.5);
+    let items = shuffled.slice(0, 3).map((item, i) => ({
+      x: (shopX + 2 + i) * TILE,
+      y: (shopY + 3) * TILE,
+      type: item.type,
+      cost: item.cost
+    }));
+
     shops.push({
       x: shopX * TILE,
       y: shopY * TILE,
       shopkeeper: {
-        x: (shopX + 1) * TILE,
-        y: (shopY + 2) * TILE,
-        vx: 0,
-        angry: gameState.shopkeeperAngry,
-        health: 10
-      },
-      items: [
-        { x: (shopX + 2) * TILE, y: (shopY + 3) * TILE, type: 'bombs', cost: 200 },
-        { x: (shopX + 3) * TILE, y: (shopY + 3) * TILE, type: 'ropes', cost: 200 },
-        { x: (shopX + 4) * TILE, y: (shopY + 3) * TILE, type: 'compass', cost: 500 }
-      ]
+  x: (shopX + 1) * TILE,
+  y: (shopY + 2) * TILE,
+},
+      items
     });
   }
 }
 
-const player = {
-  x: 100,
-  y: 80,
-  vx: 0,
-  vy: 0,
-  width: 28,
-  height: 32,
-  onGround: false,
-  onRope: false,
-  facingRight: true,
-  climbing: false
-};
-
-let enemies = [];
-
 function spawnEnemies() {
   enemies = [];
-  let count = Math.min(10, 5 + gameState.level * 2);
+  let count = Math.min(10, 5 + gameState.level * 2); // Reduced enemy count
   
   for (let i = 0; i < count; i++) {
     let x, y;
@@ -776,18 +1741,21 @@ function spawnEnemies() {
       x = Math.floor(Math.random() * (mapWidth - 12) + 6) * TILE;
       y = Math.floor(Math.random() * (mapHeight - 12) + 6) * TILE;
       attempts++;
-    } while ((solidAt(x, y) || solidAt(x, y + TILE)) && attempts < 100);
+    } while ((solidAt(x, y) && solidAt(x, y + TILE)) && attempts < 100); // Changed OR to AND - this was the bug!
     
     if (attempts < 100) {
       let type = 'spider';
       let rand = Math.random();
       
       if (gameState.level === 1) {
-        type = rand > 0.7 ? 'bat' : rand > 0.4 ? 'spider' : 'snake';
+        type = rand > 0.7 ? 'bat' : rand > 0.4 ? 'spider' : rand > 0.2 ? 'snake' : 'spider';
       } else if (gameState.level === 2) {
-        type = rand > 0.6 ? 'bat' : rand > 0.3 ? 'caveman' : 'snake';
+        type = rand > 0.6 ? 'bat' : rand > 0.4 ? 'caveman' : rand > 0.2 ? 'snake' : 'spider';
+      } else if (gameState.level === 3) {
+        type = rand > 0.5 ? 'skeleton' : rand > 0.3 ? 'bat' : rand > 0.15 ? 'caveman' : 'spider';
       } else {
-        type = rand > 0.5 ? 'skeleton' : rand > 0.3 ? 'bat' : 'caveman';
+        // Level 4+ - all enemy types
+        type = rand > 0.7 ? 'skeleton' : rand > 0.5 ? 'caveman' : rand > 0.3 ? 'bat' : rand > 0.15 ? 'snake' : 'spider';
       }
       
       enemies.push({ 
@@ -804,6 +1772,7 @@ function spawnEnemies() {
     }
   }
 }
+
 
 function spawnGold() {
   gold = [];
@@ -822,10 +1791,79 @@ function spawnGold() {
         x, 
         y, 
         value: Math.random() > 0.7 ? 500 : 100,
-        pulse: Math.random() * Math.PI * 2
+        pulse: Math.random() * Math.PI * 2,
+        hidden: Math.random() > 0.7 // 30% chance to be hidden (only visible with spectacles)
       });
     }
   }
+}
+
+function updateHUD() {
+  document.getElementById("health").textContent = gameState.health;
+  document.getElementById("bombs").textContent = gameState.bombs;
+  document.getElementById("ropes").textContent = gameState.ropes;
+  document.getElementById("gold").textContent = gameState.gold;
+  document.getElementById("level").textContent = `${gameState.level}-${gameState.sublevel}`;
+  
+  // Update powerup display
+  let powerupsHTML = '';
+  if (gameState.hasCompass) {
+    powerupsHTML += '<div class="powerup-badge">🧭 Compass</div>';
+  }
+  if (gameState.hasSpikeBoots) {
+    powerupsHTML += '<div class="powerup-badge">👢 Spike Boots</div>';
+  }
+  if (gameState.hasSpectacles) {
+    powerupsHTML += '<div class="powerup-badge">👓 Spectacles</div>';
+  }
+  if (gameState.hasCape) {
+    powerupsHTML += '<div class="powerup-badge">🦸 Cape</div>';
+  }
+  document.getElementById("powerups").innerHTML = powerupsHTML;
+}
+
+function resetLevel() {
+  // Clear special features BEFORE generating new map
+  waterTiles = [];
+  miniBosses = []; // Keep this cleared but don't spawn any
+  portals = [];
+  extraLives = [];
+  goldPiles = [];
+  enemies = [];
+  gold = [];
+  items = [];
+  traps = [];
+  arrows = [];
+  shops = [];
+  crates = [];
+  gems = [];
+  bombs = [];
+  ropes = [];
+  particles = [];
+  
+  
+  generateCaveMap();
+  generateTraps();
+  generateCrates();
+  generateGems();
+  generateShop();
+  spawnEnemies();
+  spawnGold();
+  spawnItems();
+
+  player.x = 4 * TILE;
+  player.y = 2 * TILE;
+  player.vx = 0;
+  player.vy = 0;
+  player.onGround = false;
+  player.onRope = false;
+  
+  // Give 1 bomb back each level
+  if (gameState.bombs < 8) {
+    gameState.bombs += 1;
+  }
+
+  updateHUD();
 }
 
 function spawnItems() {
@@ -843,7 +1881,7 @@ function spawnItems() {
     items.push({ x, y, type: 'ropes', collected: false });
   }
   
-  if (Math.random() > 0.75 && !gameState.hasSpikeBboots) {
+  if (Math.random() > 0.75 && !gameState.hasSpikeBoots) {
     let x = Math.floor(Math.random() * (mapWidth - 4) + 2) * TILE;
     let y = Math.floor(Math.random() * (mapHeight - 4) + 2) * TILE;
     items.push({ x, y, type: 'spikeboots', collected: false });
@@ -858,8 +1896,26 @@ function spawnItems() {
 
 let keys = {};
 document.addEventListener("keydown", e => {
-  keys[e.key.toLowerCase()] = true;
+  const k = e.key.toLowerCase();
+
+  if (k === "arrowleft") keys["a"] = true;
+  if (k === "arrowright") keys["d"] = true;
+  if (k === "arrowup") keys["w"] = true;
+  if (k === "arrowdown") keys["s"] = true;
+
+  keys[k] = true;
   
+  // ESC key to close menus or pause
+  if (e.key === "Escape") {
+    if (!document.getElementById("controlsMenu").classList.contains("hidden")) {
+      showMainMenu();
+    } else if (shopMenuOpen) {
+      closeShopMenu();
+    } else if (gameStarted) {
+      togglePause();
+    }
+  }
+
   if (!gameStarted) return;
   
   if (e.key.toLowerCase() === "b" && gameState.bombs > 0 && !whip.active) {
@@ -871,7 +1927,8 @@ document.addEventListener("keydown", e => {
       vx: player.facingRight ? 10 : -10,
       vy: -5,
       timer: 90,
-      exploded: false
+      exploded: false,
+      onGround: false
     });
     showNotification("💣 BOMB THROWN!");
   }
@@ -898,12 +1955,7 @@ document.addEventListener("keydown", e => {
     }
   }
   
-  if (e.key === " " && !whip.active) {
-    e.preventDefault();
-    whip.active = true;
-    whip.frames = 12;
-    whip.flip = !player.facingRight;
-  }
+ 
   
   if (e.key.toLowerCase() === "e") {
     // Pick up items
@@ -920,7 +1972,7 @@ document.addEventListener("keydown", e => {
           gameState.ropes += 3;
           showNotification("🪢 +3 ROPES!");
         } else if (item.type === 'spikeboots') {
-          gameState.hasSpikeBboots = true;
+          gameState.hasSpikeBoots = true;
           showNotification("👢 SPIKE BOOTS!");
         } else if (item.type === 'spectacles') {
           gameState.hasSpectacles = true;
@@ -934,40 +1986,6 @@ document.addEventListener("keydown", e => {
         return false;
       }
       return true;
-    });
-    
-    // Shop purchases
-    shops.forEach(shop => {
-      if (!shop || !shop.items) return;
-      shop.items = shop.items.filter(item => {
-        if (Math.abs(player.x - item.x) < TILE && Math.abs(player.y - item.y) < TILE) {
-          if (gameState.gold >= item.cost) {
-            gameState.gold -= item.cost;
-            if (item.type === 'bombs') {
-              gameState.bombs += 3;
-              showNotification("💣 BOUGHT 3 BOMBS!");
-            } else if (item.type === 'ropes') {
-              gameState.ropes += 3;
-              showNotification("🪢 BOUGHT 3 ROPES!");
-            } else if (item.type === 'compass') {
-              gameState.hasCompass = true;
-              showNotification("🧭 BOUGHT COMPASS!");
-            }
-            updateHUD();
-            return false;
-          } else {
-            gameState.shopkeeperAngry = true;
-            if (shop.shopkeeper) shop.shopkeeper.angry = true;
-            showNotification("😡 SHOPKEEPER ANGRY!");
-            if (item.type === 'bombs') gameState.bombs += 3;
-            else if (item.type === 'ropes') gameState.ropes += 3;
-            else if (item.type === 'compass') gameState.hasCompass = true;
-            updateHUD();
-            return false;
-          }
-        }
-        return true;
-      });
     });
     
     // Break crates
@@ -997,11 +2015,53 @@ document.addEventListener("keydown", e => {
         }
       }
     });
+    
+    // Shop interaction - press E near shopkeeper
+    shops.forEach(shop => {
+      if (!shop || !shop.shopkeeper) return;
+      let sk = shop.shopkeeper;
+      if (Math.abs(player.x - sk.x) < TILE * 2 && 
+          Math.abs(player.y - sk.y) < TILE * 2 &&
+          !shopMenuOpen) {
+        openShopMenu(shop);
+      }
+   });
   }
 });
 
 document.addEventListener("keyup", e => {
-  keys[e.key.toLowerCase()] = false;
+  const k = e.key.toLowerCase();
+
+  if (k === "arrowleft") keys["a"] = false;
+  if (k === "arrowright") keys["d"] = false;
+  if (k === "arrowup") keys["w"] = false;
+  if (k === "arrowdown") keys["s"] = false;
+
+  keys[k] = false;
+});
+
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mousePos.x = e.clientX - rect.left + camera.x;
+  mousePos.y = e.clientY - rect.top + camera.y;
+});
+
+canvas.addEventListener('click', (e) => {
+  if (!gameStarted || whip.active) return;
+  
+  const rect = canvas.getBoundingClientRect();
+  mousePos.x = e.clientX - rect.left + camera.x;
+  mousePos.y = e.clientY - rect.top + camera.y;
+  
+  // Calculate angle to mouse
+  let dx = mousePos.x - (player.x + player.width / 2);
+  let dy = mousePos.y - (player.y + player.height / 2);
+  whip.angle = Math.atan2(dy, dx);
+  
+  whip.active = true;
+  whip.frames = 12;
+  whip.flip = dx < 0;
 });
 
 function solidAt(x, y) {
@@ -1096,9 +2156,149 @@ function takeDamage(amount, cause) {
     die(cause);
   }
 }
+function openShopMenu(shop) {
+  shopMenuOpen = true;
+  currentShop = shop;
+  gameStarted = false; // Pause game
+  
+  // Create shop UI
+  let shopUI = document.createElement('div');
+  shopUI.id = 'shopUI';
+  shopUI.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, rgba(139, 69, 19, 0.98), rgba(101, 67, 33, 0.98));
+    border: 8px solid #ffd700;
+    padding: 40px;
+    z-index: 100;
+    text-align: center;
+    color: #ffd700;
+    font-family: 'Bungee', cursive;
+    box-shadow: 0 0 80px rgba(255, 215, 0, 0.8);
+  `;
+  
+  let itemsHTML = '';
+  
+  if (shop.items && shop.items.length > 0) {
+    itemsHTML = '<h2 style="font-size: 48px; margin-bottom: 30px;">🏪 SHOP 🏪</h2>';
+    itemsHTML += `<p style="font-size: 24px; margin-bottom: 20px;">Your Gold: $${gameState.gold}</p>`;
+    
+    shop.items.forEach((item, i) => {
+      let itemName = item.type === 'bombs' ? '💣 3 Bombs' : 
+                     item.type === 'ropes' ? '🪢 3 Ropes' : 
+                     item.type === 'compass' ? '🧭 Compass' :
+                     item.type === 'spikeboots' ? '👢 Spike Boots' :
+                     item.type === 'spectacles' ? '👓 Spectacles' : 
+                     item.type === 'cape' ? '🦸 Cape' : item.type;
+      
+      let canAfford = gameState.gold >= item.cost;
+      let bgColor = canAfford ? 'linear-gradient(135deg, #ff8c00, #ffd700)' : 'linear-gradient(135deg, #666, #888)';
+      
+      itemsHTML += `<button id="shopItem${i}" style="
+        display: block;
+        width: 100%;
+        margin: 15px 0;
+        padding: 20px;
+        font-size: 28px;
+        background: ${bgColor};
+        border: 4px solid #000;
+        cursor: ${canAfford ? 'pointer' : 'not-allowed'};
+        font-family: 'Bungee', cursive;
+        color: ${canAfford ? '#000' : '#333'};
+      ">${itemName} - $${item.cost}</button>`;
+    });
+  } else {
+    itemsHTML = '<h2 style="font-size: 48px; margin-bottom: 30px;">🏪 SHOP 🏪</h2>';
+    itemsHTML += '<p style="font-size: 32px; color: #ff6b6b;">SOLD OUT!</p>';
+  }
+  
+  itemsHTML += `<button id="exitShopBtn" style="
+    margin-top: 30px;
+    padding: 20px 40px;
+    font-size: 32px;
+    background: linear-gradient(135deg, #ff0000, #ff6b6b);
+    border: 4px solid #000;
+    cursor: pointer;
+    font-family: 'Bungee', cursive;
+    color: #fff;
+  ">EXIT SHOP</button>`;
+  
+  shopUI.innerHTML = itemsHTML;
+  document.body.appendChild(shopUI);
+  
+  // Add event listeners
+  shop.items.forEach((item, i) => {
+    let btn = document.getElementById(`shopItem${i}`);
+    if (btn) {
+      btn.addEventListener('click', () => buyShopItem(i));
+    }
+  });
+  
+  let exitBtn = document.getElementById('exitShopBtn');
+  if (exitBtn) {
+    exitBtn.addEventListener('click', closeShopMenu);
+  }
+}
+
+function buyShopItem(index) {
+  if (!currentShop || !currentShop.items[index]) return;
+  
+  let item = currentShop.items[index];
+  
+  if (gameState.gold >= item.cost) {
+    gameState.gold -= item.cost;
+    
+    if (item.type === 'bombs') {
+      gameState.bombs += 3;
+      showNotification("💣 BOUGHT 3 BOMBS!");
+    } else if (item.type === 'ropes') {
+      gameState.ropes += 3;
+      showNotification("🪢 BOUGHT 3 ROPES!");
+    } else if (item.type === 'compass') {
+      gameState.hasCompass = true;
+      gameState.compassLevels = 2; // Lasts 2 levels
+      showNotification("🧭 COMPASS (2 levels)!");
+    } else if (item.type === 'spikeboots') {
+      gameState.hasSpikeBoots = true;
+      gameState.spikeBootsLevels = 2; // Lasts 2 levels
+      showNotification("👢 SPIKE BOOTS (2 levels)!");
+    } else if (item.type === 'spectacles') {
+      gameState.hasSpectacles = true;
+      gameState.spectaclesLevels = 2; // Lasts 2 levels
+      showNotification("👓 SPECTACLES (2 levels)!");
+    } else if (item.type === 'cape') {
+      gameState.hasCape = true;
+      gameState.capeLevels = 2; // Lasts 2 levels
+      showNotification("🦸 CAPE (2 levels)!");
+    }
+    
+    currentShop.items.splice(index, 1);
+    updateHUD();
+    
+    // Close and reopen to refresh
+    let shopUI = document.getElementById('shopUI');
+    if (shopUI) shopUI.remove();
+    openShopMenu(currentShop);
+  } else {
+    showNotification("❌ NOT ENOUGH GOLD!");
+  }
+}
+
+function closeShopMenu() {
+  let shopUI = document.getElementById('shopUI');
+  if (shopUI) shopUI.remove();
+  shopMenuOpen = false;
+  currentShop = null;
+  gameStarted = true;
+}
+
+
 
 function update() {
   if (!gameStarted) return;
+  // Check if player enters shop
 
   if (!map || !Array.isArray(map)) return;
   
@@ -1151,12 +2351,19 @@ function update() {
       player.vx *= 0.85;
     }
 
-    if (keys["w"] && player.onGround) {
+   if (keys["w"] && player.onGround) {
       player.vy = -14;
       player.onGround = false;
     }
 
-    player.vy += GRAVITY;
+    // CAPE SLOW FALL - Hold W/UP in air to glide
+    if (gameState.hasCape && !player.onGround && !player.onRope && keys["w"] && player.vy > 0) {
+      player.vy += GRAVITY * 0.3; // 70% reduced falling speed
+      gameState.capeSlowFall = true;
+    } else {
+      player.vy += GRAVITY;
+      gameState.capeSlowFall = false;
+    }
   }
 
   player.x += player.vx;
@@ -1213,7 +2420,7 @@ function update() {
         player.y + player.height >= trap.y &&
         player.y + player.height <= trap.y + TILE / 2 &&
         Math.abs(player.x - trap.x) < TILE - 10 &&
-        !gameState.hasSpikeBboots
+        !gameState.hasSpikeBoots
       ) {
         die("Impaled on spikes");
       }
@@ -1224,8 +2431,16 @@ function update() {
     if (!arrow) return false;
 
     arrow.x += arrow.vx;
+    
+    // Add gravity to thrown rocks
+    if (arrow.gravity) {
+      if (!arrow.vy) arrow.vy = 0;
+      arrow.vy += GRAVITY * 0.8;
+      arrow.y += arrow.vy;
+    }
 
     if (arrow.x < 0 || arrow.x > mapWidth * TILE) return false;
+    if (arrow.y > mapHeight * TILE) return false;
     if (solidAt(arrow.x, arrow.y)) return false;
 
     if (
@@ -1234,7 +2449,11 @@ function update() {
       player.y < arrow.y + 10 &&
       player.y + player.height > arrow.y
     ) {
-      takeDamage(1, "Shot by arrow trap");
+      if (arrow.gravity) {
+        takeDamage(1, "Hit by thrown rock");
+      } else {
+        takeDamage(1, "Shot by arrow trap");
+      }
       return false;
     }
     return true;
@@ -1243,14 +2462,33 @@ function update() {
   bombs = bombs.filter(b => {
     if (!b) return false;
     
+    // Apply gravity
     b.vy += GRAVITY;
-    b.x += b.vx;
-    b.y += b.vy;
     
-    if (solidAt(b.x, b.y + TILE/2)) {
-      b.vx *= 0.5;
+    // Apply friction when on ground
+    if (b.onGround) {
+      b.vx *= 0.85;
+    }
+    
+    // Horizontal movement with wall collision
+    let nextX = b.x + b.vx;
+    if (solidAt(nextX, b.y) || solidAt(nextX + TILE/2, b.y) || 
+        solidAt(nextX, b.y + TILE/2) || solidAt(nextX + TILE/2, b.y + TILE/2)) {
+      b.vx *= -0.5; // Bounce back with reduced speed
+    } else {
+      b.x = nextX;
+    }
+    
+    // Vertical movement with ground collision
+    let nextY = b.y + b.vy;
+    if (solidAt(b.x, nextY + TILE/2) || solidAt(b.x + TILE/2, nextY + TILE/2)) {
+      b.y = Math.floor((b.y + TILE/2) / TILE) * TILE;
       b.vy = 0;
-      b.y = Math.floor(b.y / TILE) * TILE;
+      b.vx *= 0.7; // More friction on landing
+      b.onGround = true;
+    } else {
+      b.y = nextY;
+      b.onGround = false;
     }
 
     b.timer--;
@@ -1363,44 +2601,23 @@ function update() {
     return true;
   });
 
-  shops.forEach(shop => {
-    if (shop && shop.shopkeeper) {
-      const sk = shop.shopkeeper;
-      if (sk.angry) {
-        sk.vx = player.x < sk.x ? -4 : 4;
-        sk.x += sk.vx;
-        sk.x = Math.max(0, Math.min(sk.x, mapWidth * TILE - TILE));
-        if (
-          Math.abs(player.x - sk.x) < TILE &&
-          Math.abs(player.y - sk.y) < TILE
-        ) {
-          takeDamage(1, "Killed by angry shopkeeper");
-        }
-        if (whip.active && whip.frames > 5) {
-          let whipX = player.x + (player.facingRight ? player.width : -TILE * 1.5);
-          if (
-            sk.x < whipX + TILE * 1.5 &&
-            sk.x + TILE > whipX &&
-            sk.y < player.y + TILE &&
-            sk.y + TILE > player.y
-          ) {
-            sk.health--;
-            if (sk.health <= 0) {
-              gameState.kills++;
-              showNotification("💀 SHOPKEEPER DOWN!");
-            }
-          }
-        }
-      }
-    }
-  });
-
-  enemies = enemies.filter(e => {
+ enemies = enemies.filter(e => {
     if (!e || (e.health <= 0 && !e.stunned)) return false;
 
     if (e.type === 'skeleton' && e.health <= 0 && !e.stunned) {
       e.stunned = true;
       e.reassembleTimer = 180;
+      for (let i = 0; i < 15; i++) {
+        particles.push({
+          x: e.x + TILE/2,
+          y: e.y + TILE/2,
+          vx: (Math.random() - 0.5) * 10,
+          vy: (Math.random() - 0.5) * 10 - 2,
+          life: 40,
+          size: Math.random() * 5 + 2,
+          color: '#ddd'
+        });
+      }
     }
 
     if (e.stunned) {
@@ -1408,46 +2625,332 @@ function update() {
       if (e.reassembleTimer <= 0) {
         e.health = 3;
         e.stunned = false;
+        showNotification("💀 SKELETON REASSEMBLED!");
       }
       return true;
     }
 
     try {
+      let distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
+      
+     // ===== BAT AI =====
       if (e.type === 'bat') {
-        e.x += e.vx;
-        e.y += Math.sin(Date.now() / 200 + e.x) * 2;
-        if (Math.random() < 0.03) e.vx *= -1;
-        if (solidAt(e.x, e.y) || solidAt(e.x + TILE, e.y)) e.vx *= -1;
-      } else {
+        // Aggressive chase behavior
+        if (distToPlayer < TILE * 12) {
+          // Direct pursuit with varying speed
+          let speed = distToPlayer < TILE * 4 ? 3.5 : 2.5;
+          let targetVX = player.x > e.x ? speed : -speed;
+          
+          // Check if next position is solid
+          if (!solidAt(e.x + targetVX, e.y) && !solidAt(e.x + targetVX + TILE, e.y)) {
+            e.vx = targetVX;
+          } else {
+            e.vx *= -1; // Bounce back
+          }
+          
+          // Fly toward player's Y position
+          let targetY = player.y - TILE;
+          if (e.y < targetY - 10) {
+            e.y += 2;
+          } else if (e.y > targetY + 10) {
+            e.y -= 2;
+          }
+          
+          // Add swooping pattern
+          e.y += Math.sin(Date.now() / 150 + e.x) * 2;
+          
+          // Dive bomb if directly above player
+          if (Math.abs(e.x - player.x) < TILE * 2 && e.y < player.y - TILE * 2) {
+            e.y += 4;
+          }
+        } else {
+          // Patrol behavior when far from player
+          e.x += e.vx;
+          e.y += Math.sin(Date.now() / 200 + e.x) * 2;
+          if (Math.random() < 0.02) e.vx *= -1;
+        }
+        
+        // Wall avoidance
+        if (solidAt(e.x, e.y) || solidAt(e.x + TILE, e.y) || 
+            solidAt(e.x, e.y + TILE) || solidAt(e.x + TILE, e.y + TILE)) {
+          e.vx *= -1;
+          e.y -= 5;
+        }
+        
+        e.x = Math.max(TILE, Math.min(e.x, mapWidth * TILE - TILE * 2));
+        e.y = Math.max(TILE, Math.min(e.y, mapHeight * TILE - TILE * 2));
+      }
+      
+      // ===== SNAKE AI =====
+      else if (e.type === 'snake') {
+        e.vy += GRAVITY;
+        
+        // Smart pursuit on ground
+        if (e.onGround && distToPlayer < TILE * 8) {
+          // Move toward player
+          if (Math.abs(player.x - e.x) > TILE) {
+            e.vx = player.x > e.x ? 2.5 : -2.5;
+          }
+          
+          // Jump at player aggressively
+          if (distToPlayer < TILE * 5) {
+            if (Math.random() < 0.04) {
+              e.vy = -12;
+              // Jump toward player
+              e.vx = player.x > e.x ? 4 : -4;
+            }
+          }
+          
+          // Jump over obstacles
+          if (solidAt(e.x + e.vx * TILE, e.y)) {
+            e.vy = -10;
+          }
+        } else if (e.onGround) {
+          // Patrol when player is far
+          e.vx = e.vx || (Math.random() > 0.5 ? 2 : -2);
+        }
+        
+       // Check walls before moving
+        if (!solidAt(e.x + e.vx, e.y) && !solidAt(e.x + e.vx + TILE - 5, e.y)) {
+          e.x += e.vx;
+        } else {
+          e.vx *= -1;
+        }
+        e.y += e.vy;
+        
+        // Ground detection
+        if (solidAt(e.x, e.y + TILE) || solidAt(e.x + TILE - 5, e.y + TILE)) {
+          e.onGround = true;
+          e.vy = 0;
+          e.y = Math.floor((e.y + TILE) / TILE) * TILE - TILE;
+        } else {
+          e.onGround = false;
+        }
+        
+        // Turn around at walls or ledges
+        if (solidAt(e.x + e.vx * 10, e.y) || 
+            (e.onGround && !solidAt(e.x + e.vx * TILE * 1.5, e.y + TILE + 5))) {
+          e.vx *= -1;
+        }
+        
+        e.x = Math.max(0, Math.min(e.x, mapWidth * TILE - TILE));
+        e.y = Math.max(0, Math.min(e.y, mapHeight * TILE - TILE));
+      }
+      
+      // ===== SPIDER AI =====
+      else if (e.type === 'spider') {
+        e.vy += GRAVITY;
+        
+        // Ceiling crawler behavior
+        if (solidAt(e.x, e.y - 5)) {
+          // Walking on ceiling
+          e.vy = 0;
+          e.y = Math.ceil(e.y / TILE) * TILE;
+          
+          if (distToPlayer < TILE * 6 && player.y > e.y) {
+            // Drop down on player
+            e.vy = 2;
+          } else {
+            // Crawl on ceiling toward player
+            e.vx = distToPlayer < TILE * 8 && player.x > e.x ? 2 : -2;
+          }
+        } else {
+          // On ground or falling
+          if (distToPlayer < TILE * 7) {
+            e.vx = player.x > e.x ? 2 : -2;
+            
+            // Jump toward player
+            if (e.onGround && Math.random() < 0.03) {
+              e.vy = -8;
+            }
+          }
+        }
+        
+        // Check walls before moving
+        if (!solidAt(e.x + e.vx, e.y) && !solidAt(e.x + e.vx + TILE, e.y)) {
+          e.x += e.vx;
+        } else {
+          e.vx *= -1;
+        }
+        e.y += e.vy;
+        
+        // Ground detection
+        if (solidAt(e.x, e.y + TILE)) {
+          e.onGround = true;
+          e.vy = 0;
+          e.y = Math.floor((e.y + TILE) / TILE) * TILE - TILE;
+        } else {
+          e.onGround = false;
+        }
+        
+        // Wall collision
+        if (solidAt(e.x + e.vx * 5, e.y)) {
+          e.vx *= -1;
+        }
+        
+        e.x = Math.max(0, Math.min(e.x, mapWidth * TILE - TILE));
+        e.y = Math.max(0, Math.min(e.y, mapHeight * TILE - TILE));
+      }
+      
+      // ===== CAVEMAN AI =====
+      else if (e.type === 'caveman') {
+        e.vy += GRAVITY;
+        
+        if (distToPlayer < TILE * 10) {
+          // Chase player
+          if (Math.abs(player.x - e.x) > TILE * 2) {
+            e.vx = player.x > e.x ? 3 : -3;
+          } else {
+            // Close range - prepare to throw
+            e.vx *= 0.5;
+            
+            // Throw rocks at player
+            if (!e.throwCooldown) e.throwCooldown = 0;
+            e.throwCooldown--;
+            
+            if (e.throwCooldown <= 0 && distToPlayer < TILE * 8) {
+              // Spawn rock projectile
+              arrows.push({
+                x: e.x + (e.vx > 0 ? TILE : 0),
+                y: e.y + TILE/2,
+                vx: player.x > e.x ? 8 : -8,
+                vy: -4,
+                gravity: true,
+                active: true
+              });
+              e.throwCooldown = 120;
+              showNotification("🪨 CAVEMAN THROWS ROCK!");
+            }
+          }
+          
+          // Jump over obstacles and toward player
+          if (e.onGround) {
+            if (solidAt(e.x + e.vx * TILE, e.y) || 
+                (Math.abs(player.y - e.y) > TILE * 2 && Math.random() < 0.02)) {
+              e.vy = -11;
+            }
+          }
+        } else {
+          // Patrol
+          if (e.onGround) {
+            e.vx = e.vx || 2;
+          }
+        }
+        
+       // Check walls before moving
+        if (!solidAt(e.x + e.vx, e.y) && !solidAt(e.x + e.vx + TILE, e.y)) {
+          e.x += e.vx;
+        } else {
+          e.vx *= -1;
+        }
+        e.y += e.vy;
+        
+        // Ground detection
+        if (solidAt(e.x, e.y + TILE)) {
+          e.onGround = true;
+          e.vy = 0;
+          e.y = Math.floor((e.y + TILE) / TILE) * TILE - TILE;
+        } else {
+          e.onGround = false;
+        }
+        
+        // Turn at walls/ledges
+        if (solidAt(e.x + e.vx * 10, e.y) || 
+            (e.onGround && !solidAt(e.x + e.vx * TILE, e.y + TILE + 5))) {
+          e.vx *= -1;
+        }
+        
+        e.x = Math.max(0, Math.min(e.x, mapWidth * TILE - TILE));
+        e.y = Math.max(0, Math.min(e.y, mapHeight * TILE - TILE));
+      }
+      
+      // ===== SKELETON AI =====
+      else if (e.type === 'skeleton') {
+        e.vy += GRAVITY;
+        
+        if (distToPlayer < TILE * 12) {
+          // Relentless pursuit
+          e.vx = player.x > e.x ? 3.5 : -3.5;
+          
+          // Jump toward player aggressively
+          if (e.onGround && Math.random() < 0.05) {
+            e.vy = -13;
+          }
+          
+          // Jump over obstacles
+          if (solidAt(e.x + e.vx * TILE, e.y) && e.onGround) {
+            e.vy = -12;
+          }
+        } else {
+          // Wander when far
+          if (e.onGround) {
+            e.vx = e.vx || 2;
+          }
+        }
+        
+// Check walls before moving
+        if (!solidAt(e.x + e.vx, e.y) && !solidAt(e.x + e.vx + TILE, e.y)) {
+          e.x += e.vx;
+        } else {
+          e.vx *= -1;
+        }
+        e.y += e.vy;
+        
+        // Ground detection
+        if (solidAt(e.x, e.y + TILE)) {
+          e.onGround = true;
+          e.vy = 0;
+          e.y = Math.floor((e.y + TILE) / TILE) * TILE - TILE;
+        } else {
+          e.onGround = false;
+        }
+        
+        // Turn at walls
+        if (solidAt(e.x + e.vx * 10, e.y) || 
+            (e.onGround && !solidAt(e.x + e.vx * TILE, e.y + TILE + 5))) {
+          e.vx *= -1;
+        }
+        
+        e.x = Math.max(0, Math.min(e.x, mapWidth * TILE - TILE));
+        e.y = Math.max(0, Math.min(e.y, mapHeight * TILE - TILE));
+      }
+      
+      // ===== DEFAULT AI (for any other enemy type) =====
+      else {
         e.vy += GRAVITY;
         e.x += e.vx;
+        
         if (solidAt(e.x, e.y + TILE)) {
           e.onGround = true;
           e.vy = 0;
         } else {
           e.onGround = false;
         }
+        
         if (solidAt(e.x + e.vx * 5, e.y) || !solidAt(e.x + e.vx * TILE, e.y + TILE + 5)) {
           e.vx *= -1;
         }
+        
         e.y += e.vy;
+        e.x = Math.max(0, Math.min(e.x, mapWidth * TILE - TILE));
+        e.y = Math.max(0, Math.min(e.y, mapHeight * TILE - TILE));
       }
       
-      e.x = Math.max(0, Math.min(e.x, mapWidth * TILE - TILE));
-      e.y = Math.max(0, Math.min(e.y, mapHeight * TILE - TILE));
     } catch (err) {
       console.error("Error updating enemy:", err);
     }
 
     if (whip.active && whip.frames > 5) {
-      let whipX = player.x + (player.facingRight ? player.width : -TILE * 1.5);
-      let whipY = player.y;
-      if (
-        e.x < whipX + TILE * 1.5 &&
-        e.x + TILE > whipX &&
-        e.y < whipY + TILE &&
-        e.y + TILE > whipY
-      ) {
+      let whipLen = (12 - whip.frames) * 8;
+      let whipX = player.x + player.width / 2;
+      let whipY = player.y + player.height / 2;
+      let whipEndX = whipX + Math.cos(whip.angle) * whipLen;
+      let whipEndY = whipY + Math.sin(whip.angle) * whipLen;
+      
+      // Check if enemy is near whip tip
+      let distToWhipTip = Math.hypot(e.x + TILE/2 - whipEndX, e.y + TILE/2 - whipEndY);
+      
+      if (distToWhipTip < TILE * 1.5) {
         e.health--;
         if (e.health <= 0 && e.type !== 'skeleton') {
           gameState.kills++;
@@ -1474,7 +2977,7 @@ function update() {
       player.y + player.height > e.y + 8 &&
       gameState.damageInvincibility === 0
     ) {
-      if (gameState.hasSpikeBboots && player.vy > 0 && player.y < e.y) {
+      if (gameState.hasSpikeBoots && player.vy > 0 && player.y < e.y) {
         e.health = 0;
         player.vy = -10;
         gameState.kills++;
@@ -1497,15 +3000,83 @@ function update() {
   ) {
     nextLevel();
   }
+ // PORTAL TELEPORTATION
+  if (portalCooldown > 0) portalCooldown--;
+  
+  portals.forEach((portal, i) => {
+    portal.pulse += 0.1;
+    
+    // Don't teleport at boss entrance markers
+    if (portal.isBossEntrance) return;
+    
+    if (Math.abs(player.x - portal.x) < TILE && 
+        Math.abs(player.y - portal.y) < TILE && 
+        portalCooldown === 0) {
+      let linked = portals[portal.linkedIndex];
+      if (linked) {
+        player.x = linked.x;
+        player.y = linked.y - TILE; // Spawn slightly above portal
+        portalCooldown = 30; // 0.5 second cooldown
+        showNotification("🌀 TELEPORTED!");
+        screenShake.intensity = 10;
+      }
+    }
+  });
+  
+  // WATER PHYSICS
+  let inWater = false;
+  waterTiles.forEach(water => {
+    water.wave += 0.05;
+    if (Math.abs(player.x - water.x) < TILE && Math.abs(player.y - water.y) < TILE) {
+      inWater = true;
+      player.vy *= 0.5; // Slow falling in water
+      player.vx *= 0.8; // Slow movement
+    }
+  });
+  
+  // Swimming with W key
+  if (inWater && keys["w"]) {
+    player.vy = -4; // Swim upward
+  }
+  
+  // EXTRA LIVES
+  extraLives = extraLives.filter(life => {
+    life.pulse += 0.1;
+    if (Math.abs(player.x - life.x) < TILE && Math.abs(player.y - life.y) < TILE) {
+      gameState.health = Math.min(gameState.health + 1, 6);
+      updateHUD();
+      showNotification("❤️ +1 LIFE!");
+      return false;
+    }
+    return true;
+  });
+  
 
   updateCamera();
 }
 
 function nextLevel() {
   gameState.sublevel++;
+  ropes = []; // Clear all ropes
+  
+  // Track powerup counters (decrement each level)
+  if (gameState.compassLevels > 0) gameState.compassLevels--;
+  if (gameState.spikeBootsLevels > 0) gameState.spikeBootsLevels--;
+  if (gameState.spectaclesLevels > 0) gameState.spectaclesLevels--;
+  if (gameState.capeLevels > 0) gameState.capeLevels--;
+  
+  // Remove powerups if their counter reaches 0
+  if (gameState.compassLevels === 0) gameState.hasCompass = false;
+  if (gameState.spikeBootsLevels === 0) gameState.hasSpikeBoots = false;
+  if (gameState.spectaclesLevels === 0) gameState.hasSpectacles = false;
+  if (gameState.capeLevels === 0) gameState.hasCape = false;
+  
   if (gameState.sublevel > 4) {
     gameState.sublevel = 1;
     gameState.level++;
+    if (gameState.level > 4) {
+      gameState.level = 1; // Loop back to level 1 after level 4
+    }
     updateTheme();
     showNotification(`🎉 LEVEL ${gameState.level}!`);
   } else {
@@ -1517,37 +3088,7 @@ function nextLevel() {
   if (gameState.health < 4) gameState.health++;
   updateHUD();
   resetLevel();
-}
-
-function resetLevel() {
-  player.x = 140;
-  player.y = 100;
-  player.vx = 0;
-  player.vy = 0;
-  player.onGround = false;
-  player.onRope = false;
-  player.climbing = false;
-  generateCaveMap();
-  generateTraps();
-  generateShop();
-  generateCrates();
-  generateGems();
-  spawnEnemies();
-  spawnGold();
-  spawnItems();
-  bombs = [];
-  arrows = [];
-  particles = [];
-  camera.x = 0;
-  camera.y = 0;
-}
-
-function updateHUD() {
-  document.getElementById("bombs").textContent = gameState.bombs;
-  document.getElementById("ropes").textContent = gameState.ropes;
-  document.getElementById("health").textContent = gameState.health;
-  document.getElementById("level").textContent = `${gameState.level}-${gameState.sublevel}`;
-  document.getElementById("gold").textContent = gameState.gold;
+  saveGame(); // Auto-save after each level
 }
 
 function draw() {
@@ -1758,7 +3299,7 @@ function draw() {
     ctx.fill();
     ctx.shadowBlur = 0;
   });
-  
+
   // Gems
   gems.forEach(g => {
     if (!g) return;
@@ -1834,6 +3375,58 @@ function draw() {
     
     ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
   });
+ // PORTALS
+  portals.forEach(portal => {
+    let pulse = Math.sin(portal.pulse) * 0.3 + 1;
+    
+    // Boss entrance is RED, regular portals are PURPLE
+    let color = portal.isBossEntrance ? '#ff0000' : '#9400d3';
+    let color2 = portal.isBossEntrance ? '#ff6b6b' : '#ff00ff';
+    
+    ctx.fillStyle = color;
+    ctx.shadowBlur = 40 * pulse;
+    ctx.shadowColor = color;
+    ctx.beginPath();
+    ctx.arc(portal.x + TILE/2, portal.y + TILE/2, 25 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = color2;
+    ctx.beginPath();
+    ctx.arc(portal.x + TILE/2, portal.y + TILE/2, 25 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = '#ff00ff';
+    ctx.beginPath();
+    ctx.arc(portal.x + TILE/2, portal.y + TILE/2, 15 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+  
+  // WATER
+  waterTiles.forEach(water => {
+    let wave = Math.sin(water.wave) * 3;
+    
+    ctx.fillStyle = 'rgba(0, 100, 255, 0.6)';
+    ctx.fillRect(water.x, water.y + wave, TILE, TILE - wave);
+    
+    ctx.fillStyle = 'rgba(100, 200, 255, 0.4)';
+    ctx.fillRect(water.x + 5, water.y + 5 + wave, TILE - 10, 5);
+  });
+  
+  // EXTRA LIVES
+  extraLives.forEach(life => {
+    let pulse = Math.sin(life.pulse) * 0.2 + 1;
+    let float = Math.sin(life.pulse * 2) * 5;
+    
+    ctx.fillStyle = '#ff1493';
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = '#ff1493';
+    ctx.font = `${40 * pulse}px Arial`;
+    ctx.fillText('❤️', life.x, life.y + float);
+    ctx.shadowBlur = 0;
+  });
+  
+  
   
   // Player with damage flash
   ctx.save();
@@ -1871,10 +3464,23 @@ function draw() {
   }
   
   // Spike boots
-  if (gameState.hasSpikeBboots) {
+  if (gameState.hasSpikeBoots) {
     ctx.fillStyle = '#999';
     ctx.fillRect(player.x + 5, player.y + player.height - 3, 6, 3);
     ctx.fillRect(player.x + player.width - 11, player.y + player.height - 3, 6, 3);
+  }
+  // Cape (when gliding)
+  if (gameState.hasCape && gameState.capeSlowFall) {
+    ctx.fillStyle = '#ff0000';
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#ff0000';
+    ctx.beginPath();
+    ctx.moveTo(player.x + player.width/2, player.y + 8);
+    ctx.lineTo(player.x - 8, player.y + player.height - 5);
+    ctx.lineTo(player.x + player.width + 8, player.y + player.height - 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
   }
   
   // Eyes
@@ -1899,12 +3505,15 @@ function draw() {
     ctx.shadowColor = '#ffd700';
     
     let whipLen = (12 - whip.frames) * 8;
-    let whipX = player.x + (player.facingRight ? player.width : 0);
+    let whipX = player.x + player.width / 2;
     let whipY = player.y + player.height / 2;
     
     ctx.beginPath();
     ctx.moveTo(whipX, whipY);
-    ctx.lineTo(whipX + (player.facingRight ? whipLen : -whipLen), whipY);
+    ctx.lineTo(
+      whipX + Math.cos(whip.angle) * whipLen,
+      whipY + Math.sin(whip.angle) * whipLen
+    );
     ctx.stroke();
     ctx.shadowBlur = 0;
   }
@@ -2039,16 +3648,17 @@ function draw() {
   ctx.restore();
 }
 
-function loop() {
+function gameLoop() {
   update();
   draw();
-  requestAnimationFrame(loop);
+  requestAnimationFrame(gameLoop);
 }
 
+// Initialize
 generateCaveMap();
 updateHUD();
 updateTheme();
-loop();
+gameLoop();
 </script>
 </body>
 </html>
