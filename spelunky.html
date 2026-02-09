@@ -284,19 +284,31 @@
       display: none !important;
     }
     
-    #deathScreen {
-      background: linear-gradient(135deg, rgba(60, 0, 0, 0.98), rgba(20, 0, 0, 0.98));
-      border: 8px solid #ff0000;
-    }
-    
-    #deathScreen h1 {
-      color: #ff0000;
-      animation: glow 1.5s infinite;
-      text-shadow: 
-        0 0 30px #ff0000,
-        0 0 60px #ff0000,
-        6px 6px 0 #000;
-    }
+#deathScreen {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+}
+
+#deathScreen.active {
+  display: flex !important;
+}
+
+#deathScreen h1 {
+  color: #ff0000 !important;
+  animation: glow 1.5s infinite;
+  text-shadow: 
+    0 0 30px #ff0000,
+    0 0 60px #ff0000,
+    6px 6px 0 #000 !important;
+}
     
     .stat-line {
       font-size: 30px;
@@ -374,6 +386,7 @@
   <div>🪢 <span id="ropes">3</span></div>
   <div>💰 <span id="gold">0</span></div>
   <div>📍 <span id="level">1-1</span></div>
+  <div><span id="keyStatus">🔒</span> KEY</div>
   <div onclick="togglePause()" style="cursor: pointer; background: linear-gradient(135deg, rgba(255, 0, 0, 0.3), rgba(139, 0, 0, 0.4));">⏸️ PAUSE</div>
 </div>
 
@@ -427,7 +440,7 @@
       <div style="margin-bottom: 30px;">
         <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">⚔️ COMBAT & TOOLS</h4>
         <div><strong>CLICK MOUSE</strong> - Attack with whip (aim at enemies!)</div>
-        <div><strong>B</strong> - Throw bomb (destroys blocks & enemies)</div>
+<div><strong>SPACE</strong> - Throw bomb (destroys blocks & enemies)</div>
         <div><strong>R</strong> - Deploy rope (climb up/down)</div>
         <div><strong>E</strong> - Pick up items, break crates, talk to shopkeeper</div>
       </div>
@@ -466,15 +479,7 @@
     <button onclick="showMainMenu()" style="margin-top: 20px;">⬅️ BACK TO MENU</button>
   </div>
 </div>
-
-<div id="deathScreen" class="hidden" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(60, 0, 0, 0.98), rgba(20, 0, 0, 0.98)); border: 8px solid #ff0000; padding: 60px 100px; text-align: center; color: #ffd700; box-shadow: 0 0 100px rgba(255, 0, 0, 0.8), inset 0 0 100px rgba(0, 0, 0, 0.8); z-index: 10;">
-  <h1>💀 YOU DIED 💀</h1>
-  <div class="death-cause" id="deathCause"></div>
-  <div class="stat-line">Level Reached: <span id="finalLevel"></span></div>
-  <div class="stat-line">Gold Collected: $<span id="finalGold"></span></div>
-  <div class="stat-line">Enemies Defeated: <span id="finalKills"></span></div>
-  <button onclick="restartGame()" style="margin-top: 30px; background: linear-gradient(135deg, #ff0000, #ff6b6b); color: #fff; border: 5px solid #000; padding: 25px 60px; font-size: 36px; font-family: 'Bungee', cursive; cursor: pointer; font-weight: bold; letter-spacing: 2px;">TRY AGAIN</button>
-</div>
+<div id="deathScreen" class="hidden"></div>
 <div id="pauseMenu" class="hidden" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(60, 30, 15, 0.98), rgba(30, 15, 8, 0.98)); border: 8px solid #ffd700; padding: 60px 100px; text-align: center; color: #ffd700; box-shadow: 0 0 80px rgba(255, 215, 0, 0.8), inset 0 0 80px rgba(0, 0, 0, 0.8); z-index: 10;">
   <h1 style="font-size: 80px; margin: 0 0 40px 0; text-shadow: 0 0 30px #ffd700, 0 0 60px #ff8800, 6px 6px 0 #000; color: #ffed4e; font-family: 'Bangers', cursive; letter-spacing: 8px;">⏸️ PAUSED ⏸️</h1>
   <button onclick="togglePause()" style="background: linear-gradient(135deg, #ff8c00, #ffd700); color: #000; border: 5px solid #000; padding: 25px 60px; font-size: 36px; font-family: 'Bungee', cursive; cursor: pointer; margin: 20px; font-weight: bold; letter-spacing: 2px;">▶️ RESUME</button>
@@ -489,6 +494,18 @@ const TILE = 40;
 const GRAVITY = 0.6;
 const mapWidth = 60;
 const mapHeight = 40;
+const DEATH_QUOTES = [
+  "Even the best explorers fall sometimes...",
+  "The cave has claimed another victim...",
+  "Don't give up, spelunker!",
+  "Every death is a lesson learned.",
+  "The treasure awaits those who persevere!",
+  "Try a different approach next time!",
+  "Remember: patience is key!",
+  "You're getting closer to mastering this!",
+  "The deepest caves hold the greatest rewards.",
+  "Failure is just practice for success!"
+];
 
 ctx.imageSmoothingEnabled = false;
 
@@ -1013,6 +1030,98 @@ const ROOM_TEMPLATES = {
     "1111111111"
   ]
 };
+// Quest system
+const QUEST_POOL = [
+  { 
+    id: 'kill_spiders', 
+    type: 'kill', 
+    target: 'spider', 
+    amount: 10, 
+    reward: 500, 
+    description: 'Kill 10 spiders',
+    icon: '🕷️'
+  },
+  { 
+    id: 'kill_bats', 
+    type: 'kill', 
+    target: 'bat', 
+    amount: 8, 
+    reward: 450, 
+    description: 'Kill 8 bats',
+    icon: '🦇'
+  },
+  { 
+    id: 'kill_snakes', 
+    type: 'kill', 
+    target: 'snake', 
+    amount: 7, 
+    reward: 400, 
+    description: 'Kill 7 snakes',
+    icon: '🐍'
+  },
+  { 
+    id: 'kill_cavemen', 
+    type: 'kill', 
+    target: 'caveman', 
+    amount: 5, 
+    reward: 600, 
+    description: 'Kill 5 cavemen',
+    icon: '🧔'
+  },
+  { 
+    id: 'kill_skeletons', 
+    type: 'kill', 
+    target: 'skeleton', 
+    amount: 6, 
+    reward: 700, 
+    description: 'Kill 6 skeletons',
+    icon: '💀'
+  },
+  { 
+    id: 'destroy_blocks', 
+    type: 'destroy', 
+    amount: 15, 
+    reward: 400, 
+    description: 'Destroy 15 blocks with bombs',
+    icon: '💥'
+  },
+  { 
+    id: 'collect_gold', 
+    type: 'collect_gold', 
+    amount: 2000, 
+    reward: 800, 
+    description: 'Collect $2000 in gold',
+    icon: '💰'
+  },
+  { 
+    id: 'collect_gems', 
+    type: 'collect_gems', 
+    amount: 10, 
+    reward: 600, 
+    description: 'Collect 10 gems',
+    icon: '💎'
+  },
+  { 
+    id: 'break_crates', 
+    type: 'break_crates', 
+    amount: 12, 
+    reward: 350, 
+    description: 'Break 12 crates',
+    icon: '📦'
+  },
+  { 
+    id: 'use_bombs', 
+    type: 'use_bombs', 
+    amount: 8, 
+    reward: 300, 
+    description: 'Use 8 bombs',
+    icon: '💣'
+  }
+];
+
+let questGiver = null; // NPC who gives quests
+let activeQuest = null; // Current quest
+let questProgress = {}; // Track progress
 
 let gameState = {
   level: 1,
@@ -1026,18 +1135,33 @@ let gameState = {
   hasCape: false,
   hasCompass: false,
   hasSpectacles: false,
-  spikeBootsLevels: 0, // How many levels the powerup lasts
+  spikeBootsLevels: 0,
   capeLevels: 0,
   compassLevels: 0,
   spectaclesLevels: 0,
   shopkeeperAngry: false,
   deathCause: '',
   damageInvincibility: 0,
-  capeSlowFall: false // Tracks if cape is currently active (holding jump)
+  capeSlowFall: false,
+  hasKey: false,
+  startTime: Date.now(),
+  totalPlayTime: 0,
+  
+  // NEW QUEST TRACKING
+  blocksDestroyed: 0,
+  gemsCollected: 0,
+  cratesBreaked: 0,
+  bombsUsed: 0,
+  spidersKilled: 0,
+  batsKilled: 0,
+  snakesKilled: 0,
+  cavemenKilled: 0,
+  skeletonsKilled: 0
 };
 
 let map = [];
 let door = { x: 0, y: 0 };
+let key = { x: 0, y: 0, collected: false }; // NEW: Key location
 let bombs = [];
 let ropes = [];
 let whip = { active: false, frames: 0, flip: false, angle: 0 };
@@ -1069,7 +1193,9 @@ function showMainMenu() {
   document.getElementById("controlsMenu").classList.add("hidden");
 }
 function togglePause() {
-  if (!gameStarted) return;
+  if (!gameStarted && document.getElementById("pauseMenu").classList.contains("hidden")) {
+    return; // Don't allow pausing if game hasn't started
+  }
   
   let pauseMenu = document.getElementById("pauseMenu");
   if (pauseMenu.classList.contains("hidden")) {
@@ -1087,11 +1213,20 @@ function quitToMenu() {
   document.getElementById("pauseMenu").classList.add("hidden");
   document.getElementById("hud").classList.add("hidden");
   document.getElementById("menu").classList.remove("hidden");
+  
+  let deathScreen = document.getElementById("deathScreen");
+deathScreen.classList.remove("active");
+deathScreen.classList.add("hidden");
+deathScreen.innerHTML = "";
+  
   gameStarted = false;
   saveGame(); // Auto-save when quitting
 }
 
 function saveGame() {
+  gameState.totalPlayTime += Date.now() - gameState.startTime;
+  gameState.startTime = Date.now();
+  
   const saveData = {
     gameState: gameState,
     playerPos: { x: player.x, y: player.y },
@@ -1107,6 +1242,7 @@ function loadGame() {
     try {
       const data = JSON.parse(saveData);
       gameState = data.gameState;
+      gameState.startTime = Date.now();
       player.x = data.playerPos.x;
       player.y = data.playerPos.y;
       updateTheme();
@@ -1116,10 +1252,13 @@ function loadGame() {
       return true;
     } catch (e) {
       console.error('Failed to load save:', e);
+      showNotification('❌ LOAD FAILED!');
       return false;
     }
+  } else {
+    showNotification('❌ NO SAVE FOUND!');
+    return false;
   }
-  return false;
 }
 
 function deleteSave() {
@@ -1128,16 +1267,49 @@ function deleteSave() {
 }
 
 function startGame() {
-  document.getElementById("menu").classList.add("hidden");
+  console.log("Start game called");
+  // Hide the menu by directly setting display style
+  document.getElementById("menu").style.display = 'none';
+
+  // Show the HUD
   document.getElementById("hud").classList.remove("hidden");
+  
+  // Set game state
   gameStarted = true;
+  gameState.startTime = Date.now();
+  gameState.totalPlayTime = 0;
+
+  // Reset level
   resetLevel();
+
+  // Optional notification
   showNotification("🎮 GAME START!");
 }
 
 function restartGame() {
-  document.getElementById("deathScreen").classList.add("hidden");
+  // Hide death screen immediately
+  const deathScreen = document.getElementById("deathScreen");
+  deathScreen.style.display = 'none';
+  deathScreen.innerHTML = "";
+
+  // Hide pause menu if open
+  document.getElementById("pauseMenu").classList.add("hidden");
+
+  // Hide main menu if visible
+  document.getElementById("menu").style.display = 'none'; // ✅ FIXED!
+
+  // Show HUD
   document.getElementById("hud").classList.remove("hidden");
+
+  // Close shop if open
+  if (shopMenuOpen) {
+    let shopUI = document.getElementById('shopUI');
+    if (shopUI) shopUI.remove();
+    shopMenuOpen = false;
+    currentShop = null;
+  }
+
+  // Reset game state
   gameState = {
     level: 1,
     sublevel: 1,
@@ -1150,15 +1322,31 @@ function restartGame() {
     hasCape: false,
     hasCompass: false,
     hasSpectacles: false,
+    spikeBootsLevels: 0,
+    capeLevels: 0,
+    compassLevels: 0,
+    spectaclesLevels: 0,
     shopkeeperAngry: false,
     deathCause: '',
-    damageInvincibility: 0
+    damageInvincibility: 0,
+    capeSlowFall: false,
+    hasKey: false,
+    startTime: Date.now(),
+    totalPlayTime: 0
   };
+
+  // Update theme and level
   updateTheme();
   resetLevel();
+
+  // Set game as started
   gameStarted = true;
+
+  // Optional notification
   showNotification("🔄 TRY AGAIN!");
 }
+
+
 
 function updateTheme() {
   if (gameState.level === 1) currentTheme = THEMES.CAVE;
@@ -1741,7 +1929,7 @@ function spawnEnemies() {
       x = Math.floor(Math.random() * (mapWidth - 12) + 6) * TILE;
       y = Math.floor(Math.random() * (mapHeight - 12) + 6) * TILE;
       attempts++;
-    } while ((solidAt(x, y) && solidAt(x, y + TILE)) && attempts < 100); // Changed OR to AND - this was the bug!
+    } while ((solidAt(x, y) || solidAt(x, y + TILE)) && attempts < 100);
     
     if (attempts < 100) {
       let type = 'spider';
@@ -1804,6 +1992,13 @@ function updateHUD() {
   document.getElementById("ropes").textContent = gameState.ropes;
   document.getElementById("gold").textContent = gameState.gold;
   document.getElementById("level").textContent = `${gameState.level}-${gameState.sublevel}`;
+  document.getElementById("level").textContent = `${gameState.level}-${gameState.sublevel}`;
+  
+  // Update key indicator
+  let keyIndicator = document.getElementById("keyStatus");
+  if (keyIndicator) {
+    keyIndicator.textContent = gameState.hasKey ? "🔑" : "🔒";
+  }
   
   // Update powerup display
   let powerupsHTML = '';
@@ -1825,7 +2020,7 @@ function updateHUD() {
 function resetLevel() {
   // Clear special features BEFORE generating new map
   waterTiles = [];
-  miniBosses = []; // Keep this cleared but don't spawn any
+  miniBosses = [];
   portals = [];
   extraLives = [];
   goldPiles = [];
@@ -1850,6 +2045,8 @@ function resetLevel() {
   spawnEnemies();
   spawnGold();
   spawnItems();
+  spawnKey(); // NEW: Spawn the key
+  spawnQuestGiver();
 
   player.x = 4 * TILE;
   player.y = 2 * TILE;
@@ -1858,10 +2055,14 @@ function resetLevel() {
   player.onGround = false;
   player.onRope = false;
   
+  // Reset key state
+  gameState.hasKey = false;
+  
   // Give 1 bomb back each level
   if (gameState.bombs < 8) {
     gameState.bombs += 1;
   }
+
 
   updateHUD();
 }
@@ -1918,8 +2119,10 @@ document.addEventListener("keydown", e => {
 
   if (!gameStarted) return;
   
-  if (e.key.toLowerCase() === "b" && gameState.bombs > 0 && !whip.active) {
+  if (e.key === " " && gameState.bombs > 0 && !whip.active) {
     gameState.bombs--;
+     gameState.bombsUsed++; // ADD THIS
+  checkQuestProgress(); // ADD THIS
     updateHUD();
     bombs.push({
       x: player.x + (player.facingRight ? player.width : -TILE),
@@ -1958,6 +2161,7 @@ document.addEventListener("keydown", e => {
  
   
   if (e.key.toLowerCase() === "e") {
+      interactWithQuestGiver();
     // Pick up items
     items = items.filter(item => {
       if (!item || item.collected) return false;
@@ -1992,6 +2196,8 @@ document.addEventListener("keydown", e => {
     crates.forEach(crate => {
       if (!crate.broken && Math.abs(player.x - crate.x) < TILE * 1.5 && Math.abs(player.y - crate.y) < TILE * 1.5) {
         crate.broken = true;
+           gameState.cratesBreaked++; // ADD THIS
+    checkQuestProgress(); // ADD THIS
         
         for (let i = 0; i < 10; i++) {
           particles.push({
@@ -2064,6 +2270,38 @@ canvas.addEventListener('click', (e) => {
   whip.flip = dx < 0;
 });
 
+function spawnKey() {
+  // Spawn key far from player start and door
+  let attempts = 0;
+  let validPosition = false;
+  
+  while (!validPosition && attempts < 100) {
+    let x = Math.floor(Math.random() * (mapWidth - 10) + 5) * TILE;
+    let y = Math.floor(Math.random() * (mapHeight - 10) + 5) * TILE;
+    
+    // Check if position is valid (not solid, not too close to player or door)
+    let distFromPlayer = Math.hypot(x - player.x, y - player.y);
+    let distFromDoor = Math.hypot(x - door.x * TILE, y - door.y * TILE);
+    
+    if (!solidAt(x, y) && distFromPlayer > TILE * 15 && distFromDoor > TILE * 10) {
+      key.x = x;
+      key.y = y;
+      key.collected = false;
+      validPosition = true;
+    }
+    
+    attempts++;
+  }
+  
+  // Fallback if we can't find a good spot
+  if (!validPosition) {
+    key.x = (mapWidth / 2) * TILE;
+    key.y = (mapHeight / 2) * TILE;
+    key.collected = false;
+  }
+}
+
+
 function solidAt(x, y) {
   let tx = Math.floor(x / TILE);
   let ty = Math.floor(y / TILE);
@@ -2079,9 +2317,13 @@ function isRopeAt(x, y) {
 }
 
 function destroyBlock(tx, ty) {
-  if (ty >= 0 && ty < mapHeight && tx >= 0 && tx < mapWidth) {
-    if (map[ty] && map[ty][tx] === 1) {
+  if (ty < 0 || ty >= mapHeight || tx < 0 || tx >= mapWidth) return;
+  if (!map[ty] || map[ty][tx] !== 1) return;
+  
+  if (true) { // Keep same indentation level
       map[ty][tx] = 0;
+      gameState.blocksDestroyed++; // ADD THIS
+      checkQuestProgress(); // ADD THIS
       
       for (let i = 0; i < 8; i++) {
         particles.push({
@@ -2095,8 +2337,7 @@ function destroyBlock(tx, ty) {
         });
       }
       
-      screenShake.intensity = 8;
-    }
+     screenShake.intensity = 8;
   }
 }
 
@@ -2124,14 +2365,16 @@ function updateCamera() {
 
 function die(cause) {
   gameState.deathCause = cause;
-  document.getElementById("deathCause").textContent = cause;
-  document.getElementById("finalLevel").textContent = `${gameState.level}-${gameState.sublevel}`;
-  document.getElementById("finalGold").textContent = gameState.gold;
-  document.getElementById("finalKills").textContent = gameState.kills;
-  document.getElementById("hud").classList.add("hidden");
-  document.getElementById("deathScreen").classList.remove("hidden");
   gameStarted = false;
   
+  // Hide HUD and pause menu
+  document.getElementById("hud").classList.add("hidden");
+  document.getElementById("pauseMenu").classList.add("hidden");
+  
+  // Show main menu
+  document.getElementById("menu").style.display = 'block';
+  
+  // Death particles
   for (let i = 0; i < 30; i++) {
     particles.push({
       x: player.x + player.width/2,
@@ -2143,6 +2386,32 @@ function die(cause) {
       color: '#ff0000'
     });
   }
+  
+  // Optional: Reset game state
+  gameState = {
+    level: 1,
+    sublevel: 1,
+    bombs: 3,
+    ropes: 3,
+    health: 4,
+    gold: 0,
+    kills: 0,
+    hasSpikeBoots: false,
+    hasCape: false,
+    hasCompass: false,
+    hasSpectacles: false,
+    spikeBootsLevels: 0,
+    capeLevels: 0,
+    compassLevels: 0,
+    spectaclesLevels: 0,
+    shopkeeperAngry: false,
+    deathCause: '',
+    damageInvincibility: 0,
+    capeSlowFall: false,
+    hasKey: false,
+    startTime: Date.now(),
+    totalPlayTime: 0
+  };
 }
 
 function takeDamage(amount, cause) {
@@ -2156,6 +2425,7 @@ function takeDamage(amount, cause) {
     die(cause);
   }
 }
+
 function openShopMenu(shop) {
   shopMenuOpen = true;
   currentShop = shop;
@@ -2236,7 +2506,7 @@ function openShopMenu(shop) {
     }
   });
   
-  let exitBtn = document.getElementById('exitShopBtn');
+ let exitBtn = document.getElementById('exitShopBtn');
   if (exitBtn) {
     exitBtn.addEventListener('click', closeShopMenu);
   }
@@ -2294,6 +2564,115 @@ function closeShopMenu() {
   gameStarted = true;
 }
 
+function spawnQuestGiver() {
+  // Only spawn on certain levels (every 3 levels)
+  if (gameState.sublevel !== 2) {
+    questGiver = null;
+    return;
+  }
+  
+  // Find a safe spawn location
+  let attempts = 0;
+  let validPosition = false;
+  
+  while (!validPosition && attempts < 100) {
+    let x = Math.floor(Math.random() * (mapWidth - 10) + 5) * TILE;
+    let y = Math.floor(Math.random() * (mapHeight - 10) + 5) * TILE;
+    
+    if (!solidAt(x, y) && solidAt(x, y + TILE)) {
+      questGiver = { x, y, pulse: 0 };
+      validPosition = true;
+    }
+    
+    attempts++;
+  }
+}
+
+function generateRandomQuest() {
+  // Pick a random quest from the pool
+  let quest = QUEST_POOL[Math.floor(Math.random() * QUEST_POOL.length)];
+  
+  // Create a copy so we don't modify the original
+  activeQuest = { ...quest };
+  
+  // Reset progress
+  questProgress = {};
+  
+  showNotification(`📜 NEW QUEST: ${quest.description}`);
+}
+
+function checkQuestProgress() {
+  if (!activeQuest) return;
+  
+  let progress = 0;
+  
+  switch(activeQuest.type) {
+    case 'kill':
+      switch(activeQuest.target) {
+        case 'spider': progress = gameState.spidersKilled; break;
+        case 'bat': progress = gameState.batsKilled; break;
+        case 'snake': progress = gameState.snakesKilled; break;
+        case 'caveman': progress = gameState.cavemenKilled; break;
+        case 'skeleton': progress = gameState.skeletonsKilled; break;
+      }
+      break;
+    case 'destroy':
+      progress = gameState.blocksDestroyed;
+      break;
+    case 'collect_gold':
+      progress = gameState.gold;
+      break;
+    case 'collect_gems':
+      progress = gameState.gemsCollected;
+      break;
+    case 'break_crates':
+      progress = gameState.cratesBreaked;
+      break;
+    case 'use_bombs':
+      progress = gameState.bombsUsed;
+      break;
+  }
+  
+  questProgress.current = progress;
+  questProgress.target = activeQuest.amount;
+  
+  // Check if quest is complete
+  if (progress >= activeQuest.amount && !activeQuest.completed) {
+    completeQuest();
+  }
+}
+
+function completeQuest() {
+  if (!activeQuest || activeQuest.completed) return;
+  
+  activeQuest.completed = true;
+  gameState.gold += activeQuest.reward;
+  updateHUD();
+  
+  showNotification(`✅ QUEST COMPLETE! +$${activeQuest.reward}!`);
+  
+  // Clear quest after 3 seconds
+  setTimeout(() => {
+    activeQuest = null;
+    questProgress = {};
+  }, 3000);
+}
+
+function interactWithQuestGiver() {
+  if (!questGiver) return;
+  
+  let dist = Math.hypot(player.x - questGiver.x, player.y - questGiver.y);
+  
+  if (dist < TILE * 2) {
+    if (!activeQuest) {
+      generateRandomQuest();
+    } else if (activeQuest.completed) {
+      showNotification("🎉 Quest already completed!");
+    } else {
+      showNotification(`📋 ${activeQuest.description} (${questProgress.current || 0}/${activeQuest.amount})`);
+    }
+  }
+}
 
 
 function update() {
@@ -2462,30 +2841,57 @@ function update() {
   bombs = bombs.filter(b => {
     if (!b) return false;
     
-    // Apply gravity
-    b.vy += GRAVITY;
+    // EASIER PHYSICS: Reduced gravity and bouncing
+    if (b.vy < 8) {
+      b.vy += GRAVITY * 0.5;
+    }
     
-    // Apply friction when on ground
+    // Less air resistance
+    if (!b.onGround) {
+      b.vx *= 0.95;
+    }
+    
+    // MORE friction when on ground (stops faster)
     if (b.onGround) {
-      b.vx *= 0.85;
+      b.vx *= 0.6;
+      if (Math.abs(b.vx) < 0.3) b.vx = 0;
     }
     
     // Horizontal movement with wall collision
     let nextX = b.x + b.vx;
-    if (solidAt(nextX, b.y) || solidAt(nextX + TILE/2, b.y) || 
-        solidAt(nextX, b.y + TILE/2) || solidAt(nextX + TILE/2, b.y + TILE/2)) {
-      b.vx *= -0.5; // Bounce back with reduced speed
+    let hitWall = false;
+    
+    // Check multiple points for better collision
+    for (let offset = 0; offset <= TILE/2; offset += TILE/4) {
+      if (solidAt(nextX, b.y + offset) || solidAt(nextX + TILE/2, b.y + offset)) {
+        hitWall = true;
+        break;
+      }
+    }
+    
+    if (hitWall) {
+      b.vx *= -0.2; // Less bouncing off walls
+      b.x = Math.round(b.x / TILE) * TILE;
     } else {
       b.x = nextX;
     }
     
     // Vertical movement with ground collision
     let nextY = b.y + b.vy;
+    let hitGround = false;
+    
+    // Check ground collision
     if (solidAt(b.x, nextY + TILE/2) || solidAt(b.x + TILE/2, nextY + TILE/2)) {
-      b.y = Math.floor((b.y + TILE/2) / TILE) * TILE;
-      b.vy = 0;
-      b.vx *= 0.7; // More friction on landing
-      b.onGround = true;
+      hitGround = true;
+      b.y = Math.floor((nextY + TILE/2) / TILE) * TILE;
+      
+      // EASIER: Stick on first bounce (no bouncing)
+      if (Math.abs(b.vy) > 1) {
+        b.vy *= -0.15; // Very small bounce
+      } else {
+        b.vy = 0;
+        b.onGround = true;
+      }
     } else {
       b.y = nextY;
       b.onGround = false;
@@ -2582,6 +2988,9 @@ function update() {
       Math.abs(player.y - g.y) < TILE
     ) {
       gameState.gold += g.value;
+      gameState.gemsCollected++; // ADD THIS
+      checkQuestProgress(); // ADD THIS
+      updateHUD();
       updateHUD();
       let color = g.type === 'ruby' ? '#ff0000' : g.type === 'emerald' ? '#00ff00' : '#0080ff';
       for (let i = 0; i < 12; i++) {
@@ -2600,9 +3009,35 @@ function update() {
     }
     return true;
   });
+  // KEY COLLECTION
+  if (!key.collected && 
+      Math.abs(player.x - key.x) < TILE && 
+      Math.abs(player.y - key.y) < TILE) {
+    key.collected = true;
+    gameState.hasKey = true;
+    updateHUD();
+    
+    // Particle effect
+    for (let i = 0; i < 20; i++) {
+      particles.push({
+        x: key.x + TILE / 2,
+        y: key.y + TILE / 2,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8 - 4,
+        life: 40,
+        size: 5,
+        color: '#ffd700'
+      });
+    }
+    
+    showNotification("🔑 KEY COLLECTED! Door unlocked!");
+    screenShake.intensity = 8;
+  }
 
  enemies = enemies.filter(e => {
     if (!e || (e.health <= 0 && !e.stunned)) return false;
+    
+    try {
 
     if (e.type === 'skeleton' && e.health <= 0 && !e.stunned) {
       e.stunned = true;
@@ -2630,8 +3065,19 @@ function update() {
       return true;
     }
 
-    try {
+   try {
       let distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
+      
+      // Ledge detection - turn around before falling
+      if (e.onGround && (e.type === 'snake' || e.type === 'caveman' || e.type === 'skeleton')) {
+        let checkX = e.x + (e.vx > 0 ? TILE + 10 : -10);
+        let checkY = e.y + TILE + 5;
+        
+        if (!solidAt(checkX, checkY)) {
+          // No ground ahead - turn around
+          e.vx *= -1;
+        }
+      }
       
      // ===== BAT AI =====
       if (e.type === 'bat') {
@@ -2941,21 +3387,32 @@ function update() {
     }
 
     if (whip.active && whip.frames > 5) {
-      let whipLen = (12 - whip.frames) * 8;
-      let whipX = player.x + player.width / 2;
-      let whipY = player.y + player.height / 2;
-      let whipEndX = whipX + Math.cos(whip.angle) * whipLen;
-      let whipEndY = whipY + Math.sin(whip.angle) * whipLen;
+  let whipLen = (12 - whip.frames) * 8;
+  let whipX = player.x + player.width / 2;
+  let whipY = player.y + player.height / 2;
+  let whipEndX = whipX + Math.cos(whip.angle) * whipLen;
+  let whipEndY = whipY + Math.sin(whip.angle) * whipLen;
+  
+  let distToWhipTip = Math.hypot(e.x + TILE/2 - whipEndX, e.y + TILE/2 - whipEndY);
+  
+  if (distToWhipTip < TILE * 1.5) {
+    e.health--;
+    if (e.health <= 0 && e.type !== 'skeleton') {
+      gameState.kills++;
       
-      // Check if enemy is near whip tip
-      let distToWhipTip = Math.hypot(e.x + TILE/2 - whipEndX, e.y + TILE/2 - whipEndY);
+      // TRACK KILLS BY TYPE
+      switch(e.type) {
+        case 'spider': gameState.spidersKilled++; break;
+        case 'bat': gameState.batsKilled++; break;
+        case 'snake': gameState.snakesKilled++; break;
+        case 'caveman': gameState.cavemenKilled++; break;
+        case 'skeleton': gameState.skeletonsKilled++; break;
+      }
       
-      if (distToWhipTip < TILE * 1.5) {
-        e.health--;
-        if (e.health <= 0 && e.type !== 'skeleton') {
-          gameState.kills++;
-          showNotification(`💀 ${e.type.toUpperCase()} DEFEATED!`);
-        }
+      checkQuestProgress();
+      showNotification(`💀 ${e.type.toUpperCase()} DEFEATED!`);
+    }
+
         for (let i = 0; i < 6; i++) {
           particles.push({
             x: e.x + TILE / 2,
@@ -2981,7 +3438,17 @@ function update() {
         e.health = 0;
         player.vy = -10;
         gameState.kills++;
-        showNotification(`💀 STOMPED ${e.type.toUpperCase()}!`);
+       // TRACK KILLS BY TYPE
+  switch(e.type) {
+    case 'spider': gameState.spidersKilled++; break;
+    case 'bat': gameState.batsKilled++; break;
+    case 'snake': gameState.snakesKilled++; break;
+    case 'caveman': gameState.cavemenKilled++; break;
+    case 'skeleton': gameState.skeletonsKilled++; break;
+  }
+  
+  checkQuestProgress();
+  showNotification(`💀 STOMPED ${e.type.toUpperCase()}!`);
       } else {
         takeDamage(1, `Killed by ${e.type}`);
         player.vy = -10;
@@ -2990,20 +3457,32 @@ function update() {
     }
 
     return e.health > 0 || e.stunned;
+    
+    } catch (err) {
+      console.error("Enemy update error:", err, e);
+      return false;
+    }
   });
 
-  const doorCenterX = door.x * TILE + TILE;
+ const doorCenterX = door.x * TILE + TILE;
   const doorCenterY = door.y * TILE + TILE / 2;
   if (
     Math.abs(player.x + player.width / 2 - doorCenterX) < TILE * 1.5 &&
     Math.abs(player.y + player.height / 2 - doorCenterY) < TILE * 1.5
   ) {
-    nextLevel();
+    if (gameState.hasKey) {
+      nextLevel();
+    } else {
+      // Show notification that key is needed
+      showNotification("🔒 DOOR LOCKED! Find the key!");
+    }
   }
+
  // PORTAL TELEPORTATION
   if (portalCooldown > 0) portalCooldown--;
   
   portals.forEach((portal, i) => {
+    if (!portal) return;
     portal.pulse += 0.1;
     
     // Don't teleport at boss entrance markers
@@ -3051,7 +3530,7 @@ function update() {
     return true;
   });
   
-
+ checkQuestProgress(); // ADD THIS
   updateCamera();
 }
 
@@ -3279,6 +3758,79 @@ function draw() {
       });
     }
   });
+  // Quest Giver NPC
+if (questGiver) {
+  questGiver.pulse += 0.1;
+  let float = Math.sin(questGiver.pulse) * 5;
+  let pulse = Math.sin(questGiver.pulse * 2) * 0.2 + 1;
+  
+  // Glow effect
+  ctx.shadowBlur = 30 * pulse;
+  ctx.shadowColor = '#00ffff';
+  
+  // Body
+  ctx.fillStyle = '#00aaff';
+  ctx.fillRect(questGiver.x + 4, questGiver.y + 8 + float, TILE - 8, TILE - 8);
+  
+  // Head
+  ctx.fillStyle = '#ffcc99';
+  ctx.fillRect(questGiver.x + 8, questGiver.y + 4 + float, TILE - 16, TILE - 20);
+  
+  // Hat (wizard style)
+  ctx.fillStyle = '#4400ff';
+  ctx.beginPath();
+  ctx.moveTo(questGiver.x + 6, questGiver.y + 4 + float);
+  ctx.lineTo(questGiver.x + TILE/2, questGiver.y - 8 + float);
+  ctx.lineTo(questGiver.x + TILE - 6, questGiver.y + 4 + float);
+  ctx.fill();
+  
+  // Quest marker above head
+  ctx.fillStyle = activeQuest && !activeQuest.completed ? '#ffff00' : '#00ff00';
+  ctx.font = 'bold 32px Arial';
+  ctx.fillText(activeQuest && !activeQuest.completed ? '!' : '✓', questGiver.x + TILE/2 - 8, questGiver.y - 15 + float);
+  
+  ctx.shadowBlur = 0;
+}
+
+// Quest UI
+if (activeQuest && !activeQuest.completed) {
+  let uiX = camera.x + 20;
+  let uiY = camera.y + canvas.height - 120;
+  
+  // Background
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+  ctx.fillRect(uiX, uiY, 350, 80);
+  
+  // Border
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(uiX, uiY, 350, 80);
+  
+  // Quest title
+  ctx.fillStyle = '#ffd700';
+  ctx.font = 'bold 20px "Bungee", cursive';
+  ctx.fillText('📜 ACTIVE QUEST', uiX + 10, uiY + 25);
+  
+  // Quest description
+  ctx.fillStyle = '#fff';
+  ctx.font = '18px "Russo One", sans-serif';
+  ctx.fillText(`${activeQuest.icon} ${activeQuest.description}`, uiX + 10, uiY + 50);
+  
+  // Progress bar
+  let progress = (questProgress.current || 0) / questProgress.target;
+  let barWidth = 320;
+  
+  ctx.fillStyle = '#333';
+  ctx.fillRect(uiX + 10, uiY + 58, barWidth, 12);
+  
+  ctx.fillStyle = progress >= 1 ? '#00ff00' : '#ffd700';
+  ctx.fillRect(uiX + 10, uiY + 58, barWidth * Math.min(progress, 1), 12);
+  
+  // Progress text
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 14px monospace';
+  ctx.fillText(`${questProgress.current || 0}/${questProgress.target}`, uiX + barWidth - 60, uiY + 68);
+}
   
   // Gold
   gold.forEach(g => {
@@ -3320,6 +3872,36 @@ function draw() {
     
     ctx.shadowBlur = 0;
   });
+  // KEY
+  if (!key.collected) {
+    let floatY = Math.sin(Date.now() / 400) * 8;
+    let pulse = Math.sin(Date.now() / 200) * 0.3 + 1;
+    
+    // Glow effect
+    ctx.shadowBlur = 30 * pulse;
+    ctx.shadowColor = '#ffd700';
+    
+    // Key body (golden)
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(key.x + 8, key.y + 10 + floatY, 24, 8);
+    
+    // Key head (circle)
+    ctx.beginPath();
+    ctx.arc(key.x + 10, key.y + 14 + floatY, 8, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Key teeth
+    ctx.fillRect(key.x + 28, key.y + 12 + floatY, 4, 6);
+    ctx.fillRect(key.x + 24, key.y + 12 + floatY, 4, 6);
+    
+    // Shine
+    ctx.fillStyle = '#ffed4e';
+    ctx.beginPath();
+    ctx.arc(key.x + 8, key.y + 12 + floatY, 3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.shadowBlur = 0;
+  }
   
   // Items
   items.forEach(item => {
