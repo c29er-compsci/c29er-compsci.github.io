@@ -133,15 +133,16 @@
       transform: translate(-50%, -50%);
       background: linear-gradient(135deg, rgba(60, 30, 15, 0.98), rgba(30, 15, 8, 0.98));
       border: 8px solid #ffd700;
-      padding: 60px 100px;
+      padding: 30px 60px;
       text-align: center;
       color: #ffd700;
       box-shadow: 
         0 0 80px rgba(255, 215, 0, 0.8),
         inset 0 0 80px rgba(0, 0, 0, 0.8);
       z-index: 10;
-      max-height: 90vh;
+      max-height: 95vh;
       overflow-y: auto;
+      max-width: 90vw;
     }
     
     #menu::-webkit-scrollbar {
@@ -164,8 +165,8 @@
     }
     
     #menu h1 {
-      font-size: 110px;
-      margin: 0 0 40px 0;
+      font-size: 70px;
+      margin: 0 0 20px 0;
       text-shadow: 
         0 0 30px #ffd700,
         0 0 60px #ff8800,
@@ -182,11 +183,11 @@
       background: linear-gradient(135deg, #ff8c00, #ffd700);
       color: #000;
       border: 5px solid #000;
-      padding: 25px 60px;
-      font-size: 36px;
+      padding: 15px 40px;
+      font-size: 24px;
       font-family: 'Bungee', cursive;
       cursor: pointer;
-      margin: 20px;
+      margin: 10px;
       font-weight: bold;
       transition: all 0.3s ease;
       position: relative;
@@ -398,35 +399,107 @@
   <h1>⛏️ SPELUNKY ⛏️</h1>
   <div id="mainMenu">
   <div id="mainMenu">
-    <button onclick="startGame()">START GAME</button>
+    <button onclick="startGame()">START GAME (1 PLAYER)</button>
+    <button onclick="startGame(true)">START GAME (2 PLAYERS)</button>
     <button onclick="if(loadGame()) { document.getElementById('menu').classList.add('hidden'); document.getElementById('hud').classList.remove('hidden'); gameStarted = true; }">LOAD GAME</button>
-    <button onclick="showControls()">CONTROLS</button>
+    <!-- <button onclick="showControls()">CONTROLS</button> -->
     <button onclick="deleteSave()" style="background: linear-gradient(135deg, #ff0000, #aa0000); color: #fff;">DELETE SAVE</button>
     
     <!-- ========================================= -->
     <!-- AD SECTION - PUT YOUR LINK BELOW -->
     <!-- ========================================= -->
-    <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, rgba(0, 100, 255, 0.2), rgba(0, 200, 255, 0.2)); border: 4px solid #00ffff; border-radius: 15px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);">
-      <h3 style="font-size: 36px; margin-bottom: 15px; color: #00ffff; text-shadow: 0 0 20px #00ffff, 3px 3px 0 #000; font-family: 'Bangers', cursive; letter-spacing: 4px;">🎮 MORE GAMES! 🎮</h3>
-      <p style="font-size: 20px; margin-bottom: 20px; color: #fff; text-shadow: 2px 2px 4px #000;">Want more awesome games?</p>
+    <div style="margin-top: 20px; padding: 15px 25px; background: linear-gradient(135deg, rgba(0, 100, 255, 0.2), rgba(0, 200, 255, 0.2)); border: 4px solid #00ffff; border-radius: 15px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);">
+      <h3 style="font-size: 24px; margin-bottom: 10px; color: #00ffff; text-shadow: 0 0 20px #00ffff, 3px 3px 0 #000; font-family: 'Bangers', cursive; letter-spacing: 4px;">🎮 MORE GAMES! 🎮</h3>
+      <p style="font-size: 16px; margin-bottom: 15px; color: #fff; text-shadow: 2px 2px 4px #000;">Want more awesome games?</p>
       
       <!-- 
         ⭐ PUT YOUR WEBSITE LINK HERE ⭐
         Replace "https://your-games-website.com" with your actual URL
       -->
-      <button onclick="window.open('https://c29er-compsci.github.io/Pegworks.html', '_blank')" style="background: linear-gradient(135deg, #00ff00, #00aa00); color: #000; border: 5px solid #000; padding: 20px 50px; font-size: 32px; font-family: 'Bungee', cursive; cursor: pointer; font-weight: bold; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(0, 255, 0, 0.5); transition: all 0.3s ease;">
+      <button onclick="window.open('https://c29er-compsci.github.io/Pegworks.html', '_blank')" style="background: linear-gradient(135deg, #00ff00, #00aa00); color: #000; border: 4px solid #000; padding: 12px 30px; font-size: 20px; font-family: 'Bungee', cursive; cursor: pointer; font-weight: bold; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(0, 255, 0, 0.5); transition: all 0.3s ease;">
         🌟 PLAY MORE GAMES! 🌟
       </button>
       
-      <p style="font-size: 16px; margin-top: 15px; color: #aaa; font-style: italic;">Tons of free games to play!</p>
+      <p style="font-size: 14px; margin-top: 10px; color: #aaa; font-style: italic;">Tons of free games to play!</p>
     </div>
     <!-- ========================================= -->
     <!-- END AD SECTION -->
     <!-- ========================================= -->
   </div>
   <div id="controlsMenu" class="hidden">
-    <div class="controls" style="max-height: 500px; overflow-y: auto; padding-right: 20px;">
-      <h3 style="font-size: 32px; margin-bottom: 20px; color: #ffd700; text-align: center;">⚔️ CONTROLS ⚔️</h3>
+    <div class="controls" style="max-height: 75vh; overflow-y: auto; padding-right: 20px; font-size: 16px; line-height: 1.6;">
+      <h3 style="font-size: 28px; margin-bottom: 15px; color: #ffd700; text-align: center;">⚔️ SPELUNKY GUIDE ⚔️</h3>
+      
+      <!-- GAME OBJECTIVE -->
+      <div style="margin-bottom: 20px; background: rgba(255, 140, 0, 0.15); padding: 12px; border-radius: 8px; border-left: 4px solid #ff8c00;">
+        <h4 style="font-size: 20px; color: #ffd700; margin-bottom: 8px;">🎯 OBJECTIVE</h4>
+        <div style="border-left: none; padding-left: 0; margin: 0; font-size: 15px;">
+          Find the KEY 🔑, unlock the DOOR 🚪, escape! • Complete 4 sublevels per world • Collect gold & gems • Survive Cave → Jungle → Ice → Volcano
+        </div>
+      </div>
+      
+      <!-- SINGLE PLAYER CONTROLS -->
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 20px; color: #00ff00; margin-bottom: 8px;">👤 SINGLE PLAYER</h4>
+        <div style="font-size: 15px;"><strong>WASD/ARROWS</strong> - Move • <strong>W/UP</strong> - Jump • <strong>Q</strong> - Whip • <strong>SPACE</strong> - Bomb • <strong>R</strong> - Rope • <strong>E</strong> - Interact • <strong>ESC</strong> - Pause</div>
+      </div>
+      
+      <!-- TWO PLAYER CONTROLS -->
+      <div style="margin-bottom: 20px; background: rgba(65, 105, 225, 0.15); padding: 12px; border-radius: 8px; border-left: 4px solid #4169e1;">
+        <h4 style="font-size: 20px; color: #87ceeb; margin-bottom: 8px;">👥 TWO PLAYER</h4>
+        <div style="border-left: none; padding-left: 0; margin: 0; font-size: 15px;">
+          <strong style="color: #ffd700;">P1 (Brown):</strong> WASD, Q-Whip, SPACE-Bomb, R-Rope, E-Interact<br>
+          <strong style="color: #87ceeb;">P2 (Blue):</strong> Arrow Keys, SHIFT-Whip<br>
+          <span style="color: #ffff00;">⚠️ Shared: health, bombs, ropes, items</span>
+        </div>
+      </div>
+      
+      <!-- ROPE MECHANICS -->
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 20px; color: #8b7355; margin-bottom: 8px;">🪢 ROPES</h4>
+        <div style="font-size: 15px;"><strong>R</strong> - Deploy rope • <strong>W/UP, S/DOWN</strong> - Climb • <strong>A/D, LEFT/RIGHT</strong> - Swing • <strong>SPACE</strong> - Jump off</div>
+      </div>
+      
+      <!-- COLLECTIBLES -->
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 20px; color: #ffd700; margin-bottom: 8px;">💰 COLLECTIBLES</h4>
+        <div style="font-size: 15px;">💰 Small $100, Large $500 • 💎 Sapphire $100, Emerald $200, Ruby $300 • 📦 Crates (press E) • 🔑 Key (unlocks door)</div>
+      </div>
+      
+      <!-- SHOP ITEMS -->
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 20px; color: #ff8c00; margin-bottom: 8px;">🛒 SHOP (Lasts 2 Levels)</h4>
+        <div style="font-size: 15px;">💣 Bombs $200 • 🪢 Ropes $200 • 👢 Spike Boots $800 (walk on spikes, stomp enemies) • 👓 Spectacles $700 (reveal hidden gold) • 🧭 Compass $500 (arrow to door) • 🦸 Cape $900 (glide with W/UP)</div>
+      </div>
+      
+      <!-- ENEMIES -->
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 20px; color: #ff6b6b; margin-bottom: 8px;">👾 ENEMIES</h4>
+        <div style="font-size: 15px;">🕷️ Spider (ceiling crawl) • 🦇 Bat (aggressive flier) • 🐍 Snake (jumps) • 🧔 Caveman (throws rocks) • 💀 Skeleton (reassembles in 3s)</div>
+      </div>
+      
+      <!-- TRAPS -->
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 20px; color: #ff0000; margin-bottom: 8px;">⚠️ HAZARDS</h4>
+        <div style="font-size: 15px;">🔺 Spikes (instant death without boots) • ➡️ Arrow Traps • 💥 Own Bombs • 🪨 Caveman Rocks</div>
+      </div>
+      
+      <!-- QUESTS -->
+      <div style="margin-bottom: 20px; background: rgba(255, 215, 0, 0.15); padding: 12px; border-radius: 8px; border-left: 4px solid #ffd700;">
+        <h4 style="font-size: 20px; color: #ffd700; margin-bottom: 8px;">📜 QUESTS</h4>
+        <div style="border-left: none; padding-left: 0; margin: 0; font-size: 15px;">
+          Find glowing NPC on X-2 levels • Press E to accept • Complete objectives (kill enemies, collect gold, break crates) • Earn bonus gold!
+        </div>
+      </div>
+      
+      <!-- TIPS -->
+      <div style="margin-bottom: 15px;">
+        <h4 style="font-size: 20px; color: #00ffff; margin-bottom: 8px;">💡 TIPS</h4>
+        <div style="font-size: 15px;">✓ Save gold for shop items • ✓ Bombs create shortcuts • ✓ Cape: hold W/UP while falling to glide • ✓ +1 bomb per level (max 8) • ✓ ESC to pause & save</div>
+      </div>
+    </div>
+    <button onclick="showMainMenu()" style="margin-top: 15px;">⬅️ BACK TO MENU</button>
+  </div>
       
       <div style="margin-bottom: 30px;">
         <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🎮 MOVEMENT</h4>
@@ -442,7 +515,7 @@
         <div><strong>CLICK MOUSE</strong> - Attack with whip (aim at enemies!)</div>
 <div><strong>SPACE</strong> - Throw bomb (destroys blocks & enemies)</div>
         <div><strong>R</strong> - Deploy rope (climb up/down)</div>
-        <div><strong>E</strong> - Pick up items, break crates, talk to shopkeeper</div>
+        <div><strong>E</strong> - Pick up items, break crates, talk to shopkeeper or quest givers</div>
       </div>
       
       <div style="margin-bottom: 30px;">
@@ -471,7 +544,7 @@
       
       <div style="margin-bottom: 20px;">
         <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🎯 GOAL</h4>
-        <div>🚪 Find and enter the <strong>EXIT DOOR</strong> to advance!</div>
+        <div>🚪 Find the key and enter the <strong>EXIT DOOR</strong> to advance!</div>
         <div>📍 Complete 4 sublevels to reach the next world</div>
         <div>🌍 Worlds: Cave → Jungle → Ice → Volcano (then loops)</div>
       </div>
@@ -527,8 +600,22 @@ let player = {
   onRope: false,
   climbing: false,
   facingRight: true
-
 };
+
+let player2 = {
+  x: 6 * TILE,
+  y: 2 * TILE,
+  vx: 0,
+  vy: 0,
+  width: TILE * 0.8,
+  height: TILE * 0.9,
+  onGround: false,
+  onRope: false,
+  climbing: false,
+  facingRight: true
+};
+
+let twoPlayerMode = false;
 let enemies = [];
 let portals = [];
 let waterTiles = [];
@@ -1165,6 +1252,7 @@ let key = { x: 0, y: 0, collected: false }; // NEW: Key location
 let bombs = [];
 let ropes = [];
 let whip = { active: false, frames: 0, flip: false, angle: 0 };
+let whip2 = { active: false, frames: 0, flip: false, angle: 0 };
 let particles = [];
 let gold = [];
 let items = [];
@@ -1183,10 +1271,7 @@ function showNotification(text) {
   }, 2000);
 }
 
-function showControls() {
-  document.getElementById("mainMenu").classList.add("hidden");
-  document.getElementById("controlsMenu").classList.remove("hidden");
-}
+
 
 function showMainMenu() {
   document.getElementById("mainMenu").classList.remove("hidden");
@@ -1266,8 +1351,10 @@ function deleteSave() {
   showNotification('🗑️ SAVE DELETED!');
 }
 
-function startGame() {
+function startGame(twoPlayers = false) {
   console.log("Start game called");
+  twoPlayerMode = twoPlayers;
+  
   // Hide the menu by directly setting display style
   document.getElementById("menu").style.display = 'none';
 
@@ -1283,7 +1370,7 @@ function startGame() {
   resetLevel();
 
   // Optional notification
-  showNotification("🎮 GAME START!");
+  showNotification(twoPlayerMode ? "🎮 2 PLAYER MODE!" : "🎮 GAME START!");
 }
 
 function restartGame() {
@@ -2055,6 +2142,15 @@ function resetLevel() {
   player.onGround = false;
   player.onRope = false;
   
+  if (twoPlayerMode) {
+    player2.x = 6 * TILE;
+    player2.y = 2 * TILE;
+    player2.vx = 0;
+    player2.vy = 0;
+    player2.onGround = false;
+    player2.onRope = false;
+  }
+  
   // Reset key state
   gameState.hasKey = false;
   
@@ -2096,13 +2192,23 @@ function spawnItems() {
 }
 
 let keys = {};
+let keys2 = {}; // Player 2 keys
 document.addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
 
+  // Player 1 controls (WASD + Arrow keys in single player)
   if (k === "arrowleft") keys["a"] = true;
   if (k === "arrowright") keys["d"] = true;
   if (k === "arrowup") keys["w"] = true;
   if (k === "arrowdown") keys["s"] = true;
+
+  // Player 2 controls (Arrow keys ONLY in two-player mode)
+  if (twoPlayerMode) {
+    if (e.key === "ArrowLeft") keys2["left"] = true;
+    if (e.key === "ArrowRight") keys2["right"] = true;
+    if (e.key === "ArrowUp") keys2["up"] = true;
+    if (e.key === "ArrowDown") keys2["down"] = true;
+  }
 
   keys[k] = true;
   
@@ -2119,10 +2225,26 @@ document.addEventListener("keydown", e => {
 
   if (!gameStarted) return;
   
+  // Player 1 whip (Q key)
+  if (e.key.toLowerCase() === "q" && !whip.active) {
+    whip.active = true;
+    whip.frames = 12;
+    whip.flip = !player.facingRight;
+    whip.angle = player.facingRight ? 0 : Math.PI;
+  }
+  
+  // Player 2 whip (Shift key) - only in two player mode
+  if (twoPlayerMode && e.key === "Shift" && !whip2.active) {
+    whip2.active = true;
+    whip2.frames = 12;
+    whip2.flip = !player2.facingRight;
+    whip2.angle = player2.facingRight ? 0 : Math.PI;
+  }
+  
   if (e.key === " " && gameState.bombs > 0 && !whip.active) {
     gameState.bombs--;
-     gameState.bombsUsed++; // ADD THIS
-  checkQuestProgress(); // ADD THIS
+    gameState.bombsUsed++;
+    checkQuestProgress();
     updateHUD();
     bombs.push({
       x: player.x + (player.facingRight ? player.width : -TILE),
@@ -2243,9 +2365,16 @@ document.addEventListener("keyup", e => {
   if (k === "arrowup") keys["w"] = false;
   if (k === "arrowdown") keys["s"] = false;
 
+  // Player 2 key release (ONLY in two-player mode)
+  if (twoPlayerMode) {
+    if (e.key === "ArrowLeft") keys2["left"] = false;
+    if (e.key === "ArrowRight") keys2["right"] = false;
+    if (e.key === "ArrowUp") keys2["up"] = false;
+    if (e.key === "ArrowDown") keys2["down"] = false;
+  }
+
   keys[k] = false;
 });
-
 
 canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
@@ -2253,22 +2382,7 @@ canvas.addEventListener('mousemove', (e) => {
   mousePos.y = e.clientY - rect.top + camera.y;
 });
 
-canvas.addEventListener('click', (e) => {
-  if (!gameStarted || whip.active) return;
-  
-  const rect = canvas.getBoundingClientRect();
-  mousePos.x = e.clientX - rect.left + camera.x;
-  mousePos.y = e.clientY - rect.top + camera.y;
-  
-  // Calculate angle to mouse
-  let dx = mousePos.x - (player.x + player.width / 2);
-  let dy = mousePos.y - (player.y + player.height / 2);
-  whip.angle = Math.atan2(dy, dx);
-  
-  whip.active = true;
-  whip.frames = 12;
-  whip.flip = dx < 0;
-});
+// Mouse click whip removed - now using Q key for Player 1 and Shift for Player 2
 
 function spawnKey() {
   // Spawn key far from player start and door
@@ -2343,8 +2457,18 @@ function destroyBlock(tx, ty) {
 
 function updateCamera() {
   // Smooth camera follow with proper bounds
-  let targetX = player.x - canvas.width / 2 + player.width / 2;
-  let targetY = player.y - canvas.height / 2 + player.height / 2;
+  let targetX, targetY;
+  
+  if (twoPlayerMode) {
+    // Center camera between both players
+    let midX = (player.x + player2.x) / 2;
+    let midY = (player.y + player2.y) / 2;
+    targetX = midX - canvas.width / 2 + player.width / 2;
+    targetY = midY - canvas.height / 2 + player.height / 2;
+  } else {
+    targetX = player.x - canvas.width / 2 + player.width / 2;
+    targetY = player.y - canvas.height / 2 + player.height / 2;
+  }
   
   // Clamp camera to map bounds
   targetX = Math.max(0, Math.min(targetX, mapWidth * TILE - canvas.width));
@@ -2768,10 +2892,131 @@ function update() {
     player.y = Math.ceil(player.y / TILE) * TILE;
     player.vy = 0;
   }
+// ============= PLAYER 2 UPDATE =============
+  if (twoPlayerMode) {
+    // Check if on rope
+    player2.onRope = isRopeAt(player2.x + player2.width/2, player2.y + player2.height/2);
+    player2.climbing = false;
+
+    if (player2.onRope) {
+      player2.vx *= 0.8;
+      player2.vy *= 0.8;
+      
+      if (keys2["up"]) {
+        player2.vy = -4;
+        player2.climbing = true;
+      } else if (keys2["down"]) {
+        player2.vy = 4;
+        player2.climbing = true;
+      } else {
+        player2.vy *= 0.9;
+      }
+      
+      if (keys2["left"]) {
+        player2.vx = -3;
+        player2.facingRight = false;
+      } else if (keys2["right"]) {
+        player2.vx = 3;
+        player2.facingRight = true;
+      }
+    } else {
+      // Normal movement
+      if (keys2["left"]) {
+        player2.vx = -moveSpeed;
+        player2.facingRight = false;
+      } else if (keys2["right"]) {
+        player2.vx = moveSpeed;
+        player2.facingRight = true;
+      } else {
+        player2.vx *= 0.85;
+      }
+
+      if (keys2["up"] && player2.onGround) {
+        player2.vy = -14;
+        player2.onGround = false;
+      }
+
+      player2.vy += GRAVITY;
+    }
+
+    // Horizontal collision
+    player2.x += player2.vx;
+    player2.x = Math.max(0, Math.min(player2.x, mapWidth * TILE - player2.width));
+
+    if (solidAt(player2.x, player2.y) || solidAt(player2.x + player2.width, player2.y) ||
+        solidAt(player2.x, player2.y + player2.height - 1) || solidAt(player2.x + player2.width, player2.y + player2.height - 1)) {
+      player2.x -= player2.vx;
+      player2.vx = 0;
+    }
+
+    // Vertical collision
+    player2.onGround = false;
+    player2.y += player2.vy;
+    player2.y = Math.max(0, Math.min(player2.y, mapHeight * TILE - player2.height));
+
+    if (player2.vy > 0 && (solidAt(player2.x + 4, player2.y + player2.height) || solidAt(player2.x + player2.width - 4, player2.y + player2.height))) {
+      player2.y = Math.floor((player2.y + player2.height) / TILE) * TILE - player2.height;
+      player2.vy = 0;
+      player2.onGround = true;
+    }
+
+    if (player2.vy < 0 && (solidAt(player2.x + 4, player2.y) || solidAt(player2.x + player2.width - 4, player2.y))) {
+      player2.y = Math.ceil(player2.y / TILE) * TILE;
+      player2.vy = 0;
+    }
+    
+    // Player 2 trap collision
+    traps.forEach(trap => {
+      if (!trap || !trap.active) return;
+      if (trap.type === 'spike') {
+        if (
+          player2.y + player2.height >= trap.y &&
+          player2.y + player2.height <= trap.y + TILE / 2 &&
+          Math.abs(player2.x - trap.x) < TILE - 10 &&
+          !gameState.hasSpikeBoots
+        ) {
+          die("Player 2 impaled on spikes");
+        }
+      }
+    });
+    
+    // Player 2 enemy collision
+    enemies.forEach(e => {
+      if (!e || e.health <= 0) return;
+      if (
+        player2.x < e.x + TILE - 8 &&
+        player2.x + player2.width > e.x + 8 &&
+        player2.y < e.y + TILE - 8 &&
+        player2.y + player2.height > e.y + 8 &&
+        gameState.damageInvincibility === 0
+      ) {
+        takeDamage(1, `Player 2 hit by ${e.type}`);
+        player2.vy = -10;
+        player2.x += player2.facingRight ? -30 : 30;
+      }
+    });
+    
+    // Player 2 door check
+    const doorCenterX2 = door.x * TILE + TILE;
+    const doorCenterY2 = door.y * TILE + TILE / 2;
+    if (
+      Math.abs(player2.x + player2.width / 2 - doorCenterX2) < TILE * 1.5 &&
+      Math.abs(player2.y + player2.height / 2 - doorCenterY2) < TILE * 1.5 &&
+      gameState.hasKey
+    ) {
+      nextLevel();
+    }
+  }
+  // ============= END PLAYER 2 UPDATE =============
 
   if (whip.active) {
     whip.frames--;
     if (whip.frames <= 0) whip.active = false;
+  }
+  
+  if (whip2.active) {
+    whip2.frames--;
+    if (whip2.frames <= 0) whip2.active = false;
   }
 
   traps.forEach(trap => {
@@ -3412,6 +3657,46 @@ function update() {
       checkQuestProgress();
       showNotification(`💀 ${e.type.toUpperCase()} DEFEATED!`);
     }
+
+        for (let i = 0; i < 6; i++) {
+          particles.push({
+            x: e.x + TILE / 2,
+            y: e.y + TILE / 2,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8 - 3,
+            life: 25,
+            size: 4,
+            color: '#888'
+          });
+        }
+      }
+    }
+    // Player 2 whip collision
+    if (twoPlayerMode && whip2.active && whip2.frames > 5) {
+      let whipLen = (12 - whip2.frames) * 8;
+      let whipX = player2.x + player2.width / 2;
+      let whipY = player2.y + player2.height / 2;
+      let whipEndX = whipX + Math.cos(whip2.angle) * whipLen;
+      let whipEndY = whipY + Math.sin(whip2.angle) * whipLen;
+      
+      let distToWhipTip = Math.hypot(e.x + TILE/2 - whipEndX, e.y + TILE/2 - whipEndY);
+      
+      if (distToWhipTip < TILE * 1.5) {
+        e.health--;
+        if (e.health <= 0 && e.type !== 'skeleton') {
+          gameState.kills++;
+          
+          switch(e.type) {
+            case 'spider': gameState.spidersKilled++; break;
+            case 'bat': gameState.batsKilled++; break;
+            case 'snake': gameState.snakesKilled++; break;
+            case 'caveman': gameState.cavemenKilled++; break;
+            case 'skeleton': gameState.skeletonsKilled++; break;
+          }
+          
+          checkQuestProgress();
+          showNotification(`💀 ${e.type.toUpperCase()} DEFEATED BY P2!`);
+        }
 
         for (let i = 0; i < 6; i++) {
           particles.push({
@@ -4078,6 +4363,47 @@ if (activeQuest && !activeQuest.completed) {
   }
   
   ctx.restore();
+  // ============= DRAW PLAYER 2 =============
+  if (twoPlayerMode) {
+    ctx.save();
+    
+    if (gameState.damageInvincibility > 0 && gameState.damageInvincibility % 10 < 5) {
+      ctx.globalAlpha = 0.5;
+    }
+    
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(player2.x - 1, player2.y + player2.height, player2.width + 2, 3);
+    
+    // Body (BLUE instead of brown)
+    ctx.fillStyle = '#4169e1';
+    ctx.fillRect(player2.x, player2.y, player2.width, player2.height);
+    
+    ctx.fillStyle = '#87ceeb';
+    ctx.fillRect(player2.x + 5, player2.y + 5, player2.width - 10, player2.height - 10);
+    
+    // Hat (darker blue)
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillRect(player2.x + 3, player2.y, player2.width - 6, 8);
+    
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillRect(player2.x + 5, player2.y + 1, player2.width - 10, 2);
+    
+    // Eyes
+    ctx.fillStyle = '#000';
+    if (player2.facingRight) {
+      ctx.fillRect(player2.x + player2.width - 10, player2.y + 12, 4, 4);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(player2.x + player2.width - 9, player2.y + 13, 2, 2);
+    } else {
+      ctx.fillRect(player2.x + 6, player2.y + 12, 4, 4);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(player2.x + 7, player2.y + 13, 2, 2);
+    }
+    
+    ctx.restore();
+  }
+  // ============= END DRAW PLAYER 2 =============
   
   // Whip
   if (whip.active) {
@@ -4099,7 +4425,26 @@ if (activeQuest && !activeQuest.completed) {
     ctx.stroke();
     ctx.shadowBlur = 0;
   }
-  
+  // Player 2 Whip
+  if (twoPlayerMode && whip2.active) {
+    ctx.strokeStyle = '#4169e1';
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 5;
+    ctx.shadowColor = '#87ceeb';
+    
+    let whipLen = (12 - whip2.frames) * 8;
+    let whipX = player2.x + player2.width / 2;
+    let whipY = player2.y + player2.height / 2;
+    
+    ctx.beginPath();
+    ctx.moveTo(whipX, whipY);
+    ctx.lineTo(
+      whipX + Math.cos(whip2.angle) * whipLen,
+      whipY + Math.sin(whip2.angle) * whipLen
+    );
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
   // Enemies
   enemies.forEach(e => {
     if (!e) return;
