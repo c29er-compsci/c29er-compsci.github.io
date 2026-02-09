@@ -49,34 +49,60 @@
 	<button id="remove-person"> remove person </button>
 
 	<div id="train">
-		<div class="cart">Evren</div>
-		<div class="cart">lukas</div>
-		<div class="cart">matthew</div>
-		<div class="cart">kendrick</div>
+		
+		
 	</div>
+
+	
 
 	<script>
 
-let people = ["jamie", "evren", "lukas"]
+let people = ["jamie", "evren", "lukas", "matthew","kendrick"]
+let train = document.getElementById("train")
+
+
+ 
+
+
+
+
+
+function makeTrain () {
+	train.innerHTML =""
+for (let i = 0; i < people.length; i++) {
+  console.log(people[i])
+  let cart = document.createElement("div")
+  cart.textContent = people[i]
+  cart.classList.add("cart")
+  train.appendChild(cart)
+	}
+}
+makeTrain()
+
+
+
+
 let addPersonBtn = document.getElementById("add-person")
 
-people.push("matthew")
-people.push("kendrick")
 console.log	(people)
 addPersonBtn.addEventListener("click", function() {
 
 	let personInput = document.getElementById("person")
 	people.push(personInput.value)
 	personInput.value = ""
-	console.log(people) } )
+	console.log(people)
+	makeTrain() } )
 
  let removePersonBtn = document.getElementById("remove-person")
  removePersonBtn.addEventListener("click", function() {
  	people.pop()
+ 	makeTrain ()
  	console.log(people)
 
 
  })
+
+
 
 
 

@@ -2172,29 +2172,132 @@ document.addEventListener("keydown", e => {
 
   if (!gameStarted) return;
   
+ // Player 1 Bomb - SPACE
   if (e.key === " " && gameState.bombs > 0 && !whip.active) {
     gameState.bombs--;
-     gameState.bombsUsed++; // ADD THIS
-  checkQuestProgress(); // ADD THIS
+    gameState.bombsUsed++;
+    checkQuestProgress();
     updateHUD();
     bombs.push({
-      x: player.x + (player.facingRight ? player.width : -TILE),
-      y: player.y + player.height / 2,
-      vx: player.facingRight ? 10 : -10,
+      x: player1.x + (player1.facingRight ? player1.width : -TILE),
+      y: player1.y + player1.height / 2,
+      vx: player1.facingRight ? 10 : -10,
       vy: -5,
       timer: 90,
       exploded: false,
       onGround: false
     });
-    showNotification("💣 BOMB THROWN!");
+    showNotification("💣 P1 BOMB!");
   }
   
+  // Player 2 Bomb - Period key (only in co-op)
+  if (coopMode && e.key === "." && gameState.bombs > 0 && !whip.active) {
+    gameState.bombs--;
+    gameState.bombsUsed++;
+    checkQuestProgress();
+    updateHUD();
+    bombs.push({
+      x: player2.x + (player2.facingRight ? player2.width : -TILE),
+      y: player2.y + player2.height / 2,
+      vx: player2.facingRight ? 10 : -10,
+      vy: -5,
+      timer: 90,
+      exploded: false,
+      onGround: false
+    });
+    showNotification("💣 P2 BOMB!");
+  }
+
+  
+  // Player 1 Rope - R
   if (e.key.toLowerCase() === "r" && gameState.ropes > 0) {
     gameState.ropes--;
     updateHUD();
     
-    let ropeX = Math.floor((player.x + player.width/2) / TILE) * TILE;
-    let ropeY = Math.floor(player.y / TILE) * TILE;
+    let ropeX = Math.floor((player1.x + player1.width/2) / TILE) * TILE;
+    let ropeY = Math.floor(player1.y / TILE) * TILE;
+    
+    let ropeLength = 0;
+    for (let i = 0; i < 8; i++) {
+      if (!solidAt(ropeX + TILE/2, ropeY - i * TILE)) {
+        ropes.push({ x: ropeX, y: ropeY - i * TILE, segment: i });
+        ropeLength++;
+      } else {
+        break;
+      }
+    }
+    
+    if (ropeLength > 0) {
+      showNotification("🪢 P1 ROPE!");
+    }
+  }
+  
+  // Player 2 Rope - ENTER (only in co-op)
+  if (coopMode && e.key === "Enter" && gameState.ropes > 0) {
+    gameState.ropes--;
+    updateHUD();
+    
+    let ropeX = Math.floor((player2.x + player2.width/2) / TILE) * TILE;
+    let ropeY = Math.floor(player2.y / TILE) * TILE;
+    
+    let ropeLength = 0;
+    for (let i = 0; i < 8; i++) {
+      if (!solidAt(ropeX + TILE/2, ropeY - i * TILE)) {
+        ropes.push({ x: ropeX, y: ropeY - i * TILE, segment: i });
+        ropeLength++;
+      } else {
+        break;
+      }
+    }
+    
+    if (ropeLength > 0) {
+      showNotification("🪢 P2 ROPE!");
+    }
+  }// Player 1 Rope - R
+  if (e.key.toLowerCase() === "r" && gameState.ropes > 0) {
+    gameState.ropes--;
+    updateHUD();
+    
+    let ropeX = Math.floor((player1.x + player1.width/2) / TILE) * TILE;
+    let ropeY = Math.floor(player1.y / TILE) * TILE;
+    
+    let ropeLength = 0;
+    for (let i = 0; i < 8; i++) {
+      if (!solidAt(ropeX + TILE/2, ropeY - i * TILE)) {
+        ropes.push({ x: ropeX, y: ropeY - i * TILE, segment: i });
+        ropeLength++;
+      } else {
+        break;
+      }
+    }
+    
+    if (ropeLength > 0) {
+      showNotification("🪢 P1 ROPE!");
+    }
+  }
+  
+  // Player 2 Rope - ENTER (only in co-op)
+  if (coopMode && e.key === "Enter" && gameState.ropes > 0) {
+    gameState.ropes--;
+    updateHUD();
+    
+    let ropeX = Math.floor((player2.x + player2.width/2) / TILE) * TILE;
+    let ropeY = Math.floor(player2.y / TILE) * TILE;
+    
+    let ropeLength = 0;
+    for (let i = 0; i < 8; i++) {
+      if (!solidAt(ropeX + TILE/2, ropeY - i * TILE)) {
+        ropes.push({ x: ropeX, y: ropeY - i * TILE, segment: i });
+        ropeLength++;
+      } else {
+        break;
+      }
+    }
+    
+    if (ropeLength > 0) {
+      showNotification("🪢 P2 ROPE!");
+    }
+  }
     
     let ropeLength = 0;
     for (let i = 0; i < 8; i++) {
@@ -2324,9 +2427,6 @@ function activateWhip(p) {
 }
 
 canvas.addEventListener('mousemove', (e) => {
-
-
-canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
   mousePos.x = e.clientX - rect.left + camera.x;
   mousePos.y = e.clientY - rect.top + camera.y;
@@ -2334,6 +2434,21 @@ canvas.addEventListener('mousemove', (e) => {
 
 canvas.addEventListener('click', (e) => {
   if (!gameStarted || whip.active || coopMode) return; // Disable mouse whip in co-op
+  
+  const rect = canvas.getBoundingClientRect();
+  mousePos.x = e.clientX - rect.left + camera.x;
+  mousePos.y = e.clientY - rect.top + camera.y;
+  
+  // Calculate angle to mouse
+  let dx = mousePos.x - (player1.x + player1.width / 2);
+  let dy = mousePos.y - (player1.y + player1.height / 2);
+  whip.angle = Math.atan2(dy, dx);
+  
+  whip.active = true;
+  whip.frames = 12;
+  whip.flip = dx < 0;
+  whip.player = player1; // Single player always uses player1
+});
   
   const rect = canvas.getBoundingClientRect();
   mousePos.x = e.clientX - rect.left + camera.x;
@@ -2471,12 +2586,51 @@ function die(cause) {
   gameState.deathCause = cause;
   gameStarted = false;
   
+  // Calculate play time
+  let playTime = Math.floor((Date.now() - gameState.startTime + gameState.totalPlayTime) / 1000);
+  let minutes = Math.floor(playTime / 60);
+  let seconds = playTime % 60;
+  
   // Hide HUD and pause menu
   document.getElementById("hud").classList.add("hidden");
   document.getElementById("pauseMenu").classList.add("hidden");
   
-  // Show main menu
-  document.getElementById("menu").style.display = 'block';
+  // Death particles
+  for (let i = 0; i < 30; i++) {
+    particles.push({
+      x: player.x + player.width/2,
+      y: player.y + player.height/2,
+      vx: (Math.random() - 0.5) * 12,
+      vy: (Math.random() - 0.5) * 12 - 4,
+      life: 50,
+      size: Math.random() * 5 + 2,
+      color: '#ff0000'
+    });
+  }
+  
+  // Create death screen
+  let deathScreen = document.getElementById("deathScreen");
+  deathScreen.innerHTML = `
+    <div style="text-align: center; color: #fff; font-family: 'Bungee', cursive;">
+      <h1 style="font-size: 100px; margin-bottom: 40px; color: #ff0000; text-shadow: 0 0 30px #ff0000, 0 0 60px #ff0000, 6px 6px 0 #000; font-family: 'Bangers', cursive; letter-spacing: 8px;">☠️ YOU DIED ☠️</h1>
+      
+      <div class="death-cause">${cause}</div>
+      
+      <div class="stat-line">💰 Gold Collected: $${gameState.gold}</div>
+      <div class="stat-line">💀 Enemies Killed: ${gameState.kills}</div>
+      <div class="stat-line">📍 Reached Level: ${gameState.level}-${gameState.sublevel}</div>
+      <div class="stat-line">⏱️ Time Survived: ${minutes}m ${seconds}s</div>
+      
+      <p style="font-size: 24px; margin: 40px 0; color: #ffd700; font-style: italic;">"${DEATH_QUOTES[Math.floor(Math.random() * DEATH_QUOTES.length)]}"</p>
+      
+      <button onclick="restartGame()" style="background: linear-gradient(135deg, #ff8c00, #ffd700); color: #000; border: 5px solid #000; padding: 25px 60px; font-size: 36px; font-family: 'Bungee', cursive; cursor: pointer; margin: 20px; font-weight: bold; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);">🔄 TRY AGAIN</button>
+      <button onclick="quitToMenu()" style="background: linear-gradient(135deg, #ff0000, #aa0000); color: #fff; border: 5px solid #000; padding: 25px 60px; font-size: 36px; font-family: 'Bungee', cursive; cursor: pointer; margin: 20px; font-weight: bold; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);">🚪 MAIN MENU</button>
+    </div>
+  `;
+  
+  deathScreen.classList.remove("hidden");
+  deathScreen.classList.add("active");
+}
   
   // Death particles
   for (let i = 0; i < 30; i++) {
