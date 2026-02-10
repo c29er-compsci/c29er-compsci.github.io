@@ -4,149 +4,290 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PegWorks Studio</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
 :root {
-    --neon-cyan:#00ffff;
-    --neon-magenta:#ff00ff;
-    --neon-orange:#ff9900;
-    --dark-bg:#0a0a0f;
-    --card-bg:#1a1a24;
-    --text-primary:#fff;
-    --text-secondary:#b0b0c8;
-    --border-color:#2a2a3e;
+  --neon-cyan:#00ffff;
+  --neon-magenta:#ff00ff;
+  --neon-orange:#ff9900;
+  --neon-yellow:#ffea00;
+  --dark-bg:#0a0a0f;
+  --card-bg:#1a1a24;
+  --text-primary:#fff;
+  --text-secondary:#b0b0c8;
+  --border-color:#2a2a3e;
 }
+
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Rajdhani',sans-serif;background:var(--dark-bg);color:var(--text-primary);overflow-x:hidden;min-height:100vh;}
-.container{max-width:1400px;margin:0 auto;padding:20px;}
-.header{text-align:center;padding:60px 20px;}
-.studio-name{font-family:'Orbitron',sans-serif;font-size:clamp(3rem,10vw,6rem);font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:20px;display:inline-block;background:linear-gradient(135deg,var(--neon-cyan),var(--neon-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:glitch 3s infinite;cursor:pointer;transition:all 0.3s;}
-.studio-name:hover{filter:drop-shadow(0 0 20px var(--neon-cyan));}
+
+body{
+  font-family:'Rajdhani',sans-serif;
+  background:var(--dark-bg);
+  color:var(--text-primary);
+  min-height:100vh;
+}
+
+.container{
+  max-width:1400px;
+  margin:0 auto;
+  padding:20px;
+}
+
+/* HEADER */
+.header{
+  text-align:center;
+  padding:60px 20px;
+}
+
+.studio-name{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(3rem,10vw,6rem);
+  font-weight:900;
+  text-transform:uppercase;
+  background:linear-gradient(135deg,var(--neon-cyan),var(--neon-magenta));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:glitch 3s infinite;
+  cursor:pointer;
+}
+
 #peg-o{cursor:pointer;}
-@keyframes glitch{0%,90%,100%{transform:translate(0);}92%{transform:translate(-2px,2px);}94%{transform:translate(2px,-2px);}96%{transform:translate(-2px,-2px);}}
-.studio-tagline{font-size:1.2rem;color:var(--text-secondary);letter-spacing:0.3em;text-transform:uppercase;font-weight:600;}
-.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:30px;padding:40px 20px;}
-.game-card{background:var(--card-bg);border:2px solid var(--border-color);position:relative;overflow:hidden;transition:all 0.4s;clip-path: polygon(20px 0,100% 0,100% calc(100%-20px),calc(100%-20px) 100%,0 100%,0 20px);}
-.game-card:hover{transform:translateY(-10px);border-color:var(--neon-cyan);box-shadow:0 20px 60px rgba(0,255,255,0.3);}
-.game-image{width:100%;height:250px;object-fit:cover;filter:brightness(0.8);transition:all 0.4s;}
-.game-card:hover .game-image{filter:brightness(1) contrast(1.1);}
-.game-content{padding:25px;}
-.game-title{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:700;margin-bottom:5px;color:var(--neon-cyan);text-transform:uppercase;letter-spacing:0.05em;}
-.game-bio{color:var(--text-secondary);line-height:1.6;margin-bottom:10px;font-size:1rem;}
-.game-link{display:inline-block;padding:10px 20px;background:transparent;border:2px solid var(--neon-magenta);color:var(--neon-magenta);text-decoration:none;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;font-size:0.9rem;transition:all 0.3s;position:relative;overflow:hidden;}
-.game-link:hover{color:var(--dark-bg);box-shadow:0 0 20px var(--neon-magenta);}
-#orange-ball{position:fixed;top:20px;right:20px;width:30px;height:30px;border-radius:50%;background:var(--neon-orange);cursor:pointer;z-index:1000;}
-.peggle-ball{position:fixed;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,var(--neon-cyan),var(--neon-magenta));pointer-events:none;z-index:999;}
-.submit-game {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 1001;
-}
-.submit-game a {
-  padding: 10px 20px;
-  background: var(--neon-orange);
-  color: #000;
-  font-weight: bold;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.3s;
-}
-.submit-game a:hover {
-  box-shadow: 0 0 20px var(--neon-orange);
+
+@keyframes glitch{
+  0%,90%,100%{transform:translate(0);}
+  92%{transform:translate(-2px,2px);}
+  94%{transform:translate(2px,-2px);}
+  96%{transform:translate(-2px,-2px);}
 }
 
+.studio-tagline{
+  margin-top:10px;
+  color:var(--text-secondary);
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+}
 
-.submit-game a{padding:15px 30px;background:var(--neon-orange);color:#000;font-weight:bold;text-decoration:none;border-radius:10px;transition:all 0.3s;}
-.submit-game a:hover{box-shadow:0 0 20px var(--neon-orange);}
-@media(max-width:768px){.games-grid{grid-template-columns:1fr}.studio-name{font-size:2.5rem;}}
+/* GRID */
+.games-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(350px,1fr));
+  gap:30px;
+  padding:40px 20px;
+}
+
+.game-card{
+  background:var(--card-bg);
+  border:2px solid var(--border-color);
+  transition:0.4s;
+  overflow:hidden;
+  position:relative;
+}
+
+.game-card:hover{
+  transform:translateY(-8px);
+  border-color:var(--neon-cyan);
+  box-shadow:0 15px 40px rgba(0,255,255,0.25);
+}
+
+/* CLEAN NOW PLAYING BORDER */
+.game-card.now-playing{
+  border:4px solid var(--neon-yellow);
+  box-shadow:
+    0 0 15px rgba(255,234,0,0.7),
+    0 0 35px rgba(255,234,0,0.5);
+}
+
+.now-playing-label{
+  position:absolute;
+  top:12px;
+  left:12px;
+  padding:6px 14px;
+  font-family:'Orbitron',sans-serif;
+  font-size:0.75rem;
+  letter-spacing:0.15em;
+  background:var(--neon-yellow);
+  color:#000;
+  border-radius:6px;
+}
+
+/* CARD CONTENT */
+.game-image{
+  width:100%;
+  height:250px;
+  object-fit:cover;
+  filter:brightness(0.85);
+}
+
+.game-content{
+  padding:25px;
+}
+
+.game-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:1.8rem;
+  color:var(--neon-cyan);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.game-bio{
+  color:var(--text-secondary);
+  line-height:1.6;
+  margin-bottom:12px;
+}
+
+.game-link{
+  display:inline-block;
+  padding:10px 20px;
+  border:2px solid var(--neon-magenta);
+  color:var(--neon-magenta);
+  text-decoration:none;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  transition:0.3s;
+}
+
+.game-link:hover{
+  background:var(--neon-magenta);
+  color:#000;
+  box-shadow:0 0 15px var(--neon-magenta);
+}
+
+/* SUBMIT */
+.submit-game{
+  position:absolute;
+  top:20px;
+  left:20px;
+}
+
+.submit-game a{
+  padding:15px 30px;
+  background:var(--neon-orange);
+  color:#000;
+  font-weight:bold;
+  border-radius:10px;
+  text-decoration:none;
+}
+
+/* EFFECTS */
+#orange-ball{
+  position:fixed;
+  top:20px;
+  right:20px;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  background:var(--neon-orange);
+  cursor:pointer;
+}
+
+.peggle-ball{
+  position:fixed;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:radial-gradient(circle,var(--neon-cyan),var(--neon-magenta));
+  pointer-events:none;
+}
+
+@media(max-width:768px){
+  .games-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
+
 <body>
 <div class="container">
-  <div class="header">
-    <h1 class="studio-name">PegW<span id="peg-o">o</span>rks</h1>
-    <p class="studio-tagline">W pegworks</p>
-  </div>
-  <div class="games-grid" id="gamesGrid"></div>
 
-  <!-- Submit your own game section -->
-  <div class="submit-game">
-    <a href="https://forms.gle/rUN2vrK71uXw78xH7" target="_blank">Submit Your Own Game</a>
-  </div>
+<div class="submit-game">
+  <a href="https://forms.gle/rUN2vrK71uXw78xH7" target="_blank">Submit Your Own Game</a>
 </div>
 
-<div id="orange-ball" title="Click me!"></div>
+<div class="header">
+  <h1 class="studio-name">PegW<span id="peg-o">o</span>rks</h1>
+  <p class="studio-tagline">W pegworks</p>
+</div>
+
+<div class="games-grid" id="gamesGrid"></div>
+</div>
+
+<div id="orange-ball"></div>
 
 <script>
-// Game data
 const games=[
   {title:"Peggle – Portal Edition",image:"https://upload.wikimedia.org/wikipedia/en/c/c5/Peggle_Steam.jpg",
   bio:"Launch balls and hit pegs to clear the board. Portals warp balls for wild combos. Fun, physics-based, and addictive.",
-link:"https://c29er-compsci.github.io/peggle.html"},
+  link:"https://c29er-compsci.github.io/peggle.html"},
+
+  {title:"Spelunky",
+  image:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/John_Edward_Jones_Nutty_Putty.jpg/250px-John_Edward_Jones_Nutty_Putty.jpg",
+  bio:"traverse your ways either by yourself or with friends through endless caves while fighting unique enemies, completing quests, and causing havoc!",
+  link:"https://c29er-compsci.github.io/spelunky.html"},
 
   {title:"Balatro",
   image:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjL3XpI3kCS3gjTy5R3R0Ur3PnNX0YFKWYABcPGmy1kn_LVB1chVIOseg8L0QjpjmnFHre&s=10",
-bio:"A roguelike deck-builder with a poker twist. Use cards, Jokers, and multipliers to create combos. Every run challenges strategy and math.",link:"https://c29er-compsci.github.io/balatro.html"},
-{
-  title: "Fun card game",
-  image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSb1VeVkgfFUa8Fd_LrHegES2zQXUzubpw3bQ&s",
-  bio: "a multiplayer this fun card game to play with your friends! From Timmy",
-  link: "https://daltonwebsites.netlify.app/poker2"
-},
-{
-  title: "Spelunky (still in beta)",
-  image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/John_Edward_Jones_Nutty_Putty.jpg/250px-John_Edward_Jones_Nutty_Putty.jpg",
-  bio: "traverse your ways either by yourself or with friends through endless caves while fighting unique enemies, completing quests, and causing havoc!",
-  link: "https://c29er-compsci.github.io/spelunky.html"
-},
-{
-  title: "Basketmball",
-  image: "https://i1.pickpik.com/photos/1021/387/758/basketball-man-model-young-preview.jpg",
-  bio: "its uhhhh uhh whats that one game with the orange ball and you bounce it. Its that one. by Jeffery and Henry",
-  link: "https://main--monumental-truffle-ed74f6.netlify.app/games/basketball-stars/"
-}
+  bio:"A roguelike deck-builder with a poker twist. Use cards, Jokers, and multipliers to create combos. Every run challenges strategy and math.",
+  link:"https://c29er-compsci.github.io/balatro.html"},
 
+  {title:"Fun card game",
+  image:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSb1VeVkgfFUa8Fd_LrHegES2zQXUzubpw3bQ&s",
+  bio:"a multiplayer this fun card game to play with your friends! From Timmy",
+  link:"https://daltonwebsites.netlify.app/poker2"},
 
-
+  {title:"Basketmball",
+  image:"https://i1.pickpik.com/photos/1021/387/758/basketball-man-model-young-preview.jpg",
+  bio:"its uhhhh uhh whats that one game with the orange ball and you bounce it. Its that one. by Jeffery and Henry",
+  link:"https://main--monumental-truffle-ed74f6.netlify.app/games/basketball-stars/"}
 ];
 
-// Render games
 function renderGames(){
-  const grid=document.getElementById('gamesGrid'); grid.innerHTML='';
+  const grid=document.getElementById("gamesGrid");
+  grid.innerHTML="";
+
   games.forEach(game=>{
-    const card=document.createElement('div'); card.className='game-card';
+    const card=document.createElement("div");
+    card.className="game-card";
+
+    if(game.title==="Spelunky"){
+      card.classList.add("now-playing");
+    }
+
     card.innerHTML=`
+      ${game.title==="Spelunky" ? `<div class="now-playing-label">WHAT WE ARE PLAYING NOW</div>` : ``}
       <img src="${game.image}" class="game-image">
       <div class="game-content">
         <h3 class="game-title">${game.title}</h3>
         <p class="game-bio">${game.bio}</p>
-        <a href="${game.link}" class="game-link" target="_blank">Play Now</a>
-      </div>`;
+        <a href="${game.link}" target="_blank" class="game-link">Play Now</a>
+      </div>
+    `;
     grid.appendChild(card);
   });
 }
 
-// Peggle balls
 function spawnBalls(x,y){
   for(let i=0;i<10;i++){
-    const ball=document.createElement('div'); ball.className='peggle-ball';
-    ball.style.left=x+Math.random()*40-20+'px';
-    ball.style.top=y+'px';
-    document.body.appendChild(ball);
-    const rx=(Math.random()-0.5)*200;
-    ball.animate([{transform:'translate(0,0)'},{transform:`translate(${rx}px,500px)`}],{duration:2000+Math.random()*1000,easing:'ease-in'});
-    setTimeout(()=>ball.remove(),3000);
+    const b=document.createElement("div");
+    b.className="peggle-ball";
+    b.style.left=x+"px";
+    b.style.top=y+"px";
+    document.body.appendChild(b);
+    b.animate([{transform:"translate(0,0)"},{transform:`translate(${(Math.random()-0.5)*300}px,600px)`}],{duration:2500,easing:"ease-in"});
+    setTimeout(()=>b.remove(),3000);
   }
 }
 
-document.getElementById('peg-o').addEventListener('click',e=>{
-  const rect=e.target.getBoundingClientRect();
-  spawnBalls(rect.left+rect.width/2,rect.top);
-});
-document.getElementById('orange-ball').addEventListener('click',e=>{
-  spawnBalls(window.innerWidth-50,50);
-});
+document.getElementById("peg-o").onclick=e=>{
+  const r=e.target.getBoundingClientRect();
+  spawnBalls(r.left+r.width/2,r.top);
+};
+
+document.getElementById("orange-ball").onclick=()=>{
+  spawnBalls(window.innerWidth-40,40);
+};
 
 renderGames();
 </script>
