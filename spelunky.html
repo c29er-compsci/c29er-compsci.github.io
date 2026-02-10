@@ -472,24 +472,33 @@
      <div id="controlsSection" style="max-height: 60vh; overflow-y: auto; margin-top: 20px;">
   <div style="margin-bottom: 30px;">
     <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🎮 SINGLE PLAYER CONTROLS</h4>
-    <div><strong>WASD / ARROW KEYS</strong> - Move left/right, climb ropes</div>
+    <div><strong>WASD / ARROW KEYS</strong> - Move left/right</div>
     <div><strong>W / UP</strong> (on ground) - Jump</div>
+    <div><strong>W / UP</strong> (in air with Cape) - Glide/Slow fall</div>
     <div><strong>W / UP</strong> (on rope) - Climb up</div>
     <div><strong>S / DOWN</strong> (on rope) - Climb down</div>
     <div><strong>SPACE</strong> (on rope) - Jump off rope</div>
-    <div><strong>Q</strong> - Attack with whip</div>
+    <div><strong>Q or CLICK</strong> - Attack with whip</div>
     <div><strong>SPACE</strong> - Throw bomb</div>
     <div><strong>R</strong> - Deploy rope</div>
-    <div><strong>E</strong> - Pick up items, break crates, talk to NPCs</div>
-    <div><strong>ESC</strong> - Pause game</div>
+    <div><strong>E</strong> - Pick up items, break crates, interact with NPCs/quests</div>
+    <div><strong>ESC</strong> - Pause game / Close menus</div>
   </div>
 
   <div style="margin-bottom: 30px;">
   <h4 style="font-size: 24px; color: #87ceeb; margin-bottom: 10px;">👥 TWO PLAYER CONTROLS</h4>
-  <div><strong>PLAYER 1 (Brown):</strong></div>
-  <div style="margin-left: 20px;">WASD - Move, Q - Whip, SPACE - Bomb, R - Rope, E - Interact</div>
-  <div style="margin-top: 10px;"><strong>PLAYER 2 (Blue):</strong></div>
-  <div style="margin-left: 20px;">Arrow Keys - Move, SHIFT - Whip, CTRL - Bomb, ENTER - Rope</div>
+  <div><strong>PLAYER 1 (Brown - WASD Area):</strong></div>
+  <div style="margin-left: 20px;">WASD - Move</div>
+  <div style="margin-left: 20px;">Q - Whip</div>
+  <div style="margin-left: 20px;">E - Bomb</div>
+  <div style="margin-left: 20px;">R - Rope</div>
+  <div style="margin-left: 20px;">F - Interact (pick up, break crates, shop)</div>
+  <div style="margin-top: 10px;"><strong>PLAYER 2 (Blue - Arrow Keys Area):</strong></div>
+  <div style="margin-left: 20px;">Arrow Keys - Move</div>
+  <div style="margin-left: 20px;">/ (Slash) - Whip</div>
+  <div style="margin-left: 20px;">. (Period) - Bomb</div>
+  <div style="margin-left: 20px;">, (Comma) - Rope</div>
+  <div style="margin-left: 20px;">ENTER - Interact (pick up, break crates, shop)</div>
   <div style="margin-top: 10px; color: #ff6b6b;"><strong>⚠️ SHARED:</strong> Health and key are shared! Each player has their own gold, bombs, and ropes!</div>
   <div style="margin-top: 10px; color: #ffd700;"><strong>🚪 BOTH PLAYERS</strong> must reach the door to advance!</div>
 </div>
@@ -560,6 +569,8 @@
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+const canvas2 = document.createElement("canvas");
+const ctx2 = canvas2.getContext("2d");
 const TILE = 40;
 const GRAVITY = 0.6;
 const mapWidth = 60;
@@ -580,6 +591,7 @@ const DEATH_QUOTES = [
 ctx.imageSmoothingEnabled = false;
 
 let camera = { x: 0, y: 0 };
+let camera2 = { x: 0, y: 0 };
 let gameStarted = false;
 let screenShake = { x: 0, y: 0, intensity: 0 };
 let shopMenuOpen = false;
@@ -2264,14 +2276,15 @@ document.addEventListener("keydown", e => {
     whip.angle = player.facingRight ? 0 : Math.PI;
   }
   
-  // Player 2 whip (Right Shift key) - only in two player mode
-  if (twoPlayerMode && e.key === "Shift" && e.location === 2 && !whip2.active) {
+  // Player 2 whip (/ key) - only in two player mode
+  if (twoPlayerMode && e.key === "/" && !whip2.active) {
     whip2.active = true;
     whip2.frames = 12;
     whip2.flip = !player2.facingRight;
     whip2.angle = player2.facingRight ? 0 : Math.PI;
   }
   
+  // Player 1 bomb (single player - keep SPACE)
   if (e.key === " " && gameState.bombs > 0 && !whip.active && !twoPlayerMode) {
     gameState.bombs--;
     gameState.bombsUsed++;
@@ -2286,11 +2299,11 @@ document.addEventListener("keydown", e => {
       exploded: false,
       onGround: false
     });
-    showNotification("💣 P1 BOMB THROWN!");
+    showNotification("💣 BOMB THROWN!");
   }
   
-  // Player 1 bomb in two-player mode
-  if (twoPlayerMode && e.key === " " && gameState.bombs > 0 && !whip.active) {
+  // Player 1 bomb in two-player mode (E key)
+  if (twoPlayerMode && e.key.toLowerCase() === "e" && gameState.bombs > 0 && !whip.active) {
     gameState.bombs--;
     gameState.bombsUsed++;
     checkQuestProgress();
@@ -2307,8 +2320,8 @@ document.addEventListener("keydown", e => {
     showNotification("💣 P1 BOMB THROWN!");
   }
   
-  // Player 2 bomb (/ key)
-  if (twoPlayerMode && e.key === "/" && player2.bombs > 0 && !whip2.active) {
+  // Player 2 bomb (. key)
+  if (twoPlayerMode && e.key === "." && player2.bombs > 0 && !whip2.active) {
     player2.bombs--;
     updateHUD();
     bombs.push({
@@ -2323,7 +2336,7 @@ document.addEventListener("keydown", e => {
     showNotification("💣 P2 BOMB THROWN!");
   }
   
- // Player 1 rope
+  // Player 1 rope
   if (e.key.toLowerCase() === "r" && gameState.ropes > 0) {
     gameState.ropes--;
     updateHUD();
@@ -2346,8 +2359,8 @@ document.addEventListener("keydown", e => {
     }
   }
   
-  // Player 2 rope (Return/Enter key)
-  if (twoPlayerMode && (e.key === "Enter" || e.key === "Return") && player2.ropes > 0) {
+  // Player 2 rope (, key)
+  if (twoPlayerMode && e.key === "," && player2.ropes > 0) {
     player2.ropes--;
     updateHUD();
     
@@ -2369,11 +2382,11 @@ document.addEventListener("keydown", e => {
     }
   }
   
- 
-  
-  if (e.key.toLowerCase() === "e") {
-      interactWithQuestGiver();
-    // Pick up items
+  // Player 1 interact (F in two-player, E in single-player)
+  if ((e.key.toLowerCase() === "f" && twoPlayerMode) || (e.key.toLowerCase() === "e" && !twoPlayerMode)) {
+    interactWithQuestGiver();
+    
+    // Pick up items (Player 1)
     items = items.filter(item => {
       if (!item || item.collected) return false;
       if (
@@ -2403,8 +2416,50 @@ document.addEventListener("keydown", e => {
       return true;
     });
     
-  // Player 2 interact (Period key)
-  if (twoPlayerMode && e.key === ".") {
+    // Break crates (Player 1)
+    crates.forEach(crate => {
+      if (!crate.broken && Math.abs(player.x - crate.x) < TILE * 1.5 && Math.abs(player.y - crate.y) < TILE * 1.5) {
+        crate.broken = true;
+        gameState.cratesBreaked++;
+        checkQuestProgress();
+        
+        for (let i = 0; i < 10; i++) {
+          particles.push({
+            x: crate.x + TILE/2,
+            y: crate.y + TILE/2,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8 - 2,
+            life: 30,
+            size: Math.random() * 4 + 2,
+            color: '#8b7355'
+          });
+        }
+        
+        if (Math.random() > 0.5) {
+          gold.push({
+            x: crate.x,
+            y: crate.y,
+            value: Math.random() > 0.7 ? 500 : 200,
+            pulse: Math.random() * Math.PI * 2
+          });
+        }
+      }
+    });
+    
+    // Shop interaction - press F (two-player) or E (single-player) near shopkeeper
+    shops.forEach(shop => {
+      if (!shop || !shop.shopkeeper) return;
+      let sk = shop.shopkeeper;
+      if (Math.abs(player.x - sk.x) < TILE * 2 && 
+          Math.abs(player.y - sk.y) < TILE * 2 &&
+          !shopMenuOpen) {
+        openShopMenu(shop);
+      }
+    });
+  }
+  
+ // Player 2 interact (ENTER/RETURN key)
+  if (twoPlayerMode && e.key === "Enter") {
     // Pick up items for Player 2
     items = items.filter(item => {
       if (!item || item.collected) return false;
@@ -2465,49 +2520,9 @@ document.addEventListener("keydown", e => {
       }
     });
   }
-    
-    // Break crates
-    crates.forEach(crate => {
-      if (!crate.broken && Math.abs(player.x - crate.x) < TILE * 1.5 && Math.abs(player.y - crate.y) < TILE * 1.5) {
-        crate.broken = true;
-           gameState.cratesBreaked++; // ADD THIS
-    checkQuestProgress(); // ADD THIS
-        
-        for (let i = 0; i < 10; i++) {
-          particles.push({
-            x: crate.x + TILE/2,
-            y: crate.y + TILE/2,
-            vx: (Math.random() - 0.5) * 8,
-            vy: (Math.random() - 0.5) * 8 - 2,
-            life: 30,
-            size: Math.random() * 4 + 2,
-            color: '#8b7355'
-          });
-        }
-        
-        if (Math.random() > 0.5) {
-          gold.push({
-            x: crate.x,
-            y: crate.y,
-            value: Math.random() > 0.7 ? 500 : 200,
-            pulse: Math.random() * Math.PI * 2
-          });
-        }
-      }
-    });
-    
-    // Shop interaction - press E near shopkeeper
-    shops.forEach(shop => {
-      if (!shop || !shop.shopkeeper) return;
-      let sk = shop.shopkeeper;
-      if (Math.abs(player.x - sk.x) < TILE * 2 && 
-          Math.abs(player.y - sk.y) < TILE * 2 &&
-          !shopMenuOpen) {
-        openShopMenu(shop);
-      }
-   });
-  }
 });
+  
+  
 
 document.addEventListener("keyup", e => {
   const k = e.key.toLowerCase();
@@ -2530,6 +2545,7 @@ document.addEventListener("keyup", e => {
 
   keys[k] = false;
 });
+
 // **Add the click event listener here:**
 canvas.addEventListener('click', () => {
   if (gameStarted && !twoPlayerMode && !whip.active) {
@@ -2622,25 +2638,44 @@ function destroyBlock(tx, ty) {
 function updateCamera() {
   // Smooth camera follow with proper bounds
   let targetX, targetY;
+  let viewWidth = twoPlayerMode ? canvas.width / 2 : canvas.width;
   
   if (twoPlayerMode) {
-    // Center camera between both players
-    let midX = (player.x + player2.x) / 2;
-    let midY = (player.y + player2.y) / 2;
-    targetX = midX - canvas.width / 2 + player.width / 2;
-    targetY = midY - canvas.height / 2 + player.height / 2;
-  } else {
-    targetX = player.x - canvas.width / 2 + player.width / 2;
+    // SPLIT SCREEN - Player 1 camera (LEFT HALF)
+    targetX = player.x - viewWidth / 2 + player.width / 2;
     targetY = player.y - canvas.height / 2 + player.height / 2;
+    
+    // Clamp camera to map bounds
+    targetX = Math.max(0, Math.min(targetX, mapWidth * TILE - viewWidth));
+    targetY = Math.max(0, Math.min(targetY, mapHeight * TILE - canvas.height));
+    
+    // Smooth interpolation
+    camera.x += (targetX - camera.x) * 0.15;
+    camera.y += (targetY - camera.y) * 0.15;
+    
+    // Player 2 camera (RIGHT HALF)
+    let target2X = player2.x - viewWidth / 2 + player2.width / 2;
+    let target2Y = player2.y - canvas.height / 2 + player2.height / 2;
+    
+    // Clamp camera to map bounds
+    target2X = Math.max(0, Math.min(target2X, mapWidth * TILE - viewWidth));
+    target2Y = Math.max(0, Math.min(target2Y, mapHeight * TILE - canvas.height));
+    
+    // Smooth interpolation
+    camera2.x += (target2X - camera2.x) * 0.15;
+    camera2.y += (target2Y - camera2.y) * 0.15;
+  } else {
+    targetX = player.x - viewWidth / 2 + player.width / 2;
+    targetY = player.y - canvas.height / 2 + player.height / 2;
+    
+    // Clamp camera to map bounds
+    targetX = Math.max(0, Math.min(targetX, mapWidth * TILE - viewWidth));
+    targetY = Math.max(0, Math.min(targetY, mapHeight * TILE - canvas.height));
+    
+    // Smooth interpolation
+    camera.x += (targetX - camera.x) * 0.15;
+    camera.y += (targetY - camera.y) * 0.15;
   }
-  
-  // Clamp camera to map bounds
-  targetX = Math.max(0, Math.min(targetX, mapWidth * TILE - canvas.width));
-  targetY = Math.max(0, Math.min(targetY, mapHeight * TILE - canvas.height));
-  
-  // Smooth interpolation
-  camera.x += (targetX - camera.x) * 0.15;
-  camera.y += (targetY - camera.y) * 0.15;
   
   // Screen shake
   if (screenShake.intensity > 0) {
@@ -3496,7 +3531,8 @@ function update() {
     screenShake.intensity = 8;
   }
 
- enemies = enemies.filter(e => {
+ 
+   enemies = enemies.filter(e => {
     if (!e || (e.health <= 0 && !e.stunned)) return false;
     
     try {
@@ -3527,7 +3563,7 @@ function update() {
       return true;
     }
 
-   try {
+    try {
       let distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
       
       // Ledge detection - turn around before falling
@@ -3796,7 +3832,7 @@ function update() {
           }
         }
         
-// Check walls before moving
+        // Check walls before moving
         if (!solidAt(e.x + e.vx, e.y) && !solidAt(e.x + e.vx + TILE, e.y)) {
           e.x += e.vx;
         } else {
@@ -3849,31 +3885,31 @@ function update() {
     }
 
     if (whip.active && whip.frames > 5) {
-  let whipLen = (12 - whip.frames) * 8;
-  let whipX = player.x + player.width / 2;
-  let whipY = player.y + player.height / 2;
-  let whipEndX = whipX + Math.cos(whip.angle) * whipLen;
-  let whipEndY = whipY + Math.sin(whip.angle) * whipLen;
-  
-  let distToWhipTip = Math.hypot(e.x + TILE/2 - whipEndX, e.y + TILE/2 - whipEndY);
-  
-  if (distToWhipTip < TILE * 1.5) {
-    e.health--;
-    if (e.health <= 0 && e.type !== 'skeleton') {
-      gameState.kills++;
+      let whipLen = (12 - whip.frames) * 8;
+      let whipX = player.x + player.width / 2;
+      let whipY = player.y + player.height / 2;
+      let whipEndX = whipX + Math.cos(whip.angle) * whipLen;
+      let whipEndY = whipY + Math.sin(whip.angle) * whipLen;
       
-      // TRACK KILLS BY TYPE
-      switch(e.type) {
-        case 'spider': gameState.spidersKilled++; break;
-        case 'bat': gameState.batsKilled++; break;
-        case 'snake': gameState.snakesKilled++; break;
-        case 'caveman': gameState.cavemenKilled++; break;
-        case 'skeleton': gameState.skeletonsKilled++; break;
-      }
+      let distToWhipTip = Math.hypot(e.x + TILE/2 - whipEndX, e.y + TILE/2 - whipEndY);
       
-      checkQuestProgress();
-      showNotification(`💀 ${e.type.toUpperCase()} DEFEATED!`);
-    }
+      if (distToWhipTip < TILE * 1.5) {
+        e.health--;
+        if (e.health <= 0 && e.type !== 'skeleton') {
+          gameState.kills++;
+          
+          // TRACK KILLS BY TYPE
+          switch(e.type) {
+            case 'spider': gameState.spidersKilled++; break;
+            case 'bat': gameState.batsKilled++; break;
+            case 'snake': gameState.snakesKilled++; break;
+            case 'caveman': gameState.cavemenKilled++; break;
+            case 'skeleton': gameState.skeletonsKilled++; break;
+          }
+          
+          checkQuestProgress();
+          showNotification(`💀 ${e.type.toUpperCase()} DEFEATED!`);
+        }
 
         for (let i = 0; i < 6; i++) {
           particles.push({
@@ -3888,6 +3924,7 @@ function update() {
         }
       }
     }
+    
     // Player 2 whip collision
     if (twoPlayerMode && whip2.active && whip2.frames > 5) {
       let whipLen = (12 - whip2.frames) * 8;
@@ -3940,17 +3977,18 @@ function update() {
         e.health = 0;
         player.vy = -10;
         gameState.kills++;
-       // TRACK KILLS BY TYPE
-  switch(e.type) {
-    case 'spider': gameState.spidersKilled++; break;
-    case 'bat': gameState.batsKilled++; break;
-    case 'snake': gameState.snakesKilled++; break;
-    case 'caveman': gameState.cavemenKilled++; break;
-    case 'skeleton': gameState.skeletonsKilled++; break;
-  }
-  
-  checkQuestProgress();
-  showNotification(`💀 STOMPED ${e.type.toUpperCase()}!`);
+        
+        // TRACK KILLS BY TYPE
+        switch(e.type) {
+          case 'spider': gameState.spidersKilled++; break;
+          case 'bat': gameState.batsKilled++; break;
+          case 'snake': gameState.snakesKilled++; break;
+          case 'caveman': gameState.cavemenKilled++; break;
+          case 'skeleton': gameState.skeletonsKilled++; break;
+        }
+        
+        checkQuestProgress();
+        showNotification(`💀 STOMPED ${e.type.toUpperCase()}!`);
       } else {
         takeDamage(1, `Killed by ${e.type}`);
         player.vy = -10;
@@ -4107,23 +4145,55 @@ function draw() {
   
   if (!gameStarted) return;
   
+  if (twoPlayerMode) {
+    // SPLIT SCREEN MODE
+    // Draw Player 1's view (LEFT HALF)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.width / 2, canvas.height);
+    ctx.clip();
+    drawWorld(ctx, camera, 0);
+    ctx.restore();
+    
+    // Draw divider line
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(canvas.width / 2 - 2, 0, 4, canvas.height);
+    
+    // Draw Player 2's view (RIGHT HALF)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+    ctx.clip();
+    drawWorld(ctx, camera2, canvas.width / 2);
+    ctx.restore();
+  } else {
+    // SINGLE PLAYER MODE
+    ctx.save();
+    drawWorld(ctx, camera, 0);
+    ctx.restore();
+  }
+}
+
+function drawWorld(ctx, cam, offsetX) {
   ctx.save();
-  ctx.translate(-camera.x + screenShake.x, -camera.y + screenShake.y);
+  ctx.translate(offsetX - cam.x + screenShake.x, -cam.y + screenShake.y);
+  // Background
   
+  const viewWidth = twoPlayerMode ? canvas.width / 2 : canvas.width;
   const bgGradient = ctx.createRadialGradient(
-    camera.x + canvas.width/2, camera.y + canvas.height/2, 0,
-    camera.x + canvas.width/2, camera.y + canvas.height/2, canvas.width
+    cam.x + viewWidth/2, cam.y + canvas.height/2, 0,
+    cam.x + viewWidth/2, cam.y + canvas.height/2, viewWidth
   );
   bgGradient.addColorStop(0, currentTheme.bg);
   bgGradient.addColorStop(1, '#000000');
   ctx.fillStyle = bgGradient;
-  ctx.fillRect(camera.x, camera.y, canvas.width, canvas.height);
+ ctx.fillRect(cam.x, cam.y, viewWidth, canvas.height);
   
   // Draw map
-  const startX = Math.max(0, Math.floor(camera.x / TILE));
-  const endX = Math.min(mapWidth, Math.ceil((camera.x + canvas.width) / TILE));
-  const startY = Math.max(0, Math.floor(camera.y / TILE));
-  const endY = Math.min(mapHeight, Math.ceil((camera.y + canvas.height) / TILE));
+  const startX = Math.max(0, Math.floor(cam.x / TILE));
+  const endX = Math.min(mapWidth, Math.ceil((cam.x + viewWidth) / TILE));
+  const startY = Math.max(0, Math.floor(cam.y / TILE));
+  const endY = Math.min(mapHeight, Math.ceil((cam.y + canvas.height) / TILE));
   
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {
@@ -4326,8 +4396,8 @@ if (questGiver) {
 
 // Quest UI
 if (activeQuest && !activeQuest.completed) {
-  let uiX = camera.x + 20;
-  let uiY = camera.y + canvas.height - 120;
+  let uiX = cam.x + 20;
+  let uiY = cam.y + canvas.height - 120;
   
   // Background
   ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
