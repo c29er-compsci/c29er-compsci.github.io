@@ -94,14 +94,14 @@
     
     #hud {
       color: #ffd700;
-      font-size: 32px;
-      margin-bottom: 20px;
+      font-size: 16px;
+      margin-bottom: 10px;
       text-shadow: 
         0 0 20px #ffd700,
         3px 3px 0 #000,
         -1px -1px 0 #000;
       display: flex;
-      gap: 40px;
+      gap: 20px;
       font-weight: bold;
       z-index: 3;
       position: relative;
@@ -380,15 +380,56 @@
 </head>
 <body>
 <div id="notification"></div>
-
 <div id="hud" class="hidden">
-  <div>❤️ <span id="health">4</span></div>
-  <div>💣 <span id="bombs">3</span></div>
-  <div>🪢 <span id="ropes">3</span></div>
-  <div>💰 <span id="gold">0</span></div>
-  <div>📍 <span id="level">1-1</span></div>
-  <div><span id="keyStatus">🔒</span> KEY</div>
-  <div onclick="togglePause()" style="cursor: pointer; background: linear-gradient(135deg, rgba(255, 0, 0, 0.3), rgba(139, 0, 0, 0.4));">⏸️ PAUSE</div>
+  <!-- Single player layout (compact horizontal) -->
+  <div id="singlePlayerHud" style="display: flex; gap: 15px; font-size: 18px;">
+    <div>💣 <span id="p1bombs">3</span></div>
+    <div>🪢 <span id="p1ropes">3</span></div>
+    <div>💰 <span id="p1gold">0</span></div>
+    <div>❤️ <span id="health">4</span></div>
+    <div>📍 <span id="level">1-1</span></div>
+    <div><span id="keyStatus">🔒</span></div>
+    <div onclick="togglePause()" style="cursor: pointer;">⏸️</div>
+  </div>
+  
+  <!-- Two player layout (stylish design) -->
+  <div id="twoPlayerHud" style="display: none; position: fixed; width: 100%; top: 0; left: 0; pointer-events: none; z-index: 3;">
+    <!-- Player 1 - TOP LEFT (Brown/Gold theme) -->
+    <div style="position: absolute; left: 15px; top: 15px; background: linear-gradient(135deg, rgba(139, 69, 19, 0.95) 0%, rgba(101, 67, 33, 0.95) 100%); padding: 12px 16px; border-radius: 12px; border: 3px solid #ffd700; pointer-events: auto; font-size: 18px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3); font-family: 'Bungee', cursive;">
+      <div style="color: #ffd700; font-size: 16px; margin-bottom: 6px; text-align: center; text-shadow: 0 0 10px #ffd700, 2px 2px 0 #000;">PLAYER 1</div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="background: rgba(0, 0, 0, 0.3); padding: 4px 8px; border-radius: 6px; border-left: 3px solid #ff8c00;">💣 <span id="p1bombs2">3</span></div>
+        <div style="background: rgba(0, 0, 0, 0.3); padding: 4px 8px; border-radius: 6px; border-left: 3px solid #ff8c00;">🪢 <span id="p1ropes2">3</span></div>
+        <div style="background: rgba(0, 0, 0, 0.3); padding: 4px 8px; border-radius: 6px; border-left: 3px solid #ffd700;">💰 <span id="p1gold2">0</span></div>
+      </div>
+    </div>
+    
+    <!-- Player 2 - TOP RIGHT (Blue theme) -->
+    <div style="position: absolute; right: 15px; top: 15px; background: linear-gradient(135deg, rgba(30, 58, 138, 0.95) 0%, rgba(59, 130, 246, 0.95) 100%); padding: 12px 16px; border-radius: 12px; border: 3px solid #87ceeb; pointer-events: auto; font-size: 18px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 20px rgba(135, 206, 235, 0.3); font-family: 'Bungee', cursive;">
+      <div style="color: #87ceeb; font-size: 16px; margin-bottom: 6px; text-align: center; text-shadow: 0 0 10px #87ceeb, 2px 2px 0 #000;">PLAYER 2</div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="background: rgba(0, 0, 0, 0.3); padding: 4px 8px; border-radius: 6px; border-left: 3px solid #4169e1;">💣 <span id="p2bombs2">3</span></div>
+        <div style="background: rgba(0, 0, 0, 0.3); padding: 4px 8px; border-radius: 6px; border-left: 3px solid #4169e1;">🪢 <span id="p2ropes2">3</span></div>
+        <div style="background: rgba(0, 0, 0, 0.3); padding: 4px 8px; border-radius: 6px; border-left: 3px solid #00bfff;">💰 <span id="p2gold2">0</span></div>
+      </div>
+    </div>
+    
+    <!-- Shared stats - TOP CENTER (Gradient design) -->
+    <div style="position: absolute; left: 50%; top: 15px; transform: translateX(-50%); display: flex; gap: 12px; pointer-events: auto; font-size: 22px; font-family: 'Bungee', cursive;">
+      <div style="background: linear-gradient(135deg, #ff0066, #ff6699); padding: 10px 20px; border-radius: 10px; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.3); text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);">
+        ❤️ <span id="health2">4</span>
+      </div>
+      <div style="background: linear-gradient(135deg, #ff8c00, #ffd700); padding: 10px 20px; border-radius: 10px; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.3); text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); color: #000;">
+        📍 <span id="level2">1-1</span>
+      </div>
+      <div style="background: linear-gradient(135deg, #ffd700, #ffed4e); padding: 10px 20px; border-radius: 10px; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.3); text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); color: #000;">
+        <span id="keyStatus2">🔒</span>
+      </div>
+      <div onclick="togglePause()" style="cursor: pointer; background: linear-gradient(135deg, #ff0000, #cc0000); padding: 10px 20px; border-radius: 10px; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.3); text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); transition: all 0.2s ease;">
+        ⏸️
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="powerups" style="position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 5; font-family: 'Bungee', cursive; font-size: 24px;">
@@ -426,130 +467,86 @@
     <!-- END AD SECTION -->
     <!-- ========================================= -->
   </div>
-  <div id="controlsMenu" class="hidden">
-    <div class="controls" style="max-height: 75vh; overflow-y: auto; padding-right: 20px; font-size: 16px; line-height: 1.6;">
-      <h3 style="font-size: 28px; margin-bottom: 15px; color: #ffd700; text-align: center;">⚔️ SPELUNKY GUIDE ⚔️</h3>
+  
       
-      <!-- GAME OBJECTIVE -->
-      <div style="margin-bottom: 20px; background: rgba(255, 140, 0, 0.15); padding: 12px; border-radius: 8px; border-left: 4px solid #ff8c00;">
-        <h4 style="font-size: 20px; color: #ffd700; margin-bottom: 8px;">🎯 OBJECTIVE</h4>
-        <div style="border-left: none; padding-left: 0; margin: 0; font-size: 15px;">
-          Find the KEY 🔑, unlock the DOOR 🚪, escape! • Complete 4 sublevels per world • Collect gold & gems • Survive Cave → Jungle → Ice → Volcano
-        </div>
-      </div>
-      
-      <!-- SINGLE PLAYER CONTROLS -->
-      <div style="margin-bottom: 20px;">
-        <h4 style="font-size: 20px; color: #00ff00; margin-bottom: 8px;">👤 SINGLE PLAYER</h4>
-        <div style="font-size: 15px;"><strong>WASD/ARROWS</strong> - Move • <strong>W/UP</strong> - Jump • <strong>Q</strong> - Whip • <strong>SPACE</strong> - Bomb • <strong>R</strong> - Rope • <strong>E</strong> - Interact • <strong>ESC</strong> - Pause</div>
-      </div>
-      
-      <!-- TWO PLAYER CONTROLS -->
-      <div style="margin-bottom: 20px; background: rgba(65, 105, 225, 0.15); padding: 12px; border-radius: 8px; border-left: 4px solid #4169e1;">
-        <h4 style="font-size: 20px; color: #87ceeb; margin-bottom: 8px;">👥 TWO PLAYER</h4>
-        <div style="border-left: none; padding-left: 0; margin: 0; font-size: 15px;">
-          <strong style="color: #ffd700;">P1 (Brown):</strong> WASD, Q-Whip, SPACE-Bomb, R-Rope, E-Interact<br>
-          <strong style="color: #87ceeb;">P2 (Blue):</strong> Arrow Keys, SHIFT-Whip<br>
-          <span style="color: #ffff00;">⚠️ Shared: health, bombs, ropes, items</span>
-        </div>
-      </div>
-      
-      <!-- ROPE MECHANICS -->
-      <div style="margin-bottom: 20px;">
-        <h4 style="font-size: 20px; color: #8b7355; margin-bottom: 8px;">🪢 ROPES</h4>
-        <div style="font-size: 15px;"><strong>R</strong> - Deploy rope • <strong>W/UP, S/DOWN</strong> - Climb • <strong>A/D, LEFT/RIGHT</strong> - Swing • <strong>SPACE</strong> - Jump off</div>
-      </div>
-      
-      <!-- COLLECTIBLES -->
-      <div style="margin-bottom: 20px;">
-        <h4 style="font-size: 20px; color: #ffd700; margin-bottom: 8px;">💰 COLLECTIBLES</h4>
-        <div style="font-size: 15px;">💰 Small $100, Large $500 • 💎 Sapphire $100, Emerald $200, Ruby $300 • 📦 Crates (press E) • 🔑 Key (unlocks door)</div>
-      </div>
-      
-      <!-- SHOP ITEMS -->
-      <div style="margin-bottom: 20px;">
-        <h4 style="font-size: 20px; color: #ff8c00; margin-bottom: 8px;">🛒 SHOP (Lasts 2 Levels)</h4>
-        <div style="font-size: 15px;">💣 Bombs $200 • 🪢 Ropes $200 • 👢 Spike Boots $800 (walk on spikes, stomp enemies) • 👓 Spectacles $700 (reveal hidden gold) • 🧭 Compass $500 (arrow to door) • 🦸 Cape $900 (glide with W/UP)</div>
-      </div>
-      
-      <!-- ENEMIES -->
-      <div style="margin-bottom: 20px;">
-        <h4 style="font-size: 20px; color: #ff6b6b; margin-bottom: 8px;">👾 ENEMIES</h4>
-        <div style="font-size: 15px;">🕷️ Spider (ceiling crawl) • 🦇 Bat (aggressive flier) • 🐍 Snake (jumps) • 🧔 Caveman (throws rocks) • 💀 Skeleton (reassembles in 3s)</div>
-      </div>
-      
-      <!-- TRAPS -->
-      <div style="margin-bottom: 20px;">
-        <h4 style="font-size: 20px; color: #ff0000; margin-bottom: 8px;">⚠️ HAZARDS</h4>
-        <div style="font-size: 15px;">🔺 Spikes (instant death without boots) • ➡️ Arrow Traps • 💥 Own Bombs • 🪨 Caveman Rocks</div>
-      </div>
-      
-      <!-- QUESTS -->
-      <div style="margin-bottom: 20px; background: rgba(255, 215, 0, 0.15); padding: 12px; border-radius: 8px; border-left: 4px solid #ffd700;">
-        <h4 style="font-size: 20px; color: #ffd700; margin-bottom: 8px;">📜 QUESTS</h4>
-        <div style="border-left: none; padding-left: 0; margin: 0; font-size: 15px;">
-          Find glowing NPC on X-2 levels • Press E to accept • Complete objectives (kill enemies, collect gold, break crates) • Earn bonus gold!
-        </div>
-      </div>
-      
-      <!-- TIPS -->
-      <div style="margin-bottom: 15px;">
-        <h4 style="font-size: 20px; color: #00ffff; margin-bottom: 8px;">💡 TIPS</h4>
-        <div style="font-size: 15px;">✓ Save gold for shop items • ✓ Bombs create shortcuts • ✓ Cape: hold W/UP while falling to glide • ✓ +1 bomb per level (max 8) • ✓ ESC to pause & save</div>
-      </div>
-    </div>
-    <button onclick="showMainMenu()" style="margin-top: 15px;">⬅️ BACK TO MENU</button>
+     <div id="controlsSection" style="max-height: 60vh; overflow-y: auto; margin-top: 20px;">
+  <div style="margin-bottom: 30px;">
+    <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🎮 SINGLE PLAYER CONTROLS</h4>
+    <div><strong>WASD / ARROW KEYS</strong> - Move left/right, climb ropes</div>
+    <div><strong>W / UP</strong> (on ground) - Jump</div>
+    <div><strong>W / UP</strong> (on rope) - Climb up</div>
+    <div><strong>S / DOWN</strong> (on rope) - Climb down</div>
+    <div><strong>SPACE</strong> (on rope) - Jump off rope</div>
+    <div><strong>Q</strong> - Attack with whip</div>
+    <div><strong>SPACE</strong> - Throw bomb</div>
+    <div><strong>R</strong> - Deploy rope</div>
+    <div><strong>E</strong> - Pick up items, break crates, talk to NPCs</div>
+    <div><strong>ESC</strong> - Pause game</div>
   </div>
-      
-      <div style="margin-bottom: 30px;">
-        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🎮 MOVEMENT</h4>
-        <div><strong>WASD / ARROW KEYS</strong> - Move left/right, climb ropes</div>
-        <div><strong>W / UP</strong> (on ground) - Jump</div>
-        <div><strong>W / UP</strong> (on rope) - Climb up</div>
-        <div><strong>S / DOWN</strong> (on rope) - Climb down</div>
-        <div><strong>SPACE</strong> (on rope) - Jump off rope</div>
-      </div>
-      
-      <div style="margin-bottom: 30px;">
-        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">⚔️ COMBAT & TOOLS</h4>
-        <div><strong>CLICK MOUSE</strong> - Attack with whip (aim at enemies!)</div>
-<div><strong>SPACE</strong> - Throw bomb (destroys blocks & enemies)</div>
-        <div><strong>R</strong> - Deploy rope (climb up/down)</div>
-        <div><strong>E</strong> - Pick up items, break crates, talk to shopkeeper or quest givers</div>
-      </div>
-      
-      <div style="margin-bottom: 30px;">
-        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">💰 COLLECTIBLES</h4>
-        <div>💰 <strong>Gold</strong> - Small coins ($100) & large coins ($500)</div>
-        <div>💎 <strong>Gems</strong> - Sapphire ($100), Emerald ($200), Ruby ($300)</div>
-        <div>📦 <strong>Crates</strong> - Break with E for gold inside</div>
-      </div>
-      
-      <div style="margin-bottom: 30px;">
-        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🛒 SHOP ITEMS (Last 2 Levels!)</h4>
-        <div>💣 <strong>Bombs ($200)</strong> - Destroy terrain & enemies</div>
-        <div>🪢 <strong>Ropes ($200)</strong> - Reach high places</div>
-        <div>👢 <strong>Spike Boots ($800)</strong> - Walk on spikes, stomp enemies</div>
-        <div>👓 <strong>Spectacles ($700)</strong> - Reveal hidden cyan gold coins!</div>
-        <div>🧭 <strong>Compass ($500)</strong> - Golden arrow points to exit door</div>
-        <div>🦸 <strong>Cape ($900)</strong> - Hold W/UP while jumping to glide slowly!</div>
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">⚠️ DANGERS</h4>
-        <div style="color: #ff6b6b;">🔺 <strong>Spikes</strong> - Instant death (unless you have spike boots)</div>
-        <div style="color: #ff6b6b;">➡️ <strong>Arrow Traps</strong> - Shoot arrows when you're nearby</div>
-        <div style="color: #ff6b6b;">🦇 <strong>Enemies</strong> - Bat, Snake, Spider, Caveman, Skeleton</div>
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🎯 GOAL</h4>
-        <div>🚪 Find the key and enter the <strong>EXIT DOOR</strong> to advance!</div>
-        <div>📍 Complete 4 sublevels to reach the next world</div>
-        <div>🌍 Worlds: Cave → Jungle → Ice → Volcano (then loops)</div>
-      </div>
-    </div>
-    <button onclick="showMainMenu()" style="margin-top: 20px;">⬅️ BACK TO MENU</button>
+
+  <div style="margin-bottom: 30px;">
+  <h4 style="font-size: 24px; color: #87ceeb; margin-bottom: 10px;">👥 TWO PLAYER CONTROLS</h4>
+  <div><strong>PLAYER 1 (Brown):</strong></div>
+  <div style="margin-left: 20px;">WASD - Move, Q - Whip, SPACE - Bomb, R - Rope, E - Interact</div>
+  <div style="margin-top: 10px;"><strong>PLAYER 2 (Blue):</strong></div>
+  <div style="margin-left: 20px;">Arrow Keys - Move, SHIFT - Whip, CTRL - Bomb, ENTER - Rope</div>
+  <div style="margin-top: 10px; color: #ff6b6b;"><strong>⚠️ SHARED:</strong> Health and key are shared! Each player has their own gold, bombs, and ropes!</div>
+  <div style="margin-top: 10px; color: #ffd700;"><strong>🚪 BOTH PLAYERS</strong> must reach the door to advance!</div>
+</div>
+  
+  <div style="margin-bottom: 30px;">
+    <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">💰 COLLECTIBLES</h4>
+    <div>💰 <strong>Gold</strong> - Small coins ($100) & large coins ($500)</div>
+    <div>💎 <strong>Gems</strong> - Sapphire ($100), Emerald ($200), Ruby ($300)</div>
+    <div>📦 <strong>Crates</strong> - Press E to break for gold inside</div>
+    <div>🔑 <strong>Key</strong> - Required to unlock the exit door!</div>
+  </div>
+  
+  <div style="margin-bottom: 30px;">
+    <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🛒 SHOP ITEMS</h4>
+    <div>💣 <strong>Bombs ($200)</strong> - Destroy terrain & enemies</div>
+    <div>🪢 <strong>Ropes ($200)</strong> - Reach high places</div>
+    <div>👢 <strong>Spike Boots ($800)</strong> - Walk on spikes, stomp enemies (lasts 2 levels)</div>
+    <div>👓 <strong>Spectacles ($700)</strong> - Reveal hidden cyan gold coins! (lasts 2 levels)</div>
+    <div>🧭 <strong>Compass ($500)</strong> - Golden arrow points to exit door (lasts 2 levels)</div>
+    <div>🦸 <strong>Cape ($900)</strong> - Hold W/UP while jumping to glide slowly! (lasts 2 levels)</div>
+  </div>
+  
+  <div style="margin-bottom: 30px;">
+    <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">📜 QUEST SYSTEM</h4>
+    <div>🧙 <strong>Quest Giver</strong> - Look for the glowing NPC with ! above their head</div>
+    <div>📋 <strong>Quests</strong> - Kill enemies, collect gold/gems, destroy blocks, break crates</div>
+    <div>💰 <strong>Rewards</strong> - Complete quests to earn bonus gold!</div>
+    <div>📊 <strong>Progress</strong> - Track your quest progress in the bottom-left corner</div>
+  </div>
+  
+  <div style="margin-bottom: 20px;">
+    <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">⚠️ DANGERS</h4>
+    <div style="color: #ff6b6b;">🔺 <strong>Spikes</strong> - Instant death (unless you have spike boots)</div>
+    <div style="color: #ff6b6b;">➡️ <strong>Arrow Traps</strong> - Shoot arrows when you're nearby</div>
+    <div style="color: #ff6b6b;">🦇 <strong>Bat</strong> - Flies erratically, chases player</div>
+    <div style="color: #ff6b6b;">🐍 <strong>Snake</strong> - Jumps at player, fast movement</div>
+    <div style="color: #ff6b6b;">🕷️ <strong>Spider</strong> - Crawls on ceilings, drops on player</div>
+    <div style="color: #ff6b6b;">🧔 <strong>Caveman</strong> - Throws rocks from distance</div>
+    <div style="color: #ff6b6b;">💀 <strong>Skeleton</strong> - Reassembles after death!</div>
+  </div>
+  
+  <div style="margin-bottom: 20px;">
+    <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">🎯 GOAL</h4>
+    <div>🔑 Find the golden <strong>KEY</strong> hidden in each level</div>
+    <div>🚪 With the key, enter the <strong>EXIT DOOR</strong> to advance!</div>
+    <div>📍 Complete 4 sublevels to reach the next world</div>
+    <div>🌍 Worlds: Cave → Jungle → Ice → Volcano (then loops)</div>
+  </div>
+  
+  <div style="margin-bottom: 20px;">
+    <h4 style="font-size: 24px; color: #ff8c00; margin-bottom: 10px;">💾 SAVE SYSTEM</h4>
+    <div>💾 Press ESC to pause, then click "SAVE GAME"</div>
+    <div>📂 Click "LOAD GAME" from main menu to continue</div>
+    <div>🗑️ Click "DELETE SAVE" to start fresh</div>
+    <div>⚡ Game auto-saves when you advance levels!</div>
+  </div>
+</div>
   </div>
 </div>
 <div id="deathScreen" class="hidden"></div>
@@ -612,7 +609,11 @@ let player2 = {
   onGround: false,
   onRope: false,
   climbing: false,
-  facingRight: true
+  facingRight: true,
+  bombs: 3,
+  ropes: 3,
+  gold: 0,
+  atDoor: false
 };
 
 let twoPlayerMode = false;
@@ -1233,6 +1234,8 @@ let gameState = {
   hasKey: false,
   startTime: Date.now(),
   totalPlayTime: 0,
+  player1AtDoor: false,
+  player2AtDoor: false,
   
   // NEW QUEST TRACKING
   blocksDestroyed: 0,
@@ -2074,20 +2077,39 @@ function spawnGold() {
 }
 
 function updateHUD() {
-  document.getElementById("health").textContent = gameState.health;
-  document.getElementById("bombs").textContent = gameState.bombs;
-  document.getElementById("ropes").textContent = gameState.ropes;
-  document.getElementById("gold").textContent = gameState.gold;
-  document.getElementById("level").textContent = `${gameState.level}-${gameState.sublevel}`;
-  document.getElementById("level").textContent = `${gameState.level}-${gameState.sublevel}`;
-  
-  // Update key indicator
-  let keyIndicator = document.getElementById("keyStatus");
-  if (keyIndicator) {
-    keyIndicator.textContent = gameState.hasKey ? "🔑" : "🔒";
+  if (twoPlayerMode) {
+    // Show two-player layout, hide single-player
+    document.getElementById("singlePlayerHud").style.display = "none";
+    document.getElementById("twoPlayerHud").style.display = "block";
+    
+    // Update two-player HUD
+    document.getElementById("p1bombs2").textContent = gameState.bombs;
+    document.getElementById("p1ropes2").textContent = gameState.ropes;
+    document.getElementById("p1gold2").textContent = gameState.gold;
+    
+    document.getElementById("p2bombs2").textContent = player2.bombs;
+    document.getElementById("p2ropes2").textContent = player2.ropes;
+    document.getElementById("p2gold2").textContent = player2.gold;
+    
+    document.getElementById("health2").textContent = gameState.health;
+    document.getElementById("level2").textContent = `${gameState.level}-${gameState.sublevel}`;
+    document.getElementById("keyStatus2").textContent = gameState.hasKey ? "🔑" : "🔒";
+  } else {
+    // Show single-player layout, hide two-player
+    document.getElementById("singlePlayerHud").style.display = "flex";
+    document.getElementById("twoPlayerHud").style.display = "none";
+    
+    // Update single-player HUD
+    document.getElementById("p1bombs").textContent = gameState.bombs;
+    document.getElementById("p1ropes").textContent = gameState.ropes;
+    document.getElementById("p1gold").textContent = gameState.gold;
+    
+    document.getElementById("health").textContent = gameState.health;
+    document.getElementById("level").textContent = `${gameState.level}-${gameState.sublevel}`;
+    document.getElementById("keyStatus").textContent = gameState.hasKey ? "🔑" : "🔒";
   }
   
-  // Update powerup display
+  // Update powerup display (same for both modes)
   let powerupsHTML = '';
   if (gameState.hasCompass) {
     powerupsHTML += '<div class="powerup-badge">🧭 Compass</div>';
@@ -2158,6 +2180,13 @@ function resetLevel() {
   if (gameState.bombs < 8) {
     gameState.bombs += 1;
   }
+  // Reset player 2 resources
+  if (twoPlayerMode) {
+    player2.bombs = 3;
+    player2.ropes = 3;
+    gameState.player1AtDoor = false;
+    gameState.player2AtDoor = false;
+  }
 
 
   updateHUD();
@@ -2196,11 +2225,13 @@ let keys2 = {}; // Player 2 keys
 document.addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
 
-  // Player 1 controls (WASD + Arrow keys in single player)
-  if (k === "arrowleft") keys["a"] = true;
-  if (k === "arrowright") keys["d"] = true;
-  if (k === "arrowup") keys["w"] = true;
-  if (k === "arrowdown") keys["s"] = true;
+  // Player 1 controls (WASD + Arrow keys ONLY in single player)
+  if (!twoPlayerMode) {
+    if (k === "arrowleft") keys["a"] = true;
+    if (k === "arrowright") keys["d"] = true;
+    if (k === "arrowup") keys["w"] = true;
+    if (k === "arrowdown") keys["s"] = true;
+  }
 
   // Player 2 controls (Arrow keys ONLY in two-player mode)
   if (twoPlayerMode) {
@@ -2233,15 +2264,15 @@ document.addEventListener("keydown", e => {
     whip.angle = player.facingRight ? 0 : Math.PI;
   }
   
-  // Player 2 whip (Shift key) - only in two player mode
-  if (twoPlayerMode && e.key === "Shift" && !whip2.active) {
+  // Player 2 whip (Right Shift key) - only in two player mode
+  if (twoPlayerMode && e.key === "Shift" && e.location === 2 && !whip2.active) {
     whip2.active = true;
     whip2.frames = 12;
     whip2.flip = !player2.facingRight;
     whip2.angle = player2.facingRight ? 0 : Math.PI;
   }
   
-  if (e.key === " " && gameState.bombs > 0 && !whip.active) {
+  if (e.key === " " && gameState.bombs > 0 && !whip.active && !twoPlayerMode) {
     gameState.bombs--;
     gameState.bombsUsed++;
     checkQuestProgress();
@@ -2255,9 +2286,44 @@ document.addEventListener("keydown", e => {
       exploded: false,
       onGround: false
     });
-    showNotification("💣 BOMB THROWN!");
+    showNotification("💣 P1 BOMB THROWN!");
   }
   
+  // Player 1 bomb in two-player mode
+  if (twoPlayerMode && e.key === " " && gameState.bombs > 0 && !whip.active) {
+    gameState.bombs--;
+    gameState.bombsUsed++;
+    checkQuestProgress();
+    updateHUD();
+    bombs.push({
+      x: player.x + (player.facingRight ? player.width : -TILE),
+      y: player.y + player.height / 2,
+      vx: player.facingRight ? 10 : -10,
+      vy: -5,
+      timer: 90,
+      exploded: false,
+      onGround: false
+    });
+    showNotification("💣 P1 BOMB THROWN!");
+  }
+  
+  // Player 2 bomb (/ key)
+  if (twoPlayerMode && e.key === "/" && player2.bombs > 0 && !whip2.active) {
+    player2.bombs--;
+    updateHUD();
+    bombs.push({
+      x: player2.x + (player2.facingRight ? player2.width : -TILE),
+      y: player2.y + player2.height / 2,
+      vx: player2.facingRight ? 10 : -10,
+      vy: -5,
+      timer: 90,
+      exploded: false,
+      onGround: false
+    });
+    showNotification("💣 P2 BOMB THROWN!");
+  }
+  
+ // Player 1 rope
   if (e.key.toLowerCase() === "r" && gameState.ropes > 0) {
     gameState.ropes--;
     updateHUD();
@@ -2276,7 +2342,30 @@ document.addEventListener("keydown", e => {
     }
     
     if (ropeLength > 0) {
-      showNotification("🪢 ROPE DEPLOYED!");
+      showNotification("🪢 P1 ROPE DEPLOYED!");
+    }
+  }
+  
+  // Player 2 rope (Return/Enter key)
+  if (twoPlayerMode && (e.key === "Enter" || e.key === "Return") && player2.ropes > 0) {
+    player2.ropes--;
+    updateHUD();
+    
+    let ropeX = Math.floor((player2.x + player2.width/2) / TILE) * TILE;
+    let ropeY = Math.floor(player2.y / TILE) * TILE;
+    
+    let ropeLength = 0;
+    for (let i = 0; i < 8; i++) {
+      if (!solidAt(ropeX + TILE/2, ropeY - i * TILE)) {
+        ropes.push({ x: ropeX, y: ropeY - i * TILE, segment: i });
+        ropeLength++;
+      } else {
+        break;
+      }
+    }
+    
+    if (ropeLength > 0) {
+      showNotification("🪢 P2 ROPE DEPLOYED!");
     }
   }
   
@@ -2313,6 +2402,69 @@ document.addEventListener("keydown", e => {
       }
       return true;
     });
+    
+  // Player 2 interact (Period key)
+  if (twoPlayerMode && e.key === ".") {
+    // Pick up items for Player 2
+    items = items.filter(item => {
+      if (!item || item.collected) return false;
+      if (
+        Math.abs(player2.x - item.x) < TILE &&
+        Math.abs(player2.y - item.y) < TILE
+      ) {
+        if (item.type === 'bombs') {
+          player2.bombs += 3;
+          showNotification("💣 P2 +3 BOMBS!");
+        } else if (item.type === 'ropes') {
+          player2.ropes += 3;
+          showNotification("🪢 P2 +3 ROPES!");
+        } else if (item.type === 'spikeboots') {
+          gameState.hasSpikeBoots = true;
+          showNotification("👢 P2 SPIKE BOOTS!");
+        } else if (item.type === 'spectacles') {
+          gameState.hasSpectacles = true;
+          showNotification("👓 P2 SPECTACLES!");
+        } else if (item.type === 'compass') {
+          gameState.hasCompass = true;
+          showNotification("🧭 P2 COMPASS!");
+        }
+        updateHUD();
+        item.collected = true;
+        return false;
+      }
+      return true;
+    });
+    
+    // Break crates for Player 2
+    crates.forEach(crate => {
+      if (!crate.broken && Math.abs(player2.x - crate.x) < TILE * 1.5 && Math.abs(player2.y - crate.y) < TILE * 1.5) {
+        crate.broken = true;
+        gameState.cratesBreaked++;
+        checkQuestProgress();
+        
+        for (let i = 0; i < 10; i++) {
+          particles.push({
+            x: crate.x + TILE/2,
+            y: crate.y + TILE/2,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8 - 2,
+            life: 30,
+            size: Math.random() * 4 + 2,
+            color: '#8b7355'
+          });
+        }
+        
+        if (Math.random() > 0.5) {
+          gold.push({
+            x: crate.x,
+            y: crate.y,
+            value: Math.random() > 0.7 ? 500 : 200,
+            pulse: Math.random() * Math.PI * 2
+          });
+        }
+      }
+    });
+  }
     
     // Break crates
     crates.forEach(crate => {
@@ -2360,10 +2512,13 @@ document.addEventListener("keydown", e => {
 document.addEventListener("keyup", e => {
   const k = e.key.toLowerCase();
 
-  if (k === "arrowleft") keys["a"] = false;
-  if (k === "arrowright") keys["d"] = false;
-  if (k === "arrowup") keys["w"] = false;
-  if (k === "arrowdown") keys["s"] = false;
+  // Player 1 controls (WASD + Arrow keys ONLY in single player)
+  if (!twoPlayerMode) {
+    if (k === "arrowleft") keys["a"] = false;
+    if (k === "arrowright") keys["d"] = false;
+    if (k === "arrowup") keys["w"] = false;
+    if (k === "arrowdown") keys["s"] = false;
+  }
 
   // Player 2 key release (ONLY in two-player mode)
   if (twoPlayerMode) {
@@ -2374,6 +2529,15 @@ document.addEventListener("keyup", e => {
   }
 
   keys[k] = false;
+});
+// **Add the click event listener here:**
+canvas.addEventListener('click', () => {
+  if (gameStarted && !twoPlayerMode && !whip.active) {
+    whip.active = true;
+    whip.frames = 12;
+    whip.flip = !player.facingRight;
+    whip.angle = player.facingRight ? 0 : Math.PI;
+  }
 });
 
 canvas.addEventListener('mousemove', (e) => {
@@ -3224,6 +3388,59 @@ function update() {
     }
     return true;
   });
+  // Player 2 gold collection
+  if (twoPlayerMode) {
+    gold = gold.filter(g => {
+      if (!g) return false;
+      if (
+        Math.abs(player2.x - g.x) < TILE &&
+        Math.abs(player2.y - g.y) < TILE
+      ) {
+        player2.gold += g.value;
+        updateHUD();
+        for (let i = 0; i < 8; i++) {
+          particles.push({
+            x: g.x + TILE / 2,
+            y: g.y + TILE / 2,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5 - 2,
+            life: 25,
+            size: 3,
+            color: '#4169e1'
+          });
+        }
+        return false;
+      }
+      return true;
+    });
+    
+    // Player 2 gem collection
+    gems = gems.filter(g => {
+      if (!g) return false;
+      if (
+        Math.abs(player2.x - g.x) < TILE &&
+        Math.abs(player2.y - g.y) < TILE
+      ) {
+        player2.gold += g.value;
+        updateHUD();
+        let color = g.type === 'ruby' ? '#ff0000' : g.type === 'emerald' ? '#00ff00' : '#0080ff';
+        for (let i = 0; i < 12; i++) {
+          particles.push({
+            x: g.x + TILE / 2,
+            y: g.y + TILE / 2,
+            vx: (Math.random() - 0.5) * 6,
+            vy: (Math.random() - 0.5) * 6 - 3,
+            life: 30,
+            size: 4,
+            color: color
+          });
+        }
+        showNotification(`💎 P2 +$${g.value}!`);
+        return false;
+      }
+      return true;
+    });
+  }
   
   gems = gems.filter(g => {
     if (!g) return false;
@@ -3751,14 +3968,39 @@ function update() {
 
  const doorCenterX = door.x * TILE + TILE;
   const doorCenterY = door.y * TILE + TILE / 2;
-  if (
+  
+  // Player 1 door check
+  gameState.player1AtDoor = (
     Math.abs(player.x + player.width / 2 - doorCenterX) < TILE * 1.5 &&
-    Math.abs(player.y + player.height / 2 - doorCenterY) < TILE * 1.5
-  ) {
-    if (gameState.hasKey) {
+    Math.abs(player.y + player.height / 2 - doorCenterY) < TILE * 1.5 &&
+    gameState.hasKey
+  );
+  
+  // Player 2 door check
+  if (twoPlayerMode) {
+    gameState.player2AtDoor = (
+      Math.abs(player2.x + player2.width / 2 - doorCenterX) < TILE * 1.5 &&
+      Math.abs(player2.y + player2.height / 2 - doorCenterY) < TILE * 1.5 &&
+      gameState.hasKey
+    );
+    
+    // Both players must be at door to advance
+    if (gameState.player1AtDoor && gameState.player2AtDoor) {
       nextLevel();
-    } else {
-      // Show notification that key is needed
+    } else if (gameState.player1AtDoor && !gameState.player2AtDoor) {
+      showNotification("🚪 P1 WAITING FOR P2...");
+    } else if (gameState.player2AtDoor && !gameState.player1AtDoor) {
+      showNotification("🚪 P2 WAITING FOR P1...");
+    }
+  } else {
+    // Single player
+    if (gameState.player1AtDoor) {
+      nextLevel();
+    } else if (
+      Math.abs(player.x + player.width / 2 - doorCenterX) < TILE * 1.5 &&
+      Math.abs(player.y + player.height / 2 - doorCenterY) < TILE * 1.5 &&
+      !gameState.hasKey
+    ) {
       showNotification("🔒 DOOR LOCKED! Find the key!");
     }
   }
@@ -3851,6 +4093,11 @@ function nextLevel() {
   gameState.ropes = Math.min(gameState.ropes + 1, 8);
   if (gameState.health < 4) gameState.health++;
   updateHUD();
+  // Give resources to both players
+  if (twoPlayerMode) {
+    player2.bombs = Math.min(player2.bombs + 1, 8);
+    player2.ropes = Math.min(player2.ropes + 1, 8);
+  }
   resetLevel();
   saveGame(); // Auto-save after each level
 }
@@ -4580,6 +4827,9 @@ function gameLoop() {
   draw();
   requestAnimationFrame(gameLoop);
 }
+// Add this after your keyup event listener
+
+
 
 // Initialize
 generateCaveMap();
