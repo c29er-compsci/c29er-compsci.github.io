@@ -1,131 +1,244 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Cookie Clicker Lite</title>
+<title>3D Baseball Advanced</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f5efe6;
-    text-align: center;
-    padding: 40px;
-  }
-
-  h1 {
-    font-size: 3em;
-  }
-
-  #cookie {
-    font-size: 120px;
-    cursor: pointer;
-    user-select: none;
-    transition: transform 0.1s;
-  }
-
-  #cookie:active {
-    transform: scale(0.95);
-  }
-
-  .stats {
-    font-size: 1.4em;
-    margin: 20px 0;
-  }
-
-  .shop {
-    margin-top: 30px;
-  }
-
-  button {
-    padding: 10px 16px;
-    font-size: 1em;
-    margin: 6px;
-    cursor: pointer;
-  }
+body{margin:0;overflow:hidden;background:#0b1d2a;color:white;font-family:Arial}
+#ui{
+position:absolute;top:10px;left:10px;z-index:10
+}
+button{padding:8px 16px;margin:4px;font-size:14px}
 </style>
 </head>
-
 <body>
 
-<h1>🍪 Cookie Clicker</h1>
-
-<div id="cookie">🍪</div>
-
-<div class="stats">
-  Cookies: <span id="cookies">0</span><br>
-  Cookies per second: <span id="cps">0</span>
+<div id="ui">
+<button onclick="pitch()">Pitch</button>
+<p id="feedback"></p>
+<p>AVG: <span id="avg">0.000</span></p>
 </div>
 
-<div class="shop">
-  <h2>Shop</h2>
-  <button onclick="buyCursor()">🖱 Cursor (10 cookies)</button><br>
-  <button onclick="buyGrandma()">👵 Grandma (50 cookies)</button>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 <script>
-  let cookies = 0;
-  let cps = 0;
 
-  let cursors = 0;
-  let grandmas = 0;
+////////////////////
+// SCENE SETUP
+////////////////////
+let scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+let renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+scene.background = new THREE.Color(0x87ceeb);
 
-  // Load save
-  if (localStorage.getItem("cookieSave")) {
-    let save = JSON.parse(localStorage.getItem("cookieSave"));
-    cookies = save.cookies;
-    cursors = save.cursors;
-    grandmas = save.grandmas;
-    cps = cursors + grandmas * 5;
-  }
+scene.add(new THREE.AmbientLight(0xffffff,0.5));
+let light = new THREE.DirectionalLight(0xffffff,1);
+light.position.set(10,20,10);
+scene.add(light);
 
-  const cookieEl = document.getElementById("cookie");
-  const cookiesEl = document.getElementById("cookies");
-  const cpsEl = document.getElementById("cps");
+////////////////////
+// FIELD
+////////////////////
+let field = new THREE.Mesh(
+new THREE.CircleGeometry(60,64),
+new THREE.MeshPhongMaterial({color:0x1f8f3f})
+);
+field.rotation.x = -Math.PI/2;
+scene.add(field);
 
-  cookieEl.onclick = () => {
-    cookies++;
-    update();
-  };
+////////////////////
+// STRIKE ZONE
+////////////////////
+let zone = new THREE.Mesh(
+new THREE.BoxGeometry(4,4,0.1),
+new THREE.MeshBasicMaterial({color:0xffffff, wireframe:true})
+);
+zone.position.set(0,2,3);
+scene.add(zone);
 
-  function buyCursor() {
-    if (cookies >= 10) {
-      cookies -= 10;
-      cursors++;
-      cps += 1;
-      update();
-    }
-  }
+////////////////////
+// BALL
+////////////////////
+let ball = new THREE.Mesh(
+new THREE.SphereGeometry(0.4,32,32),
+new THREE.MeshPhongMaterial({color:0xffffff})
+);
+scene.add(ball);
 
-  function buyGrandma() {
-    if (cookies >= 50) {
-      cookies -= 50;
-      grandmas++;
-      cps += 5;
-      update();
-    }
-  }
+////////////////////
+// PCI (shrinks based on contact stat)
+////////////////////
+let contactStat = 70; // out of 100
+let pciSize = 1.5 - (contactStat/100);
+let pci = new THREE.Mesh(
+new THREE.RingGeometry(pciSize, pciSize+0.3, 32),
+new THREE.MeshBasicMaterial({color:0xffff00, side:THREE.DoubleSide})
+);
+pci.rotation.x = -Math.PI/2;
+pci.position.set(0,2,4);
+scene.add(pci);
 
-  function update() {
-    cookiesEl.textContent = Math.floor(cookies);
-    cpsEl.textContent = cps;
-    saveGame();
-  }
+////////////////////
+// BAT
+////////////////////
+let bat = new THREE.Mesh(
+new THREE.CylinderGeometry(0.2,0.4,6,32),
+new THREE.MeshPhongMaterial({color:0x8b4513})
+);
+bat.rotation.z = Math.PI/2;
+bat.position.set(0,2,5);
+scene.add(bat);
 
-  function saveGame() {
-    localStorage.setItem("cookieSave", JSON.stringify({
-      cookies,
-      cursors,
-      grandmas
-    }));
-  }
+////////////////////
+// FIELDERS
+////////////////////
+let fielderGeo = new THREE.BoxGeometry(1,2,1);
+let fielderMat = new THREE.MeshPhongMaterial({color:0xff0000});
+let fielder = new THREE.Mesh(fielderGeo,fielderMat);
+fielder.position.set(0,1,-20);
+scene.add(fielder);
 
-  // Passive income
-  setInterval(() => {
-    cookies += cps / 10;
-    update();
-  }, 100);
+////////////////////
+// CAMERA
+////////////////////
+camera.position.set(0,6,15);
+camera.lookAt(0,2,0);
 
-  update();
+////////////////////
+// GAME VARIABLES
+////////////////////
+let pitching=false;
+let velocity = new THREE.Vector3();
+let pitchType="";
+let swingStart=0;
+let hits=0;
+let atBats=0;
+
+////////////////////
+// MOUSE AIM
+////////////////////
+window.addEventListener("mousemove",(e)=>{
+let x=(e.clientX/window.innerWidth)*2-1;
+let y=-(e.clientY/window.innerHeight)*2+1;
+pci.position.x=x*5;
+pci.position.y=2+y*3;
+});
+
+////////////////////
+// POWER SWING (hold)
+////////////////////
+window.addEventListener("mousedown",()=>{
+swingStart=Date.now();
+});
+
+window.addEventListener("mouseup",()=>{
+if(!pitching) return;
+
+let holdTime=(Date.now()-swingStart)/1000;
+let power=Math.min(holdTime,1.5);
+
+checkContact(power);
+});
+
+////////////////////
+// PITCH
+////////////////////
+function pitch(){
+if(pitching) return;
+
+pitching=true;
+ball.position.set((Math.random()-0.5)*2,2+(Math.random()-0.5)*2,-25);
+
+pitchType=Math.random()<0.5?"fast":"curve";
+
+if(pitchType==="fast"){
+velocity.set(0,0,0.8);
+}else{
+velocity.set(0.05,0,0.7);
+}
+document.getElementById("feedback").innerText="";
+}
+
+////////////////////
+// CONTACT LOGIC
+////////////////////
+function checkContact(power){
+let distance=ball.position.distanceTo(pci.position);
+let timing=Math.abs(ball.position.z-3);
+
+atBats++;
+
+if(distance<pciSize+0.5 && timing<2){
+let timingLabel="";
+if(timing<0.5) timingLabel="Perfect";
+else if(ball.position.z<3) timingLabel="Early";
+else timingLabel="Late";
+
+document.getElementById("feedback").innerText="💥 "+timingLabel+" Contact";
+
+hits++;
+
+let angleX=(pci.position.x-ball.position.x)*2;
+let launch=4+power*6;
+velocity.set(angleX,launch,-10-power*8);
+
+}else{
+document.getElementById("feedback").innerText="❌ Miss";
+}
+
+updateAVG();
+pitching=false;
+}
+
+function updateAVG(){
+let avg=(hits/atBats)||0;
+document.getElementById("avg").innerText=avg.toFixed(3);
+}
+
+////////////////////
+// ANIMATION LOOP
+////////////////////
+function animate(){
+requestAnimationFrame(animate);
+
+if(pitching){
+ball.position.add(velocity);
+
+if(pitchType==="curve"){
+velocity.x+=0.002;
+}
+
+if(ball.position.z>6){
+pitching=false;
+}
+}
+else if(ball.position.z<10){
+ball.position.add(velocity);
+velocity.y-=0.2;
+
+fielderChase();
+}
+
+renderer.render(scene,camera);
+}
+animate();
+
+////////////////////
+// FIELDER AI
+////////////////////
+function fielderChase(){
+let target=ball.position.clone();
+target.y=1;
+fielder.position.lerp(target,0.02);
+}
+
+window.addEventListener("resize",()=>{
+camera.aspect=window.innerWidth/window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
 </script>
-
 </body>
 </html>

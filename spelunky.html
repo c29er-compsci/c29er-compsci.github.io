@@ -1234,16 +1234,17 @@ let gameState = {
   hasSpikeBoots: false,
   hasCape: false,
   hasCompass: false,
-  hasSpectacles: false,
+  hasBouncyShoes: false,
+  bouncyShoesLevels: 0,
   spikeBootsLevels: 0,
   capeLevels: 0,
   compassLevels: 0,
-  spectaclesLevels: 0,
   shopkeeperAngry: false,
   deathCause: '',
   damageInvincibility: 0,
   capeSlowFall: false,
   hasKey: false,
+  hasReviveToken: false,
   startTime: Date.now(),
   totalPlayTime: 0,
   player1AtDoor: false,
@@ -1313,11 +1314,13 @@ function quitToMenu() {
   document.getElementById("pauseMenu").classList.add("hidden");
   document.getElementById("hud").classList.add("hidden");
   document.getElementById("menu").classList.remove("hidden");
+  document.getElementById("menu").style.display = ''; // Remove inline display style
   
   let deathScreen = document.getElementById("deathScreen");
-deathScreen.classList.remove("active");
-deathScreen.classList.add("hidden");
-deathScreen.innerHTML = "";
+  deathScreen.classList.remove("active");
+  deathScreen.classList.add("hidden");
+  deathScreen.style.display = 'none';
+  deathScreen.innerHTML = "";
   
   gameStarted = false;
   saveGame(); // Auto-save when quitting
@@ -1391,6 +1394,8 @@ function startGame(twoPlayers = false) {
 function restartGame() {
   // Hide death screen immediately
   const deathScreen = document.getElementById("deathScreen");
+  deathScreen.classList.remove("active");
+  deathScreen.classList.add("hidden");
   deathScreen.style.display = 'none';
   deathScreen.innerHTML = "";
 
@@ -1420,21 +1425,27 @@ function restartGame() {
     health: 4,
     gold: 0,
     kills: 0,
-    hasSpikeBoots: false,
+   hasSpikeBoots: false,
     hasCape: false,
     hasCompass: false,
-    hasSpectacles: false,
+    hasBouncyShoes: false,
     spikeBootsLevels: 0,
     capeLevels: 0,
     compassLevels: 0,
-    spectaclesLevels: 0,
+    bouncyShoesLevels: 0,
+    hasReviveToken: false,
     shopkeeperAngry: false,
     deathCause: '',
     damageInvincibility: 0,
     capeSlowFall: false,
     hasKey: false,
     startTime: Date.now(),
-    totalPlayTime: 0
+    totalPlayTime: 0,
+    blocksDestroyed: 0, gemsCollected: 0,
+    cratesBreaked: 0, bombsUsed: 0,
+    spidersKilled: 0, batsKilled: 0,
+    snakesKilled: 0, cavemenKilled: 0,
+    skeletonsKilled: 0
   };
 
   // Update theme and level
@@ -1975,8 +1986,9 @@ const SHOP_ITEM_POOL = [
   { type: 'ropes', cost: 200 },
   { type: 'compass', cost: 500 },
   { type: 'spikeboots', cost: 800 },
-  { type: 'spectacles', cost: 700 },
-  { type: 'cape', cost: 900 }
+  { type: 'bouncyshoes', cost: 700 },
+  { type: 'cape', cost: 900 },
+  { type: 'revivetoken', cost: 1500 }
 ];
 
 function generateShop() {
@@ -2490,6 +2502,20 @@ document.addEventListener("keydown", e => {
       return true;
     });
     
+    // Player 2 shop interaction
+    shops.forEach(shop => {
+      if (!shop || !shop.shopkeeper) return;
+      let sk = shop.shopkeeper;
+      if (Math.abs(player2.x - sk.x) < TILE * 2 &&
+          Math.abs(player2.y - sk.y) < TILE * 2 &&
+          !shopMenuOpen) {
+        openShopMenu(shop);
+      }
+    });
+    
+    // Player 2 quest giver interaction
+    interactWithQuestGiver2();
+    
     // Break crates for Player 2
     crates.forEach(crate => {
       if (!crate.broken && Math.abs(player2.x - crate.x) < TILE * 1.5 && Math.abs(player2.y - crate.y) < TILE * 1.5) {
@@ -2689,14 +2715,7 @@ function updateCamera() {
 function die(cause) {
   gameState.deathCause = cause;
   gameStarted = false;
-  
-  // Hide HUD and pause menu
-  document.getElementById("hud").classList.add("hidden");
-  document.getElementById("pauseMenu").classList.add("hidden");
-  
-  // Show main menu
-  document.getElementById("menu").style.display = 'block';
-  
+
   // Death particles
   for (let i = 0; i < 30; i++) {
     particles.push({
@@ -2709,32 +2728,109 @@ function die(cause) {
       color: '#ff0000'
     });
   }
-  
-  // Optional: Reset game state
+
+  // Hide HUD and pause menu
+  document.getElementById("hud").classList.add("hidden");
+  document.getElementById("pauseMenu").classList.add("hidden");
+
+  // Build death screen
+  const deathScreen = document.getElementById("deathScreen");
+  deathScreen.classList.remove("hidden");
+  deathScreen.classList.add("active");
+
+  let quote = DEATH_QUOTES[Math.floor(Math.random() * DEATH_QUOTES.length)];
+  let reviveHTML = gameState.hasReviveToken ? `
+    <button onclick="useReviveToken()" style="
+      background: linear-gradient(135deg, #00ff88, #00cc66);
+      color: #000; border: 5px solid #000;
+      padding: 20px 50px; font-size: 32px;
+      font-family: 'Bungee', cursive; cursor: pointer;
+      margin: 15px; letter-spacing: 2px;
+      box-shadow: 0 0 40px rgba(0,255,136,0.8);">
+      💎 USE REVIVE TOKEN
+    </button><br>` : `
+    <p style="color:#888; font-size:20px; margin:10px 0 20px;">
+      (No revive token - buy one from the shop!)
+    </p>`;
+
+  deathScreen.innerHTML = `
+    <div style="text-align:center; padding: 40px; font-family: 'Bungee', cursive;">
+      <h1 style="font-size:90px; color:#ff0000; margin:0;
+        text-shadow: 0 0 40px #ff0000, 6px 6px 0 #000;
+        font-family:'Bangers',cursive; letter-spacing:10px;">
+        YOU DIED
+      </h1>
+      <p class="death-cause">☠️ ${cause} ☠️</p>
+      <p style="color:#aaa; font-size:22px; font-style:italic; margin:10px 0 30px;">
+        "${quote}"
+      </p>
+      <div class="stat-line">🏆 Level: ${gameState.level}-${gameState.sublevel}</div>
+      <div class="stat-line">💰 Gold: $${gameState.gold}</div>
+      <div class="stat-line">💀 Kills: ${gameState.kills}</div>
+      <br>
+      ${reviveHTML}
+      <button onclick="restartGame(); this.disabled=true;" style="
+        background: linear-gradient(135deg, #ff8c00, #ffd700);
+        color: #000; border: 5px solid #000;
+        padding: 20px 50px; font-size: 32px;
+        font-family: 'Bungee', cursive; cursor: pointer;
+        margin: 15px; letter-spacing: 2px;">
+        🔄 TRY AGAIN
+      </button>
+      <button onclick="quitToMenu(); this.disabled=true;" style="
+        background: linear-gradient(135deg, #ff0000, #aa0000);
+        color: #fff; border: 5px solid #000;
+        padding: 20px 50px; font-size: 32px;
+        font-family: 'Bungee', cursive; cursor: pointer;
+        margin: 15px; letter-spacing: 2px;">
+        🚪 MAIN MENU
+      </button>
+    </div>`;
+
+  // Reset game state AFTER building the screen
   gameState = {
-    level: 1,
-    sublevel: 1,
-    bombs: 3,
-    ropes: 3,
-    health: 4,
-    gold: 0,
-    kills: 0,
-    hasSpikeBoots: false,
-    hasCape: false,
-    hasCompass: false,
-    hasSpectacles: false,
-    spikeBootsLevels: 0,
-    capeLevels: 0,
-    compassLevels: 0,
-    spectaclesLevels: 0,
-    shopkeeperAngry: false,
-    deathCause: '',
-    damageInvincibility: 0,
-    capeSlowFall: false,
-    hasKey: false,
-    startTime: Date.now(),
-    totalPlayTime: 0
+    level: 1, sublevel: 1,
+    bombs: 3, ropes: 3,
+    health: 4, gold: 0, kills: 0,
+    hasSpikeBoots: false, hasCape: false,
+    hasCompass: false, hasBouncyShoes: false,
+    spikeBootsLevels: 0, capeLevels: 0,
+    compassLevels: 0, bouncyShoesLevels: 0,
+    hasReviveToken: false,
+    shopkeeperAngry: false, deathCause: '',
+    damageInvincibility: 0, capeSlowFall: false,
+    hasKey: false, startTime: Date.now(),
+    totalPlayTime: 0,
+    player1AtDoor: false, player2AtDoor: false,
+    blocksDestroyed: 0, gemsCollected: 0,
+    cratesBreaked: 0, bombsUsed: 0,
+    spidersKilled: 0, batsKilled: 0,
+    snakesKilled: 0, cavemenKilled: 0,
+    skeletonsKilled: 0
   };
+}
+
+function useReviveToken() {
+  const deathScreen = document.getElementById("deathScreen");
+  deathScreen.classList.remove("active");
+  deathScreen.classList.add("hidden");
+  deathScreen.innerHTML = "";
+
+  gameState.health = 4;
+  gameState.hasReviveToken = false;
+  gameState.damageInvincibility = 120;
+  gameStarted = true;
+
+  document.getElementById("hud").classList.remove("hidden");
+  
+  // Respawn player at start
+  player.x = 4 * TILE;
+  player.y = 2 * TILE;
+  player.vx = 0;
+  player.vy = 0;
+
+  updateHUD();
+  showNotification("💎 REVIVED! 4 health restored!");
 }
 
 function takeDamage(amount, cause) {
@@ -2857,14 +2953,17 @@ function buyShopItem(index) {
       gameState.hasSpikeBoots = true;
       gameState.spikeBootsLevels = 2; // Lasts 2 levels
       showNotification("👢 SPIKE BOOTS (2 levels)!");
-    } else if (item.type === 'spectacles') {
-      gameState.hasSpectacles = true;
-      gameState.spectaclesLevels = 2; // Lasts 2 levels
-      showNotification("👓 SPECTACLES (2 levels)!");
+    } else if (item.type === 'bouncyshoes') {
+      gameState.hasBouncyShoes = true;
+      gameState.bouncyShoesLevels = 2;
+      showNotification("👟 BOUNCY SHOES (2 levels)!");
     } else if (item.type === 'cape') {
       gameState.hasCape = true;
-      gameState.capeLevels = 2; // Lasts 2 levels
+      gameState.capeLevels = 2;
       showNotification("🦸 CAPE (2 levels)!");
+    } else if (item.type === 'revivetoken') {
+      gameState.hasReviveToken = true;
+      showNotification("💎 REVIVE TOKEN! One free life!");
     }
     
     currentShop.items.splice(index, 1);
@@ -2981,11 +3080,11 @@ function completeQuest() {
   }, 3000);
 }
 
+
+  // Around line 1766, replace the incomplete function with:
 function interactWithQuestGiver() {
   if (!questGiver) return;
-  
   let dist = Math.hypot(player.x - questGiver.x, player.y - questGiver.y);
-  
   if (dist < TILE * 2) {
     if (!activeQuest) {
       generateRandomQuest();
@@ -2997,6 +3096,19 @@ function interactWithQuestGiver() {
   }
 }
 
+function interactWithQuestGiver2() {
+  if (!questGiver) return;
+  let dist = Math.hypot(player2.x - questGiver.x, player2.y - questGiver.y);
+  if (dist < TILE * 2) {
+    if (!activeQuest) {
+      generateRandomQuest();
+    } else if (activeQuest.completed) {
+      showNotification("🎉 Quest already completed!");
+    } else {
+      showNotification(`📋 ${activeQuest.description} (${questProgress.current || 0}/${activeQuest.amount})`);
+    }
+  }
+}
 
 function update() {
   if (!gameStarted) return;
@@ -3054,7 +3166,7 @@ function update() {
     }
 
    if (keys["w"] && player.onGround) {
-      player.vy = -14;
+      player.vy = gameState.hasBouncyShoes ? -22 : -14;
       player.onGround = false;
     }
 
@@ -3277,6 +3389,15 @@ function update() {
       } else {
         takeDamage(1, "Shot by arrow trap");
       }
+      return false;
+    }
+    if (twoPlayerMode &&
+      player2.x < arrow.x + 20 &&
+      player2.x + player2.width > arrow.x &&
+      player2.y < arrow.y + 10 &&
+      player2.y + player2.height > arrow.y
+    ) {
+      takeDamage(1, "P2 shot by arrow");
       return false;
     }
     return true;
@@ -3506,7 +3627,7 @@ function update() {
     }
     return true;
   });
-  // KEY COLLECTION
+ // KEY COLLECTION - Player 1
   if (!key.collected && 
       Math.abs(player.x - key.x) < TILE && 
       Math.abs(player.y - key.y) < TILE) {
@@ -3528,6 +3649,28 @@ function update() {
     }
     
     showNotification("🔑 KEY COLLECTED! Door unlocked!");
+    screenShake.intensity = 8;
+  }
+  
+  // KEY COLLECTION - Player 2
+  if (twoPlayerMode && !key.collected &&
+      Math.abs(player2.x - key.x) < TILE &&
+      Math.abs(player2.y - key.y) < TILE) {
+    key.collected = true;
+    gameState.hasKey = true;
+    updateHUD();
+    for (let i = 0; i < 20; i++) {
+      particles.push({
+        x: key.x + TILE / 2,
+        y: key.y + TILE / 2,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8 - 4,
+        life: 40,
+        size: 5,
+        color: '#4169e1'
+      });
+    }
+    showNotification("🔑 P2 GOT THE KEY! Door unlocked!");
     screenShake.intensity = 8;
   }
 
@@ -4106,13 +4249,13 @@ function nextLevel() {
   // Track powerup counters (decrement each level)
   if (gameState.compassLevels > 0) gameState.compassLevels--;
   if (gameState.spikeBootsLevels > 0) gameState.spikeBootsLevels--;
-  if (gameState.spectaclesLevels > 0) gameState.spectaclesLevels--;
+ if (gameState.bouncyShoesLevels > 0) gameState.bouncyShoesLevels--;
   if (gameState.capeLevels > 0) gameState.capeLevels--;
   
   // Remove powerups if their counter reaches 0
   if (gameState.compassLevels === 0) gameState.hasCompass = false;
   if (gameState.spikeBootsLevels === 0) gameState.hasSpikeBoots = false;
-  if (gameState.spectaclesLevels === 0) gameState.hasSpectacles = false;
+  if (gameState.bouncyShoesLevels === 0) gameState.hasBouncyShoes = false;
   if (gameState.capeLevels === 0) gameState.hasCape = false;
   
   if (gameState.sublevel > 4) {
@@ -4874,7 +5017,9 @@ if (activeQuest && !activeQuest.completed) {
   
   // Compass indicator
   if (gameState.hasCompass) {
-    let angle = Math.atan2(door.y * TILE - player.y, door.x * TILE - player.x);
+    let targetX = gameState.hasKey ? door.x * TILE : key.x;
+    let targetY = gameState.hasKey ? door.y * TILE : key.y;
+    let angle = Math.atan2(targetY - player.y, targetX - player.x);
     let indicatorX = player.x + player.width/2 + Math.cos(angle) * 50;
     let indicatorY = player.y + player.height/2 + Math.sin(angle) * 50;
     
