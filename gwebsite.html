@@ -93,6 +93,17 @@ body::before{
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(-8px)}
 }
+.rs-val, #roundScore{
+  transition:all .4s cubic-bezier(.34,1.56,.64,1);
+}
+.score-bump{
+  animation:scoreBump .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes scoreBump{
+  0%{transform:scale(1);}
+  50%{transform:scale(1.3);color:#ffd700;}
+  100%{transform:scale(1);}
+}
 
 
 #particles{position:fixed;inset:0;pointer-events:none;z-index:500;}
@@ -381,17 +392,45 @@ body::before{
 .joker-card{width:86px;height:125px;background:#fff;border:3px solid #111;border-radius:10px;box-shadow:var(--card-shadow);transition:transform .3s cubic-bezier(.34,1.56,.64,1);cursor:default;position:relative;}
 .joker-card:hover{transform:translateY(-8px) scale(1.05) rotate(2deg);}
 .joker-card.empty{background:rgba(255,255,255,.06);border:3px dashed rgba(255,255,255,.22);box-shadow:none;}
-.joker-card.trigger{animation:jokerTrigger .6s cubic-bezier(.34,1.56,.64,1);}
+.joker-card.trigger{animation:jokerTrigger .8s cubic-bezier(.34,1.56,.64,1);}
 @keyframes jokerTrigger{
-  0%,100%{transform:translateY(0) scale(1) rotate(0deg);}
-  25%{transform:translateY(-12px) scale(1.12) rotate(-5deg);}
-  50%{transform:translateY(-8px) scale(1.08) rotate(5deg);}
-  75%{transform:translateY(-10px) scale(1.1) rotate(-3deg);}
+  0%,100%{transform:translateY(0) scale(1) rotate(0deg);filter:brightness(1);}
+  25%{transform:translateY(-16px) scale(1.15) rotate(-8deg);filter:brightness(1.4) drop-shadow(0 0 20px #ffd700);}
+  50%{transform:translateY(-12px) scale(1.12) rotate(8deg);filter:brightness(1.5) drop-shadow(0 0 25px #ffd700);}
+  75%{transform:translateY(-14px) scale(1.13) rotate(-5deg);filter:brightness(1.4) drop-shadow(0 0 20px #ffd700);}
+
 }
 .joker-card.common{border-color:#666;}
 .joker-card.uncommon{border-color:var(--uncommon);box-shadow:0 0 12px rgba(79,195,247,.3),var(--card-shadow);}
 .joker-card.rare{border-color:var(--rare);box-shadow:0 0 12px rgba(156,39,176,.4),var(--card-shadow);}
 .joker-card.legendary{border-color:var(--legendary);box-shadow:0 0 16px rgba(255,152,0,.5),var(--card-shadow);}
+.joker-card{position:relative;}
+.joker-tooltip{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(20,20,20,.98);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;
+  text-align:center;
+  line-height:1.4;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .25s ease-in-out;
+  z-index:3000;
+  border:2px solid #ffd700;
+  box-shadow:0 6px 20px rgba(0,0,0,.8), 0 0 20px rgba(255,215,0,.4);
+  min-width:150px;
+}
+.joker-card:hover .joker-tooltip{
+  opacity:1;
+  transition-delay:.3s;
+}
 .joker-inner{height:100%;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:7px 4px;}
 .joker-inner .j-name{font-size:10px;font-weight:900;color:#222;text-transform:uppercase;text-align:center;line-height:1.2;}
 .joker-inner .j-icon{font-size:38px;line-height:1;}
@@ -560,7 +599,39 @@ body::before{
   border-radius:6px;
   box-shadow:0 2px 4px rgba(0,0,0,.3);
 }
-.shop-btn-wrap{text-align:center;margin-top:16px;}
+.shop-btn-wrap{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  margin-top:16px;
+}
+.shop-reroll-btn{
+  background:linear-gradient(160deg,#ff9800,#f57c00);
+  border:none;
+  border-radius:12px;
+  padding:12px 32px;
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  font-size:16px;
+  font-weight:900;
+  color:#fff;
+  cursor:pointer;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  box-shadow:0 4px 0 #e65100,0 6px 16px rgba(0,0,0,.4);
+  transition:transform .12s,box-shadow .12s;
+}
+.shop-reroll-btn:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 6px 0 #e65100;
+}
+.shop-reroll-btn:active:not(:disabled){
+  transform:translateY(2px);
+  box-shadow:0 1px 0 #e65100;
+}
+.shop-reroll-btn:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
 .shop-btn{background:linear-gradient(160deg,#4fc3f7,#0277bd);border:none;border-radius:12px;padding:12px 48px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:16px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 0 #01579b,0 6px 16px rgba(0,0,0,.4);transition:transform .12s,box-shadow .12s;}
 .shop-btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 #01579b;}
 .shop-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #01579b;}
@@ -768,7 +839,10 @@ body::before{
     <div class="shop-title">🃏 Shop 🃏</div>
     <div class="shop-sub" id="shopMoney">💰 $0</div>
     <div id="shopContent"></div>
-    <div class="shop-btn-wrap"><button class="shop-btn" id="shopClose">Continue</button></div>
+    <div class="shop-btn-wrap">
+  <button class="shop-reroll-btn" id="shopReroll">Reroll ($5)</button>
+  <button class="shop-btn" id="shopClose">Continue</button>
+</div>
   </div>
 </div>
 
@@ -1006,7 +1080,7 @@ function initState(){
      selected:new Set(),jokers:[],busy:false,sortMode:null,
      baseHands:4,baseDiscards:3,maxJokers:5,jokerDiscount:1,
      tarots:[],planets:[],handUpgrades:{},selectedDeck:null,
-     bossBlind:null,firstHandPlayed:false,roundWon:false};
+     bossBlind:null,firstHandPlayed:false,roundWon:false,rerollCost:5,shopItems:null};
 }
 
 /* ════ DECK ════ */
@@ -1118,7 +1192,11 @@ function renderJokers(){
   for(let i=0;i<G.maxJokers;i++){
     if(i<G.jokers.length){
       const j=G.jokers[i];
-      h+=`<div class="joker-card ${j.rarity}" data-joker-idx="${i}"><div class="joker-inner">
+      let tooltipText=j.effect;
+      if(j.name==='Green Joker')tooltipText=`+${j.mult||1} Mult (grows each hand)`;
+      h+=`<div class="joker-card ${j.rarity}" data-joker-idx="${i}">
+        <div class="joker-tooltip">${j.name}: ${tooltipText}</div>
+        <div class="joker-inner">
         <div class="j-name">${j.name}</div><div class="j-icon">${j.icon}</div>
         <div class="j-desc">${j.effect}</div></div></div>`;
     }else h+=`<div class="joker-card empty"></div>`;
@@ -1285,11 +1363,31 @@ function playHand(){
   });
   
   const total=Math.floor(chips*mult);
+  const oldScore = G.roundScore;
   const newScore = G.roundScore + total;
   const willWin = newScore >= G.targetScore;
   
-  G.roundScore = newScore;
   G.handsLeft--;
+  G.roundScore = newScore; // Update score immediately for game logic
+  
+  // Animate score counting up (visual only)
+  const scoreEl=document.getElementById('roundScore');
+  const duration=1200;
+  const startTime=Date.now();
+  const countUp=()=>{
+    const elapsed=Date.now()-startTime;
+    const progress=Math.min(elapsed/duration,1);
+    const eased=progress<0.5?2*progress*progress:1-Math.pow(-2*progress+2,2)/2;
+    const current=Math.floor(oldScore+(total*eased));
+    scoreEl.textContent=fmt(current);
+    if(progress<1)requestAnimationFrame(countUp);
+    else{
+      scoreEl.textContent=fmt(newScore);
+      scoreEl.classList.add('score-bump');
+      setTimeout(()=>scoreEl.classList.remove('score-bump'),500);
+    }
+  };
+  requestAnimationFrame(countUp);
 
   const strip=document.getElementById('playedStrip');
   strip.innerHTML=selCards.map(c=>{
@@ -1528,6 +1626,39 @@ function endRound(){
 
 function showShop(){
   document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+  
+  // If no shop items exist, generate them
+  if(!G.shopItems){
+    generateShopItems();
+  }
+  
+  renderShop();
+  document.getElementById('shopOverlay').classList.add('open');
+}
+
+function generateShopItems(){
+  G.shopItems={jokers:[],tarots:[],planets:[]};
+  
+  // Generate jokers
+  const pool=[...JOKER_DB];
+  shuffle(pool).slice(0,3).forEach(j=>{
+    const baseCost={common:5,uncommon:8,rare:12,legendary:20}[j.rarity];
+    const cost=Math.floor(baseCost*G.jokerDiscount);
+    G.shopItems.jokers.push({joker:{...j},cost,sold:false});
+  });
+  
+  // Generate tarots
+  shuffle([...TAROT_CARDS]).slice(0,2).forEach(t=>{
+    G.shopItems.tarots.push({tarot:{...t},cost:3,sold:false});
+  });
+  
+  // Generate planets
+  shuffle([...PLANET_CARDS]).slice(0,2).forEach(p=>{
+    G.shopItems.planets.push({planet:{...p},cost:3,sold:false});
+  });
+}
+
+function renderShop(){
   const content=document.getElementById('shopContent');
   content.innerHTML='';
   
@@ -1538,39 +1669,38 @@ function showShop(){
     sellSec.innerHTML='<div class="shop-section-title">💸 Sell Your Jokers</div><div class="shop-sub" style="margin:4px 0 0 0;font-size:10px;">Click to sell for half price</div><div class="joker-sell-grid" id="jokerSellGrid"></div>';
     content.appendChild(sellSec);
     
-  const sellGrid=sellSec.querySelector('#jokerSellGrid');
-// Create a snapshot of jokers to avoid index issues
-const jokersSnapshot=[...G.jokers];
-jokersSnapshot.forEach((j,snapshotIdx)=>{
-  const baseCost={common:5,uncommon:8,rare:12,legendary:20}[j.rarity];
-  const sellPrice=Math.floor(baseCost*G.jokerDiscount/2);
-  const el=document.createElement('div');
-  el.className=`joker-sell-card ${j.rarity}`;
-  el.innerHTML=`<div class="joker-sell-price">+$${sellPrice}</div>
-    <div class="sc-name" style="font-size:10px;margin-bottom:3px;">${j.name}</div>
-    <div class="sc-icon" style="font-size:32px;margin:2px 0;">${j.icon}</div>
-    <div class="sc-desc" style="font-size:8px;min-height:20px;">${j.effect}</div>`;
-  el.onclick=()=>{
-    if(el.classList.contains('sold'))return;
-    // Find the actual current index of this joker
-    const currentIdx=G.jokers.findIndex(joker=>joker===j);
-    if(currentIdx===-1)return; // Already sold
-    
-    if(confirm(`Sell ${j.name} for $${sellPrice}?`)){
-      G.money+=sellPrice;
-      G.jokers.splice(currentIdx,1);
-      G.jokersSold=(G.jokersSold||0)+1;
-      el.classList.add('sold');
-      el.querySelector('.joker-sell-price').textContent='SOLD';
-      document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
-      renderJokers();
-      renderStats();
-      burst(innerWidth/2,innerHeight/2,'#ffd700',30);
-      saveGame();
-    }
-  };
- sellGrid.appendChild(el);
-});
+    const sellGrid=sellSec.querySelector('#jokerSellGrid');
+    const jokersSnapshot=[...G.jokers];
+    jokersSnapshot.forEach((j,snapshotIdx)=>{
+      const baseCost={common:5,uncommon:8,rare:12,legendary:20}[j.rarity];
+      const sellPrice=Math.floor(baseCost*G.jokerDiscount/2);
+      const el=document.createElement('div');
+      el.className=`joker-sell-card ${j.rarity}`;
+      el.innerHTML=`<div class="joker-sell-price">+$${sellPrice}</div>
+        <div class="sc-name" style="font-size:10px;margin-bottom:3px;">${j.name}</div>
+        <div class="sc-icon" style="font-size:32px;margin:2px 0;">${j.icon}</div>
+        <div class="sc-desc" style="font-size:8px;min-height:20px;">${j.effect}</div>`;
+      el.onclick=()=>{
+        if(el.classList.contains('sold'))return;
+        const currentIdx=G.jokers.findIndex(joker=>joker===j);
+        if(currentIdx===-1)return;
+        
+        if(confirm(`Sell ${j.name} for $${sellPrice}?`)){
+          G.money+=sellPrice;
+          G.jokers.splice(currentIdx,1);
+          G.jokersSold=(G.jokersSold||0)+1;
+          el.classList.add('sold');
+          el.querySelector('.joker-sell-price').textContent='SOLD';
+          document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+          renderJokers();
+          renderStats();
+          updateRerollButton();
+          burst(innerWidth/2,innerHeight/2,'#ffd700',30);
+          saveGame();
+        }
+      };
+      sellGrid.appendChild(el);
+    });
   }
   
   // Jokers
@@ -1580,15 +1710,29 @@ jokersSnapshot.forEach((j,snapshotIdx)=>{
   content.appendChild(jokerSec);
   
   const jokerGrid=jokerSec.querySelector('#jokerShop');
-  const pool=[...JOKER_DB];
-  shuffle(pool).slice(0,3).forEach(j=>{
-    const baseCost={common:5,uncommon:8,rare:12,legendary:20}[j.rarity];
-    const cost=Math.floor(baseCost*G.jokerDiscount);
+  G.shopItems.jokers.forEach((item,idx)=>{
+    const j=item.joker;
     const el=document.createElement('div');
     el.className=`shop-card ${j.rarity}`;
+    if(item.sold)el.classList.add('sold');
     el.innerHTML=`<div class="sc-name">${j.name}</div><div class="sc-icon">${j.icon}</div>
-      <div class="sc-desc">${j.effect}</div><div class="sc-price">$${cost}</div>`;
-    el.onclick=()=>buyJoker(j,cost,el);
+      <div class="sc-desc">${j.effect}</div><div class="sc-price">${item.sold?'Sold':'$'+item.cost}</div>`;
+    if(!item.sold){
+      el.onclick=()=>{
+        if(G.money>=item.cost&&G.jokers.length<G.maxJokers){
+          G.money-=item.cost;
+          G.jokers.push({...j});
+          item.sold=true;
+          renderShop();
+          renderJokers();
+          renderStats();
+          updateRerollButton();
+          const r=document.getElementById('jokerRow').getBoundingClientRect();
+          burst(r.left+r.width/2,r.top+r.height/2,'#ffd700',24);
+          saveGame();
+        }
+      };
+    }
     jokerGrid.appendChild(el);
   });
   
@@ -1599,24 +1743,28 @@ jokersSnapshot.forEach((j,snapshotIdx)=>{
   content.appendChild(tarotSec);
   
   const tarotGrid=tarotSec.querySelector('#tarotShop');
-  shuffle([...TAROT_CARDS]).slice(0,2).forEach(t=>{
-    const cost=3;
+  G.shopItems.tarots.forEach(item=>{
+    const t=item.tarot;
     const el=document.createElement('div');
     el.className='shop-card';
+    if(item.sold)el.classList.add('sold');
     el.innerHTML=`<div class="sc-name">${t.name}</div><div class="sc-icon">${t.icon}</div>
-      <div class="sc-desc">${t.desc}</div><div class="sc-price">$${cost}</div>`;
-    el.onclick=()=>{
-      if(G.money>=cost){
-        G.money-=cost;
-        G.tarots.push({...t});
-        el.classList.add('sold');
-        el.querySelector('.sc-price').textContent='Sold';
-        document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
-        renderStats();renderInventory();
-        burst(innerWidth/2,innerHeight/2,'#9c27b0',24);
-        saveGame();
-      }
-    };
+      <div class="sc-desc">${t.desc}</div><div class="sc-price">${item.sold?'Sold':'$'+item.cost}</div>`;
+    if(!item.sold){
+      el.onclick=()=>{
+        if(G.money>=item.cost){
+          G.money-=item.cost;
+          G.tarots.push({...t});
+          item.sold=true;
+          renderShop();
+          renderStats();
+          renderInventory();
+          updateRerollButton();
+          burst(innerWidth/2,innerHeight/2,'#9c27b0',24);
+          saveGame();
+        }
+      };
+    }
     tarotGrid.appendChild(el);
   });
   
@@ -1627,28 +1775,52 @@ jokersSnapshot.forEach((j,snapshotIdx)=>{
   content.appendChild(planetSec);
   
   const planetGrid=planetSec.querySelector('#planetShop');
-  shuffle([...PLANET_CARDS]).slice(0,2).forEach(p=>{
-    const cost=3;
+  G.shopItems.planets.forEach(item=>{
+    const p=item.planet;
     const el=document.createElement('div');
     el.className='shop-card';
+    if(item.sold)el.classList.add('sold');
     el.innerHTML=`<div class="sc-name">${p.name}</div><div class="sc-icon">${p.icon}</div>
-      <div class="sc-desc">+${p.chipBonus}c +${p.multBonus}m to ${p.hand}</div><div class="sc-price">$${cost}</div>`;
-    el.onclick=()=>{
-      if(G.money>=cost){
-        G.money-=cost;
-        G.planets.push({...p});
-        el.classList.add('sold');
-        el.querySelector('.sc-price').textContent='Sold';
-        document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
-        renderStats();renderInventory();
-        burst(innerWidth/2,innerHeight/2,'#9c27b0',24);
-        saveGame();
-      }
-    };
+      <div class="sc-desc">+${p.chipBonus}c +${p.multBonus}m to ${p.hand}</div><div class="sc-price">${item.sold?'Sold':'$'+item.cost}</div>`;
+    if(!item.sold){
+      el.onclick=()=>{
+        if(G.money>=item.cost){
+          G.money-=item.cost;
+          G.planets.push({...p});
+          item.sold=true;
+          renderShop();
+          renderStats();
+          renderInventory();
+          updateRerollButton();
+          burst(innerWidth/2,innerHeight/2,'#9c27b0',24);
+          saveGame();
+        }
+      };
+    }
     planetGrid.appendChild(el);
   });
   
-  document.getElementById('shopOverlay').classList.add('open');
+  updateRerollButton();
+}
+
+function rerollShop(){
+  if(G.money<G.rerollCost)return;
+  G.money-=G.rerollCost;
+  G.rerollCost+=2; // Increase cost each reroll
+  generateShopItems();
+  renderShop();
+  renderStats();
+  burst(innerWidth/2,innerHeight/2,'#ff9800',30);
+  saveGame();
+}
+
+function updateRerollButton(){
+  const btn=document.getElementById('shopReroll');
+  if(btn){
+    btn.textContent=`Reroll ($${G.rerollCost})`;
+    btn.disabled=G.money<G.rerollCost;
+    document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+  }
 }
 
 function buyJoker(j,cost,el){
@@ -1666,6 +1838,8 @@ function buyJoker(j,cost,el){
 
 function startNewRound(){
   document.getElementById('shopOverlay').classList.remove('open');
+  G.shopItems=null; // Reset shop for next round
+  G.rerollCost=5; // Reset reroll cost
   G.round++;
   G.roundWon = false;
   G.busy = false;
@@ -1855,6 +2029,7 @@ document.getElementById('discBtn').onclick=discardCards;
 document.getElementById('sortRank').onclick=()=>sortHand('rank');
 document.getElementById('sortSuit').onclick=()=>sortHand('suit');
 document.getElementById('shopClose').onclick=startNewRound;
+document.getElementById('shopReroll').onclick=rerollShop;
 document.getElementById('rulesTab').onclick=()=>document.getElementById('rulesOverlay').classList.add('open');
 document.getElementById('rulesClose').onclick=()=>document.getElementById('rulesOverlay').classList.remove('open');
 document.getElementById('retryBtn').onclick=()=>{
