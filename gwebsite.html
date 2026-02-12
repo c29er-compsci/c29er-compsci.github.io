@@ -1,244 +1,1873 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>3D Baseball Advanced</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balatro Ultimate</title>
 <style>
-body{margin:0;overflow:hidden;background:#0b1d2a;color:white;font-family:Arial}
-#ui{
-position:absolute;top:10px;left:10px;z-index:10
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap');
+
+:root {
+  --chip-blue:#4fc3f7;
+  --mult-red:#ef5350;
+  --gold:#ffd700;
+  --gold-dim:#b8960c;
+  --card-shadow:0 6px 20px rgba(0,0,0,.45);
+  --common:#fff;
+  --uncommon:#4fc3f7;
+  --rare:#9c27b0;
+  --legendary:#ff9800;
 }
-button{padding:8px 16px;margin:4px;font-size:14px}
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  background:radial-gradient(ellipse at 50% 40%,#2d5a3d 0%,#1a3325 60%,#0f1f18 100%);
+  color:#fff;
+  height:100vh;
+  overflow:hidden;
+  user-select:none;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 6px),
+             repeating-linear-gradient(-45deg,transparent,transparent 3px,rgba(0,0,0,.03) 3px,rgba(0,0,0,.03) 6px);
+  pointer-events:none;z-index:0;
+}
+
+#moreGamesBox{
+  position:fixed;
+  left:15px;
+  bottom:15px;
+  width:280px;
+  background:linear-gradient(135deg,rgba(255,100,255,.95),rgba(157,78,221,.9));
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 8px 32px rgba(157,78,221,.5);
+  border:3px solid rgba(255,215,0,.6);
+  z-index:101;
+  cursor:pointer;
+  transition:all .3s;
+  text-decoration:none;
+  display:block;
+}
+#moreGamesBox:hover{
+  transform:scale(1.05) translateY(-5px);
+  box-shadow:0 12px 40px rgba(157,78,221,.7);
+  border-color:#ffd700;
+}
+#moreGamesBox h3{
+  margin:0 0 10px 0;
+  color:white;
+  font-size:20px;
+  text-align:center;
+  text-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+#moreGamesBox p{
+  margin:0;
+  color:#fff;
+  font-size:14px;
+  text-align:center;
+  line-height:1.4;
+}
+.gameIcons{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:12px 0 8px 0;
+  font-size:28px;
+}
+.gameIcon{
+  animation:iconBounce 2s ease-in-out infinite;
+}
+.gameIcon:nth-child(2){
+  animation-delay:.2s;
+}
+.gameIcon:nth-child(3){
+  animation-delay:.4s;
+}
+.gameIcon:nth-child(4){
+  animation-delay:.6s;
+}
+@keyframes iconBounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+
+
+#particles{position:fixed;inset:0;pointer-events:none;z-index:500;}
+
+/* ═══ HOME ═══ */
+.home{
+  position:fixed;inset:0;z-index:400;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 40%,#2d5a3d 0%,#1a3325 60%,#0f1f18 100%);
+  transition:opacity .4s,transform .4s cubic-bezier(.34,1.56,.64,1);
+}
+.home.hide{opacity:0;transform:scale(1.04);pointer-events:none;}
+
+.home-title{
+  font-size:88px;font-weight:900;
+  background:linear-gradient(180deg,#fff 30%,var(--gold) 70%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:-2px;margin-bottom:6px;
+  filter:drop-shadow(0 4px 18px rgba(0,0,0,.6));
+  animation:titlePulse 3s ease-in-out infinite;
+}
+@keyframes titlePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.02);}}
+
+.home-sub{font-size:18px;color:rgba(255,255,255,.55);margin-bottom:48px;letter-spacing:2px;text-transform:uppercase;}
+
+.home-btn-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+
+.home-btn{
+  padding:18px 72px;border:none;border-radius:14px;
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  font-size:24px;font-weight:900;color:#fff;
+  text-transform:uppercase;letter-spacing:2px;cursor:pointer;
+  background:linear-gradient(160deg,#ef5350,#c62828);
+  box-shadow:0 6px 0 #8e0000,0 10px 30px rgba(0,0,0,.5);
+  transition:transform .12s,box-shadow .12s;
+  position:relative;overflow:hidden;
+}
+.home-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18) 0%,transparent 55%);pointer-events:none;}
+.home-btn:hover{transform:translateY(-3px);box-shadow:0 9px 0 #8e0000,0 14px 36px rgba(0,0,0,.55);}
+.home-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #8e0000;}
+
+.home-deco{position:absolute;opacity:.08;font-size:160px;pointer-events:none;color:#fff;animation:floatDeco 4s ease-in-out infinite;}
+.home-deco.d1{top:-30px;left:-40px;animation-delay:0s;}
+.home-deco.d2{bottom:-40px;right:-50px;animation-delay:1s;}
+.home-deco.d3{top:40%;left:8%;font-size:90px;opacity:.05;animation-delay:2s;}
+.home-deco.d4{top:30%;right:10%;font-size:100px;opacity:.06;animation-delay:1.5s;}
+@keyframes floatDeco{0%,100%{transform:translateY(0);}50%{transform:translateY(-15px);}}
+
+/* ═══ DECK SELECTION ═══ */
+.deck-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;}
+.deck-overlay.open{opacity:1;pointer-events:auto;}
+.deck-panel{background:linear-gradient(145deg,#1e3a2a,#142518);
+  border:4px solid var(--gold);border-radius:22px;padding:28px 30px;
+  width:650px;max-width:95vw;
+  box-shadow:0 0 60px rgba(255,215,0,.35),0 20px 60px rgba(0,0,0,.7);
+  transform:translateY(30px) scale(.96);
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.deck-overlay.open .deck-panel{transform:translateY(0) scale(1);}
+.deck-title{font-size:32px;font-weight:900;text-align:center;color:var(--gold);
+  text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;
+  text-shadow:0 0 18px rgba(255,215,0,.45);}
+.deck-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;}
+.deck-card{background:rgba(255,255,255,.05);border:3px solid rgba(255,255,255,.2);
+  border-radius:12px;padding:14px;cursor:pointer;
+  transition:transform .2s,border-color .2s,background .2s;}
+.deck-card:hover{transform:translateY(-4px);border-color:var(--gold);background:rgba(255,215,0,.1);}
+.deck-card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.deck-card-icon{font-size:28px;}
+.deck-card-name{font-size:16px;font-weight:900;color:#fff;}
+.deck-card-desc{font-size:11px;color:rgba(255,255,255,.7);line-height:1.4;}
+
+/* ═══ RULES OVERLAY ═══ */
+.rules-overlay{
+  position:fixed;inset:0;z-index:600;
+  background:rgba(0,0,0,.88);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.rules-overlay.open{opacity:1;pointer-events:auto;}
+
+.rules-panel{
+  background:linear-gradient(160deg,#1e3a2a,#142518);
+  border:3px solid rgba(255,215,0,.5);border-radius:20px;
+  padding:28px 32px 24px;width:600px;max-width:93vw;
+  max-height:85vh;overflow-y:auto;
+  box-shadow:0 0 50px rgba(255,215,0,.22),0 24px 60px rgba(0,0,0,.7);
+  transform:translateY(24px) scale(.97);
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+}
+.rules-overlay.open .rules-panel{transform:translateY(0) scale(1);}
+.rules-panel::-webkit-scrollbar{width:6px;}
+.rules-panel::-webkit-scrollbar-track{background:transparent;}
+.rules-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px;}
+
+.rules-title{
+  font-size:28px;font-weight:900;color:var(--gold);text-align:center;
+  text-transform:uppercase;letter-spacing:2px;margin-bottom:22px;
+  text-shadow:0 0 16px rgba(255,215,0,.4);
+}
+.rules-section{margin-bottom:18px;}
+.rules-section h3{
+  font-size:15px;font-weight:900;color:rgba(255,255,255,.9);
+  text-transform:uppercase;letter-spacing:1px;
+  border-bottom:2px solid rgba(255,255,255,.15);padding-bottom:5px;margin-bottom:10px;
+}
+.rules-section p{font-size:13px;color:rgba(255,255,255,.7);line-height:1.6;margin-bottom:6px;}
+.rules-section ul{margin-left:20px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.6;}
+.rules-section li{margin-bottom:4px;}
+
+.hand-table{width:100%;border-collapse:collapse;margin-top:8px;}
+.hand-table th{
+  font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;
+  letter-spacing:.8px;text-align:left;padding:5px 8px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+}
+.hand-table td{
+  font-size:13px;color:rgba(255,255,255,.75);
+  padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06);
+}
+.hand-table tr:last-child td{border-bottom:none;}
+.hand-table .ht-name{font-weight:900;color:#fff;}
+.hand-table .ht-chips{color:var(--chip-blue);font-weight:900;}
+.hand-table .ht-mult{color:var(--mult-red);font-weight:900;}
+
+.rules-close{
+  display:block;margin:24px auto 0;padding:11px 48px;
+  border:none;border-radius:10px;
+  background:linear-gradient(160deg,#4fc3f7,#0277bd);
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  font-size:15px;font-weight:900;color:#fff;cursor:pointer;
+  text-transform:uppercase;letter-spacing:1px;
+  box-shadow:0 4px 0 #01579b,0 6px 14px rgba(0,0,0,.4);
+  transition:transform .12s,box-shadow .12s;
+}
+.rules-close:hover{transform:translateY(-2px);box-shadow:0 6px 0 #01579b;}
+.rules-close:active{transform:translateY(2px);box-shadow:0 1px 0 #01579b;}
+
+/* ═══ GAME ═══ */
+.game-wrap{
+  display:flex;height:100vh;position:relative;z-index:1;
+  opacity:0;pointer-events:none;
+  transition:opacity .45s .1s;
+}
+.game-wrap.visible{opacity:1;pointer-events:auto;}
+
+.sidebar{
+  width:195px;background:linear-gradient(180deg,#252525 0%,#1a1a1a 100%);
+  padding:8px;display:flex;flex-direction:column;gap:7px;
+  box-shadow:4px 0 18px rgba(0,0,0,.6);z-index:10;overflow-y:auto;
+}
+
+.blind-box{
+  background:linear-gradient(145deg,#9a7518,#6b4e0f);
+  border:3px solid #4a3509;border-radius:14px;padding:10px 8px;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.35);
+}
+.blind-box.boss{background:linear-gradient(145deg,#8e2424,#5c1616);border-color:#3d0f0f;}
+.blind-header{
+  background:rgba(0,0,0,.35);padding:4px 0;border-radius:8px;
+  text-align:center;font-weight:900;font-size:13px;
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;
+}
+.blind-info{text-align:center;font-size:10px;color:#eee;opacity:.85;line-height:1.3;}
+.blind-score{color:#ff4444;font-size:26px;font-weight:900;text-align:center;text-shadow:0 2px 6px rgba(0,0,0,.6);margin:4px 0 2px;}
+
+.round-score-box{
+  background:linear-gradient(145deg,#2a2a2a,#1a1a1a);
+  border:2px solid #3a3a3a;border-radius:10px;padding:7px 10px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.rs-label{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;}
+.rs-val{font-size:21px;font-weight:900;color:#fff;}
+
+.hand-info-box{
+  background:linear-gradient(135deg,#1e5a8e 35%,#c94040 65%);
+  border:3px solid #0a2844;border-radius:12px;padding:9px 6px;text-align:center;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.3);
+}
+.hand-name{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;min-height:18px;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+.hand-score-row{display:flex;justify-content:center;align-items:center;gap:6px;font-size:26px;font-weight:900;}
+.chips{color:var(--chip-blue);text-shadow:0 0 8px rgba(79,195,247,.4);}
+.mult{color:var(--mult-red);text-shadow:0 0 8px rgba(239,83,80,.4);}
+.hand-score-row .x{color:#fff;opacity:.7;font-size:20px;}
+
+.actions{display:flex;flex-direction:column;gap:4px;}
+.action-label{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;padding:0 2px;}
+.action-label .cnt{background:rgba(0,0,0,.55);padding:2px 8px;border-radius:5px;color:var(--chip-blue);font-weight:700;font-size:11px;}
+
+.action-btn{
+  padding:11px 8px;border:none;border-radius:9px;
+  font-family:'M PLUS Rounded 1c',sans-serif;font-weight:900;font-size:13px;
+  text-transform:uppercase;letter-spacing:.8px;cursor:pointer;
+  transition:transform .12s,box-shadow .12s;position:relative;overflow:hidden;
+}
+.action-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,transparent 60%);pointer-events:none;}
+.btn-play{background:linear-gradient(160deg,#ef5350,#c62828);color:#fff;box-shadow:0 4px 0 #8e0000,0 6px 14px rgba(0,0,0,.4);}
+.btn-play:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 0 #8e0000,0 8px 18px rgba(0,0,0,.5);}
+.btn-play:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #8e0000;}
+.btn-play:disabled{opacity:.4;cursor:not-allowed;}
+.btn-discard{background:linear-gradient(160deg,#4fc3f7,#0277bd);color:#fff;box-shadow:0 4px 0 #01579b,0 6px 14px rgba(0,0,0,.4);}
+.btn-discard:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 0 #01579b,0 8px 18px rgba(0,0,0,.5);}
+.btn-discard:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #01579b;}
+.btn-discard:disabled{opacity:.4;cursor:not-allowed;}
+
+.inventory-box{background:rgba(0,0,0,.3);border:2px solid #444;border-radius:10px;padding:8px;}
+.inv-label{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;text-align:center;}
+.inv-items{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
+.inv-item{padding:5px 8px;background:rgba(79,195,247,.2);border:2px solid rgba(79,195,247,.4);
+  border-radius:6px;font-size:10px;font-weight:900;cursor:pointer;
+  transition:transform .12s,border-color .12s;text-align:center;}
+.inv-item:hover{transform:translateY(-2px);border-color:var(--chip-blue);}
+.inv-item.planet{background:rgba(156,39,176,.2);border-color:rgba(156,39,176,.4);}
+.inv-item.planet:hover{border-color:var(--rare);}
+.inv-item{position:relative;}
+.inv-item-tooltip{
+  position:absolute;
+  bottom:calc(100% + 8px);
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(20,20,20,.98);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;
+  text-align:center;
+  line-height:1.4;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .25s ease-in-out;
+  z-index:2000;
+  border:2px solid #ffd700;
+  box-shadow:0 6px 20px rgba(0,0,0,.8), 0 0 20px rgba(255,215,0,.4);
+  min-width:120px;
+}
+.inv-item:hover .inv-item-tooltip{
+  opacity:1;
+  transition-delay:.3s;
+}
+.inventory-box{
+  background:rgba(0,0,0,.3);
+  border:2px solid #444;
+  border-radius:10px;
+  padding:8px;
+  position:relative;
+  overflow:visible;
+}
+.inv-item:hover .inv-item-tooltip{opacity:1;}
+.money-box{background:rgba(0,0,0,.3);border:2px solid #444;border-radius:10px;padding:8px;text-align:center;}
+.money-val{color:var(--gold);font-size:22px;font-weight:900;}
+
+.sort-box{background:rgba(0,0,0,.3);border:2px solid #444;border-radius:10px;padding:8px;}
+.sort-label{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:6px;}
+.sort-btns{display:flex;gap:4px;}
+.sort-btn{flex:1;padding:8px 4px;border:2px solid rgba(255,255,255,.2);border-radius:7px;
+  background:rgba(255,255,255,.06);font-family:'M PLUS Rounded 1c',sans-serif;
+  font-size:10px;font-weight:700;color:rgba(255,255,255,.6);
+  cursor:pointer;text-transform:uppercase;letter-spacing:.5px;text-align:center;
+  transition:background .2s,border-color .2s,color .2s,transform .12s;
+}
+.sort-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.45);color:#fff;}
+.sort-btn:active{transform:scale(.95);}
+.sort-btn.active{background:rgba(79,195,247,.2);border-color:rgba(79,195,247,.6);color:var(--chip-blue);}
+
+.pills{display:flex;gap:5px;}
+.pill{flex:1;background:linear-gradient(145deg,#f57c00,#e65100);border:2px solid #bf360c;border-radius:9px;padding:7px 4px;text-align:center;}
+.pill-label{font-size:9px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.pill-val{font-size:16px;font-weight:900;}
+
+.rules-tab{
+  margin-top:auto;padding:9px 8px;border:2px solid rgba(255,255,255,.2);border-radius:9px;
+  background:rgba(255,255,255,.06);font-family:'M PLUS Rounded 1c',sans-serif;
+  font-size:12px;font-weight:700;color:rgba(255,255,255,.6);
+  cursor:pointer;text-transform:uppercase;letter-spacing:1px;text-align:center;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.rules-tab:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.45);color:#fff;}
+
+.main{flex:1;display:flex;flex-direction:column;align-items:center;padding:14px 12px;position:relative;overflow:hidden;}
+
+.joker-row{display:flex;gap:7px;justify-content:center;margin-bottom:10px;flex-wrap:wrap;}
+.joker-card{width:86px;height:125px;background:#fff;border:3px solid #111;border-radius:10px;box-shadow:var(--card-shadow);transition:transform .3s cubic-bezier(.34,1.56,.64,1);cursor:default;position:relative;}
+.joker-card:hover{transform:translateY(-8px) scale(1.05) rotate(2deg);}
+.joker-card.empty{background:rgba(255,255,255,.06);border:3px dashed rgba(255,255,255,.22);box-shadow:none;}
+.joker-card.trigger{animation:jokerTrigger .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes jokerTrigger{
+  0%,100%{transform:translateY(0) scale(1) rotate(0deg);}
+  25%{transform:translateY(-12px) scale(1.12) rotate(-5deg);}
+  50%{transform:translateY(-8px) scale(1.08) rotate(5deg);}
+  75%{transform:translateY(-10px) scale(1.1) rotate(-3deg);}
+}
+.joker-card.common{border-color:#666;}
+.joker-card.uncommon{border-color:var(--uncommon);box-shadow:0 0 12px rgba(79,195,247,.3),var(--card-shadow);}
+.joker-card.rare{border-color:var(--rare);box-shadow:0 0 12px rgba(156,39,176,.4),var(--card-shadow);}
+.joker-card.legendary{border-color:var(--legendary);box-shadow:0 0 16px rgba(255,152,0,.5),var(--card-shadow);}
+.joker-inner{height:100%;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:7px 4px;}
+.joker-inner .j-name{font-size:10px;font-weight:900;color:#222;text-transform:uppercase;text-align:center;line-height:1.2;}
+.joker-inner .j-icon{font-size:38px;line-height:1;}
+.joker-inner .j-desc{font-size:8.5px;color:#555;font-weight:700;text-align:center;line-height:1.25;}
+
+.score-popup-area{height:52px;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:4px;}
+.score-breakdown{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;align-items:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;z-index:5;
+}
+.score-breakdown.visible{opacity:1;}
+.score-breakdown .sb-tag{
+  background:rgba(0,0,0,.7);border-radius:6px;padding:3px 9px;
+  font-size:13px;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.4);
+  animation:sbPop .5s cubic-bezier(.34,1.56,.64,1) backwards;
+}
+.sb-tag.chips-tag{color:var(--chip-blue);}
+.sb-tag.mult-tag{color:var(--mult-red);}
+.sb-tag.eq-tag{color:#fff;}
+.sb-tag.total-tag{color:var(--gold);font-size:20px;background:rgba(0,0,0,.85);padding:5px 16px;
+  animation:sbPopBig .6s cubic-bezier(.34,1.56,.64,1) backwards;}
+.sb-tag:nth-child(1){animation-delay:.05s}.sb-tag:nth-child(2){animation-delay:.15s}
+.sb-tag:nth-child(3){animation-delay:.25s}.sb-tag:nth-child(4){animation-delay:.35s}
+.sb-tag:nth-child(5){animation-delay:.5s}
+@keyframes sbPop{0%{transform:translateY(-18px) scale(.7);opacity:0;}100%{transform:translateY(0) scale(1);opacity:1;}}
+@keyframes sbPopBig{0%{transform:translateY(-24px) scale(.5);opacity:0;}100%{transform:translateY(0) scale(1);opacity:1;}}
+
+.score-flash{font-size:58px;font-weight:900;color:#fff;text-shadow:0 4px 16px rgba(0,0,0,.7);opacity:0;transform:scale(.6);transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;}
+.score-flash.show{opacity:1;transform:scale(1);}
+
+.played-strip{height:132px;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px;position:relative;}
+
+.hand-row{display:flex;align-items:flex-end;justify-content:center;gap:6px;height:152px;padding-bottom:4px;flex-wrap:wrap;}
+
+/* ═══ CARD & ENHANCEMENTS ═══ */
+.card{
+  width:82px;height:118px;background:#fff;border:3px solid #111;border-radius:9px;
+  box-shadow:var(--card-shadow);display:flex;flex-direction:column;
+  justify-content:space-between;padding:7px;cursor:pointer;position:relative;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s;
+  user-select:none;
+}
+.card:hover{transform:translateY(-16px) rotate(-2deg);}
+.card.selected{transform:translateY(-32px) scale(1.05);box-shadow:0 12px 32px rgba(80,200,255,.6),0 0 0 4px rgba(80,200,255,.8);z-index:2;
+  animation:cardFloat .8s ease-in-out infinite;}
+@keyframes cardFloat{0%,100%{transform:translateY(-32px) scale(1.05);}50%{transform:translateY(-36px) scale(1.05);}}
+.card.played{cursor:default;transform:none;box-shadow:var(--card-shadow);}
+
+.card.foil{background:linear-gradient(135deg,#fff 0%,#e3f2fd 25%,#fff 50%,#fce4ec 75%,#fff 100%);
+  background-size:200% 200%;animation:foilShimmer 3s ease infinite;}
+@keyframes foilShimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.card.holo{background:linear-gradient(135deg,#ff0080 0%,#ff8c00 20%,#40e0d0 40%,#9370db 60%,#ff0080 80%);
+  background-size:400% 400%;animation:holoShift 4s ease infinite;}
+@keyframes holoShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.card.steel{background:linear-gradient(145deg,#b0bec5,#78909c);border-color:#37474f;}
+.card.steel .c-rank,.card.steel .c-suit{color:#263238;text-shadow:0 1px 2px rgba(255,255,255,.3);}
+
+.card.H .c-rank,.card.H .c-suit{color:#e91e63;}
+.card.D .c-rank,.card.D .c-suit{color:#e91e63;}
+.card.C .c-rank,.card.C .c-suit{color:#111;}
+.card.S .c-rank,.card.S .c-suit{color:#111;}
+
+.c-top{display:flex;flex-direction:column;line-height:1;}
+.c-rank{font-size:17px;font-weight:900;}
+.c-suit{font-size:13px;}
+.c-mid{font-size:34px;text-align:center;line-height:1;}
+.c-bot{display:flex;flex-direction:column;align-items:flex-end;line-height:1;transform:rotate(180deg);}
+
+@keyframes dealIn{
+  0%{opacity:0;transform:translateY(-60px) rotate(-15deg) scale(.8);}
+  60%{transform:translateY(8px) rotate(3deg) scale(1.05);}
+  100%{opacity:1;transform:translateY(0) rotate(0) scale(1);}
+}
+.card.deal{animation:dealIn .4s cubic-bezier(.34,1.56,.64,1) backwards;}
+.card.deal:nth-child(1){animation-delay:.03s}.card.deal:nth-child(2){animation-delay:.08s}
+.card.deal:nth-child(3){animation-delay:.13s}.card.deal:nth-child(4){animation-delay:.18s}
+.card.deal:nth-child(5){animation-delay:.23s}.card.deal:nth-child(6){animation-delay:.28s}
+.card.deal:nth-child(7){animation-delay:.33s}.card.deal:nth-child(8){animation-delay:.38s}
+
+@keyframes flyUp{
+  0%{opacity:1;transform:translateY(0) scale(1) rotate(0deg);}
+  40%{opacity:1;transform:translateY(-40px) scale(1.15) rotate(-8deg);}
+  100%{opacity:0;transform:translateY(-100px) scale(.7) rotate(15deg);}
+}
+.card.fly{animation:flyUp .7s ease-in forwards;}
+
+@keyframes flyDown{
+  0%{opacity:1;transform:translateY(0) rotate(0deg);}
+  100%{opacity:0;transform:translateY(70px) scale(.7) rotate(20deg);}
+}
+.card.discard-anim{animation:flyDown .5s ease-in forwards;}
+
+/* ═══ SHOP ═══ */
+.shop-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.shop-overlay.open{opacity:1;pointer-events:auto;}
+.shop-panel{
+  background:linear-gradient(145deg,#243d2d,#162518);border:4px solid var(--gold);border-radius:22px;
+  padding:24px 26px 20px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;
+  box-shadow:0 0 60px rgba(255,215,0,.35),0 20px 60px rgba(0,0,0,.7);
+  transform:translateY(30px) scale(.96);transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+}
+.shop-overlay.open .shop-panel{transform:translateY(0) scale(1);}
+.shop-title{font-size:28px;font-weight:900;text-align:center;color:var(--gold);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;text-shadow:0 0 18px rgba(255,215,0,.45);}
+.shop-sub{text-align:center;font-size:11px;color:#999;margin-bottom:14px;}
+.shop-section{margin-bottom:16px;}
+.shop-section-title{font-size:14px;font-weight:900;color:rgba(255,255,255,.8);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;
+  border-bottom:2px solid rgba(255,255,255,.15);padding-bottom:3px;}
+.shop-grid{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.shop-card{width:130px;background:#fff;border:3px solid #111;border-radius:14px;padding:12px 8px 10px;text-align:center;cursor:pointer;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;box-shadow:0 6px 18px rgba(0,0,0,.4);}
+.shop-card:hover:not(.sold){transform:translateY(-8px) scale(1.06) rotate(1deg);box-shadow:0 14px 32px rgba(255,215,0,.5);}
+.shop-card .sc-name{font-size:11px;font-weight:900;color:#222;text-transform:uppercase;margin-bottom:4px;line-height:1.2;}
+.shop-card .sc-icon{font-size:36px;margin:3px 0;}
+.shop-card .sc-desc{font-size:9px;color:#555;font-weight:700;margin-bottom:6px;min-height:24px;display:flex;align-items:center;justify-content:center;line-height:1.2;}
+.shop-card .sc-price{font-size:15px;font-weight:900;color:var(--gold-dim);}
+.shop-card.sold{opacity:.45;cursor:default;}
+.shop-card.sold .sc-price{color:#999;}
+.shop-card.uncommon{border-color:var(--uncommon);}
+.shop-card.rare{border-color:var(--rare);}
+.shop-card.legendary{border-color:var(--legendary);}
+.joker-sell-section{
+  background:rgba(255,100,100,.1);
+  border:2px solid rgba(255,100,100,.3);
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:16px;
+}
+.joker-sell-grid{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.joker-sell-card{
+  width:110px;
+  background:#fff;
+  border:3px solid #111;
+  border-radius:12px;
+  padding:10px 6px;
+  text-align:center;
+  cursor:pointer;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+  position:relative;
+}
+.joker-sell-card:hover{
+  transform:translateY(-6px) scale(1.05);
+  box-shadow:0 8px 20px rgba(255,100,100,.6);
+}
+.joker-sell-card.sold{
+  opacity:.3;
+  cursor:not-allowed;
+  transform:none !important;
+}
+.joker-sell-price{
+  position:absolute;
+  top:4px;
+  right:4px;
+  background:#ef5350;
+  color:#fff;
+  font-size:10px;
+  font-weight:900;
+  padding:2px 6px;
+  border-radius:6px;
+  box-shadow:0 2px 4px rgba(0,0,0,.3);
+}
+.shop-btn-wrap{text-align:center;margin-top:16px;}
+.shop-btn{background:linear-gradient(160deg,#4fc3f7,#0277bd);border:none;border-radius:12px;padding:12px 48px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:16px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 0 #01579b,0 6px 16px rgba(0,0,0,.4);transition:transform .12s,box-shadow .12s;}
+.shop-btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 #01579b;}
+.shop-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #01579b;}
+
+/* ═══ TAROT USE ═══ */
+.tarot-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.tarot-overlay.open{opacity:1;pointer-events:auto;}
+.tarot-panel{background:linear-gradient(145deg,#3a1f5c,#261440);border:4px solid var(--rare);border-radius:20px;
+  padding:24px;width:500px;max-width:95vw;
+  box-shadow:0 0 50px rgba(156,39,176,.4),0 20px 60px rgba(0,0,0,.7);
+  transform:translateY(30px) scale(.96);transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.tarot-overlay.open .tarot-panel{transform:translateY(0) scale(1);}
+.tarot-title{font-size:26px;font-weight:900;text-align:center;color:var(--rare);
+  text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;
+  text-shadow:0 0 16px rgba(156,39,176,.5);}
+.tarot-msg{text-align:center;font-size:14px;color:rgba(255,255,255,.8);margin-bottom:16px;}
+.tarot-hand-select{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
+.tarot-btns{display:flex;gap:10px;justify-content:center;}
+.tarot-btn{padding:11px 32px;border:none;border-radius:10px;font-family:'M PLUS Rounded 1c',sans-serif;
+  font-size:14px;font-weight:900;color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:1px;
+  transition:transform .12s,box-shadow .12s;}
+.tarot-btn.confirm{background:linear-gradient(160deg,#9c27b0,#7b1fa2);box-shadow:0 4px 0 #4a148c,0 6px 14px rgba(0,0,0,.4);}
+.tarot-btn.confirm:hover{transform:translateY(-2px);box-shadow:0 6px 0 #4a148c;}
+.tarot-btn.confirm:active{transform:translateY(2px);box-shadow:0 1px 0 #4a148c;}
+.tarot-btn.cancel{background:linear-gradient(160deg,#666,#444);box-shadow:0 4px 0 #2a2a2a,0 6px 14px rgba(0,0,0,.4);}
+.tarot-btn.cancel:hover{transform:translateY(-2px);box-shadow:0 6px 0 #2a2a2a;}
+.tarot-btn.cancel:active{transform:translateY(2px);box-shadow:0 1px 0 #2a2a2a;}
+
+/* ═══ END ═══ */
+.end-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s;}
+.end-overlay.open{opacity:1;pointer-events:auto;}
+.end-overlay h1{font-size:64px;font-weight:900;margin-bottom:10px;text-shadow:0 4px 20px rgba(0,0,0,.7);}
+.end-overlay h1.win{color:var(--gold);}
+.end-overlay h1.lose{color:#ef5350;}
+.end-overlay p{font-size:18px;color:#ccc;margin-bottom:28px;}
+.end-btn-row{display:flex;gap:14px;}
+.end-btn{padding:14px 44px;border:none;border-radius:12px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:18px;font-weight:900;color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:transform .12s,box-shadow .12s;}
+.end-btn.retry{background:linear-gradient(160deg,#ef5350,#c62828);box-shadow:0 5px 0 #8e0000,0 8px 20px rgba(0,0,0,.5);}
+.end-btn.retry:hover{transform:translateY(-2px);box-shadow:0 7px 0 #8e0000;}
+.end-btn.retry:active{transform:translateY(2px);box-shadow:0 2px 0 #8e0000;}
+.end-btn.menu{background:linear-gradient(160deg,#666,#444);box-shadow:0 5px 0 #2a2a2a,0 8px 20px rgba(0,0,0,.5);}
+.end-btn.menu:hover{transform:translateY(-2px);box-shadow:0 7px 0 #2a2a2a;}
+.end-btn.menu:active{transform:translateY(2px);box-shadow:0 2px 0 #2a2a2a;}
 </style>
 </head>
 <body>
+<canvas id="particles"></canvas>
 
-<div id="ui">
-<button onclick="pitch()">Pitch</button>
-<p id="feedback"></p>
-<p>AVG: <span id="avg">0.000</span></p>
+
+
+<div class="home" id="home">
+  <div class="home-deco d1">♠</div>
+  <div class="home-deco d2">♥</div>
+  <div class="home-deco d3">♦</div>
+  <div class="home-deco d4">♣</div>
+  <div class="home-title">BALATRO</div>
+  <div class="home-sub">Ultimate Edition</div>
+  <div class="home-btn-wrap">
+    <a id="moreGamesBox" href="https://c29er-compsci.github.io/Pegworks.html" target="_blank">
+  <h3>🎮 PLAY MORE GAMES! 🎮</h3>
+  <div class="gameIcons">
+    <span class="gameIcon">🕹️</span>
+    <span class="gameIcon">🎯</span>
+    <span class="gameIcon">🎲</span>
+    <span class="gameIcon">🏆</span>
+  </div>
+  <p>Check out our collection of awesome games at Pegworks!</p>
+</a>
+    <button class="home-btn" id="startBtn">Start Game</button>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+
+<div class="deck-overlay" id="deckOverlay">
+  <div class="deck-panel">
+    <div class="deck-title">Choose Your Deck</div>
+    <div class="deck-grid" id="deckGrid"></div>
+  </div>
+</div>
+
+<div class="rules-overlay" id="rulesOverlay">
+  <div class="rules-panel">
+    <div class="rules-title">📖 How to Play</div>
+    <div class="rules-section">
+      <h3>🎯 Goal</h3>
+      <p>Beat each blind by reaching the target score before running out of hands. Progress through rounds to win!</p>
+    </div>
+    <div class="rules-section">
+      <h3>🖱️ Controls</h3>
+      <p><strong>Click cards</strong> to select up to 5, then press <strong>Play Hand</strong> to score or <strong>Discard</strong> to swap them.</p>
+    </div>
+    <div class="rules-section">
+      <h3>📊 Scoring</h3>
+      <p>Each hand has base <span style="color:var(--chip-blue);font-weight:900">Chips</span> and <span style="color:var(--mult-red);font-weight:900">Mult</span>. Your score is <strong>Chips × Mult</strong>. Jokers and enhancements boost these values!</p>
+    </div>
+    <div class="rules-section">
+      <h3>🃏 Jokers</h3>
+      <p>Start with 2 jokers (up to 5-6 total). Buy more in the shop after each blind. Jokers have different rarities:</p>
+      <ul>
+        <li><strong>Common</strong> - Basic bonuses</li>
+        <li><strong style="color:var(--uncommon)">Uncommon</strong> - Better effects</li>
+        <li><strong style="color:var(--rare)">Rare</strong> - Powerful multipliers</li>
+        <li><strong style="color:var(--legendary)">Legendary</strong> - Game-changing abilities</li>
+      </ul>
+    </div>
+    <div class="rules-section">
+      <h3>✨ Card Enhancements</h3>
+      <ul>
+        <li><strong>Foil</strong> - Shimmering effect, +50 chips</li>
+        <li><strong>Holo</strong> - Rainbow colors, +10 mult</li>
+        <li><strong>Steel</strong> - Metallic, ×1.5 mult</li>
+      </ul>
+    </div>
+    <div class="rules-section">
+      <h3>🔮 Consumables</h3>
+      <p><strong>Tarots</strong> - One-time effects: enhance cards, create jokers, add money/hands</p>
+      <p><strong>Planets</strong> - Permanently upgrade specific poker hands (+chips & +mult)</p>
+    </div>
+    <div class="rules-section">
+      <h3>👹 Boss Blinds</h3>
+      <p>Every 3rd round, face a boss blind with special rules that make the game harder!</p>
+    </div>
+    <div class="rules-section">
+      <h3>🎴 Deck Types</h3>
+      <p>Choose your starting deck for unique bonuses: extra hands/discards, more money, cheaper jokers, extra joker slot, or starting tarots.</p>
+    </div>
+    <div class="rules-section">
+      <h3>📋 Hand Rankings</h3>
+      <table class="hand-table">
+        <tr><th>Hand</th><th>Chips</th><th>Mult</th></tr>
+        <tr><td class="ht-name">Royal Flush</td><td class="ht-chips">100</td><td class="ht-mult">×8</td></tr>
+        <tr><td class="ht-name">Straight Flush</td><td class="ht-chips">100</td><td class="ht-mult">×8</td></tr>
+        <tr><td class="ht-name">Four of a Kind</td><td class="ht-chips">60</td><td class="ht-mult">×7</td></tr>
+        <tr><td class="ht-name">Full House</td><td class="ht-chips">40</td><td class="ht-mult">×4</td></tr>
+        <tr><td class="ht-name">Flush</td><td class="ht-chips">35</td><td class="ht-mult">×4</td></tr>
+        <tr><td class="ht-name">Straight</td><td class="ht-chips">30</td><td class="ht-mult">×4</td></tr>
+        <tr><td class="ht-name">Three of a Kind</td><td class="ht-chips">30</td><td class="ht-mult">×3</td></tr>
+        <tr><td class="ht-name">Two Pair</td><td class="ht-chips">20</td><td class="ht-mult">×2</td></tr>
+        <tr><td class="ht-name">Pair</td><td class="ht-chips">10</td><td class="ht-mult">×2</td></tr>
+        <tr><td class="ht-name">High Card</td><td class="ht-chips">5</td><td class="ht-mult">×1</td></tr>
+      </table>
+    </div>
+    <button class="rules-close" id="rulesClose">Got it!</button>
+
+  </div>
+</div>
+
+<div class="game-wrap" id="gameWrap">
+  <aside class="sidebar">
+    <div class="blind-box" id="blindBox">
+      <div class="blind-header" id="blindName">Big Blind</div>
+      <div class="blind-info" id="blindDesc">Beat the blind</div>
+      <div class="blind-score">❄ <span id="targetScore">800</span></div>
+    </div>
+    <div class="round-score-box">
+      <div><div class="rs-label">Score</div><div class="rs-val" id="roundScore">0</div></div>
+      <div style="text-align:right"><div class="rs-label">Target</div><div class="rs-val" style="color:var(--gold)" id="targetScoreSide">800</div></div>
+    </div>
+    <div class="hand-info-box">
+      <div class="hand-name" id="handName">—</div>
+      <div class="hand-score-row">
+        <span class="chips" id="chipVal">—</span>
+        <span class="x">✕</span>
+        <span class="mult" id="multVal">—</span>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="action-label"><span>Hands</span><span class="cnt" id="handsLeft">4</span></div>
+      <button class="action-btn btn-play" id="playBtn" disabled>Play Hand</button>
+      <div class="action-label"><span>Discards</span><span class="cnt" id="discardsLeft">3</span></div>
+      <button class="action-btn btn-discard" id="discBtn" disabled>Discard</button>
+    </div>
+    <div class="inventory-box">
+      <div class="inv-label">Consumables</div>
+      <div class="inv-items" id="invItems"></div>
+    </div>
+    <div class="money-box"><div class="money-val" id="money">$25</div></div>
+    <div class="sort-box">
+      <div class="sort-label">Sort Cards</div>
+      <div class="sort-btns">
+        <button class="sort-btn" id="sortRank">Rank</button>
+        <button class="sort-btn" id="sortSuit">Suit</button>
+      </div>
+    </div>
+    <div class="pills">
+      <div class="pill"><div class="pill-label">Ante</div><div class="pill-val" id="ante">$2</div></div>
+      <div class="pill"><div class="pill-label">Round</div><div class="pill-val" id="roundNum">1</div></div>
+    </div>
+    <button class="rules-tab" id="rulesTab">📖 Rules</button>
+  </aside>
+
+  <main class="main">
+    <div class="joker-row" id="jokerRow"></div>
+    <div class="score-popup-area">
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div class="score-flash" id="scoreFlash">0</div>
+    </div>
+    <div class="played-strip" id="playedStrip"></div>
+    <div class="hand-row" id="handRow"></div>
+  </main>
+</div>
+
+<div class="shop-overlay" id="shopOverlay">
+  <div class="shop-panel">
+    <div class="shop-title">🃏 Shop 🃏</div>
+    <div class="shop-sub" id="shopMoney">💰 $0</div>
+    <div id="shopContent"></div>
+    <div class="shop-btn-wrap"><button class="shop-btn" id="shopClose">Continue</button></div>
+  </div>
+</div>
+
+<div class="tarot-overlay" id="tarotOverlay">
+  <div class="tarot-panel">
+    <div class="tarot-title" id="tarotTitle">Use Tarot</div>
+    <div class="tarot-msg" id="tarotMsg">Select cards to enhance</div>
+    <div class="tarot-hand-select" id="tarotHandSelect"></div>
+    <div class="tarot-btns">
+      <button class="tarot-btn confirm" id="tarotConfirm">Confirm</button>
+      <button class="tarot-btn cancel" id="tarotCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="end-overlay" id="endOverlay">
+  <h1 id="endTitle" class="lose">Game Over</h1>
+  <p id="endMsg">Better luck next time.</p>
+  <div class="end-btn-row">
+    <button class="end-btn retry" id="retryBtn">Try Again</button>
+    <button class="end-btn menu"  id="menuBtn">Menu</button>
+  </div>
+</div>
+
+
+
 <script>
 
-////////////////////
-// SCENE SETUP
-////////////////////
-let scene = new THREE.Scene();
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-let renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-scene.background = new THREE.Color(0x87ceeb);
+/* ════ PARTICLES ════ */
+const canvas=document.getElementById('particles'),ctx=canvas.getContext('2d');
+let particles=[];
+(function sz(){canvas.width=innerWidth;canvas.height=innerHeight;})();
+addEventListener('resize',()=>{canvas.width=innerWidth;canvas.height=innerHeight;});
 
-scene.add(new THREE.AmbientLight(0xffffff,0.5));
-let light = new THREE.DirectionalLight(0xffffff,1);
-light.position.set(10,20,10);
-scene.add(light);
+class Particle{
+  constructor(x,y,color,n,type='square'){
+    this.x=x;this.y=y;
+    this.vx=(Math.random()-.5)*n*.15;
+    this.vy=Math.random()*-n*.09-1.5;
+    this.life=1;this.decay=.01+Math.random()*.015;
+    this.size=3+Math.random()*7;this.color=color;
+    this.rot=Math.random()*Math.PI*2;this.rotV=(Math.random()-.5)*.25;
+    this.type=type;
+  }
+  tick(){this.x+=this.vx;this.y+=this.vy;this.vy+=.04;this.life-=this.decay;this.rot+=this.rotV;}
+  draw(){
+    ctx.save();ctx.globalAlpha=this.life;ctx.fillStyle=this.color;
+    ctx.translate(this.x,this.y);ctx.rotate(this.rot);
+    if(this.type==='circle'){
+      ctx.beginPath();ctx.arc(0,0,this.size/2,0,Math.PI*2);ctx.fill();
+    }else{
+      ctx.fillRect(-this.size/2,-this.size/2,this.size,this.size);
+    }
+    ctx.restore();
+  }
+}
+function burst(x,y,color,n=30){
+  const types=['square','circle'];
+  for(let i=0;i<n;i++){
+    const type=types[Math.floor(Math.random()*types.length)];
+    particles.push(new Particle(x,y,color,n,type));
+  }
+}
+(function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);particles=particles.filter(p=>p.life>0);particles.forEach(p=>{p.tick();p.draw();});requestAnimationFrame(loop);})();
 
-////////////////////
-// FIELD
-////////////////////
-let field = new THREE.Mesh(
-new THREE.CircleGeometry(60,64),
-new THREE.MeshPhongMaterial({color:0x1f8f3f})
-);
-field.rotation.x = -Math.PI/2;
-scene.add(field);
+/* ════ CONSTANTS ════ */
+const SUITS=['H','D','C','S'],SYM={H:'♥',D:'♦',C:'♣',S:'♠'};
+const RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const RV={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+const HANDS={
+  'Royal Flush':{c:100,m:8},'Straight Flush':{c:100,m:8},
+  'Four of a Kind':{c:60,m:7},'Full House':{c:40,m:4},
+  'Flush':{c:35,m:4},'Straight':{c:30,m:4},
+  'Three of a Kind':{c:30,m:3},'Two Pair':{c:20,m:2},
+  'Pair':{c:10,m:2},'High Card':{c:5,m:1}
+};
 
-////////////////////
-// STRIKE ZONE
-////////////////////
-let zone = new THREE.Mesh(
-new THREE.BoxGeometry(4,4,0.1),
-new THREE.MeshBasicMaterial({color:0xffffff, wireframe:true})
-);
-zone.position.set(0,2,3);
-scene.add(zone);
+const DECK_TYPES=[
+  {name:'Red Deck',icon:'🔴',desc:'Start with +1 discard per round',
+    apply:g=>{g.baseDiscards=4;}},
+  {name:'Blue Deck',icon:'🔵',desc:'Start with +1 hand per round',
+    apply:g=>{g.baseHands=5;}},
+  {name:'Yellow Deck',icon:'🟡',desc:'Start with $15 extra money',
+    apply:g=>{g.money+=15;}},
+  {name:'Green Deck',icon:'🟢',desc:'Jokers 20% cheaper',
+    apply:g=>{g.jokerDiscount=0.8;}},
+  {name:'Black Deck',icon:'⚫',desc:'Start with 1 extra joker slot',
+    apply:g=>{g.maxJokers=6;}},
+  {name:'Magic Deck',icon:'🔮',desc:'Start with 2 random tarots',
+    apply:g=>{g.startTarots=2;}},
+];
 
-////////////////////
-// BALL
-////////////////////
-let ball = new THREE.Mesh(
-new THREE.SphereGeometry(0.4,32,32),
-new THREE.MeshPhongMaterial({color:0xffffff})
-);
-scene.add(ball);
+const JOKER_DB=[
+  {name:'Joker',icon:'🃏',rarity:'common',effect:'+6 Mult',apply:s=>{s.mult+=6;}},
+  {name:'Greedy',icon:'💰',rarity:'common',effect:'+5 Mult',apply:s=>{s.mult+=5;}},
+  {name:'Lusty',icon:'❤️',rarity:'common',effect:'+10 Chips',apply:s=>{s.chips+=10;}},
+  {name:'Wrathful',icon:'😠',rarity:'uncommon',effect:'×2 Mult',apply:s=>{s.mult=Math.round(s.mult*2*10)/10;}},
+  {name:'Jolly',icon:'😊',rarity:'common',effect:'+12 Mult if Pair',apply:(s,h)=>{if(h.includes('Pair'))s.mult+=12;}},
+  {name:'Zany',icon:'🤪',rarity:'common',effect:'+18 Mult if 3-Kind',apply:(s,h)=>{if(h==='Three of a Kind')s.mult+=18;}},
+  {name:'Mad',icon:'😵',rarity:'uncommon',effect:'+15 Mult if 2 Pair',apply:(s,h)=>{if(h==='Two Pair')s.mult+=15;}},
+  {name:'Crazy',icon:'🤡',rarity:'uncommon',effect:'+20 Mult if Straight',apply:(s,h)=>{if(h.includes('Straight'))s.mult+=20;}},
+  {name:'Droll',icon:'😜',rarity:'uncommon',effect:'+25 Mult if Flush',apply:(s,h)=>{if(h.includes('Flush'))s.mult+=25;}},
+  {name:'Sly',icon:'😏',rarity:'common',effect:'+8 Chips/card',apply:(s,h,cards)=>{s.chips+=cards.length*8;}},
+  {name:'Wily',icon:'🦊',rarity:'uncommon',effect:'×1.5 Chips',apply:s=>{s.chips=Math.round(s.chips*1.5);}},
+  {name:'Clever',icon:'🧠',rarity:'uncommon',effect:'+30 Mult Full House',apply:(s,h)=>{if(h==='Full House')s.mult+=30;}},
+  {name:'Devious',icon:'😈',rarity:'common',effect:'+12 Chips',apply:s=>{s.chips+=12;}},
+  {name:'Crafty',icon:'🎨',rarity:'common',effect:'+8 Mult',apply:s=>{s.mult+=8;}},
+  {name:'Half Joker',icon:'🌓',rarity:'common',effect:'+10 Mult if ≤4 cards',apply:(s,h,cards)=>{if(cards.length<=4)s.mult+=10;}},
+  {name:'Stencil',icon:'📋',rarity:'uncommon',effect:'×1.5 if empty slot',apply:(s,h,cards,G)=>{if(G.jokers.length<G.maxJokers)s.mult*=1.5;}},
+  {name:'Banner',icon:'🚩',rarity:'common',effect:'+15 Chips per discard',apply:(s,h,cards,G)=>{s.chips+=G.discardsLeft*15;}},
+  {name:'Mystic Summit',icon:'🏔️',rarity:'common',effect:'+15 Mult if no discard',apply:(s,h,cards,G)=>{if(G.discardsLeft===G.baseDiscards)s.mult+=15;}},
+  {name:'Scary Face',icon:'👻',rarity:'common',effect:'+30 Chips per face',apply:(s,h,cards)=>{s.chips+=cards.filter(c=>['J','Q','K'].includes(c.r)).length*30;}},
+  {name:'Abstract',icon:'🎭',rarity:'common',effect:'+3 Mult per Joker',apply:(s,h,cards,G)=>{s.mult+=G.jokers.length*3;}},
+  {name:'Even Steven',icon:'⚖️',rarity:'uncommon',effect:'+4 Mult per even card',apply:(s,h,cards)=>{s.mult+=cards.filter(c=>['2','4','6','8','10'].includes(c.r)).length*4;}},
+  {name:'Odd Todd',icon:'🎲',rarity:'uncommon',effect:'+4 Mult per odd card',apply:(s,h,cards)=>{s.mult+=cards.filter(c=>['3','5','7','9','A'].includes(c.r)).length*4;}},
+  {name:'Scholar',icon:'📚',rarity:'common',effect:'+20 Chips per Ace',apply:(s,h,cards)=>{s.chips+=cards.filter(c=>c.r==='A').length*20;}},
+  {name:'Walkie Talkie',icon:'📻',rarity:'common',effect:'+10 Chips per 10/4',apply:(s,h,cards)=>{s.chips+=cards.filter(c=>c.r==='10'||c.r==='4').length*10;}},
+  {name:'Supernova',icon:'💥',rarity:'uncommon',effect:'+15 Mult if played hand type',apply:s=>{s.mult+=15;}},
+  {name:'Space Joker',icon:'🚀',rarity:'uncommon',effect:'1 in 4: upgrade level',apply:s=>{if(Math.random()<0.25)s.mult+=20;}},
+  {name:'Egg',icon:'🥚',rarity:'common',effect:'+$5 at end',value:true},
+  {name:'Baron',icon:'👑',rarity:'rare',effect:'×3 Mult if Kings',apply:(s,h,cards)=>{if(cards.some(c=>c.r==='K'))s.mult*=3;}},
+  {name:'Triboulet',icon:'🎭',rarity:'rare',effect:'×2 Mult per K/Q',apply:(s,h,cards)=>{cards.forEach(c=>{if(c.r==='K'||c.r==='Q')s.mult*=2;});}},
+  {name:'Bloodstone',icon:'💎',rarity:'rare',effect:'+25 Mult per ♥',apply:(s,h,cards)=>{s.mult+=cards.filter(c=>c.s==='H').length*25;}},
+  {name:'Arrowhead',icon:'➡️',rarity:'rare',effect:'+50 Chips per ♠',apply:(s,h,cards)=>{s.chips+=cards.filter(c=>c.s==='S').length*50;}},
+  {name:'Onyx Agate',icon:'⬛',rarity:'rare',effect:'+7 Mult per ♣',apply:(s,h,cards)=>{s.mult+=cards.filter(c=>c.s==='C').length*7;}},
+  {name:'Glass Joker',icon:'💠',rarity:'uncommon',effect:'×2 Mult, fragile',apply:s=>{s.mult*=2;}},
+  {name:'Showman',icon:'🎪',rarity:'uncommon',effect:'+3 Mult per Joker slot',apply:(s,h,cards,G)=>{s.mult+=G.maxJokers*3;}},
+  {name:'Flower Pot',icon:'🪴',rarity:'uncommon',effect:'×1.5 if ♥♦♣♠',apply:(s,h,cards)=>{const suits=new Set(cards.map(c=>c.s));if(suits.size===4)s.mult*=1.5;}},
+  {name:'Midas Mask',icon:'🎭',rarity:'uncommon',effect:'+15 Mult per gold card',apply:(s,h,cards)=>{s.mult+=cards.filter(c=>c.gold).length*15;}},
+  {name:'Luchador',icon:'🤼',rarity:'uncommon',effect:'Sell for $5',value:true},
+  {name:'Photograph',icon:'📷',rarity:'common',effect:'+2 Mult per face',apply:(s,h,cards)=>{s.mult+=cards.filter(c=>['J','Q','K'].includes(c.r)).length*2;}},
+  {name:'Gift Card',icon:'🎁',rarity:'uncommon',effect:'+$3 at round end',value:true},
+ {name:'Turtle Bean',icon:'🐢',rarity:'uncommon',effect:'+5 hand size',handSize:5},
+  {name:'Erosion',icon:'🌊',rarity:'uncommon',effect:'+4 Mult per below full',apply:(s,h,cards,G)=>{s.mult+=(52-G.deck.length-G.hand.length)*4;}},
+  {name:'Reserved',icon:'🎫',rarity:'uncommon',effect:'+10 Mult if no face',apply:(s,h,cards)=>{if(!cards.some(c=>['J','Q','K'].includes(c.r)))s.mult+=10;}},
+  {name:'Mail In',icon:'📬',rarity:'common',effect:'+3 Mult per discard',apply:(s,h,cards,G)=>{s.mult+=(G.baseDiscards-G.discardsLeft)*3;}},
+  {name:'To the Moon',icon:'🌙',rarity:'uncommon',effect:'+$1 per $5',value:true},
+  {name:'Hallucination',icon:'👁️',rarity:'common',effect:'1 in 2: ×2 Mult',apply:s=>{if(Math.random()<0.5)s.mult*=2;}},
+  {name:'Fortune',icon:'🔮',rarity:'common',effect:'1 in 5: ×4 Mult',apply:s=>{if(Math.random()<0.2)s.mult*=4;}},
+  {name:'Dusk',icon:'🌆',rarity:'uncommon',effect:'Retrigger all',effect2:true},
+  {name:'Raised Fist',icon:'✊',rarity:'common',effect:'×2 Mult if lowest',apply:(s,h,cards,G)=>{const vals=cards.map(c=>RV[c.r]);if(vals.every(v=>v===Math.min(...vals)))s.mult*=2;}},
+  {name:'Chaos',icon:'🌀',rarity:'uncommon',effect:'1 free reroll/shop',value:true},
+  {name:'Fibonacci',icon:'🔢',rarity:'uncommon',effect:'+8 Mult if A,2,3,5,8',apply:(s,h,cards)=>{const ranks=cards.map(c=>c.r);if(['A','2','3','5','8'].some(r=>ranks.includes(r)))s.mult+=8;}},
+  {name:'Steel Joker',icon:'⚙️',rarity:'rare',effect:'×1.5 per Steel',apply:(s,h,cards)=>{const st=cards.filter(c=>c.enhancement==='steel').length;if(st>0)s.mult*=Math.pow(1.5,st);}},
+  {name:'Constellation',icon:'✨',rarity:'uncommon',effect:'+0.1×Mult per planet',apply:(s,h,cards,G)=>{s.mult*=(1+G.planets.length*0.1);}},
+  {name:'Hiker',icon:'🥾',rarity:'uncommon',effect:'Every card +5 Chips',apply:(s,h,cards)=>{s.chips+=cards.length*5;}},
+  {name:'Faceless',icon:'😶',rarity:'common',effect:'+$5 if ≥3 face',value:true},
+  {name:'Green Joker',icon:'💚',rarity:'uncommon',effect:'+Mult (grows)',apply:(s,h,cards,G)=>{const j=G.jokers.find(jj=>jj.name==='Green Joker');s.mult+=(j.mult||1);},grow:true,mult:1},
+  {name:'Red Card',icon:'🟥',rarity:'common',effect:'+3 Mult per skipped',apply:(s,h,cards,G)=>{s.mult+=G.skippedBlinds*3;}},
+  {name:'Madness',icon:'🌪️',rarity:'uncommon',effect:'×0.5 if ≤1 left',apply:(s,h,cards,G)=>{if(G.handsLeft<=1)s.mult*=0.5;else s.mult*=2;}},
+  {name:'Square',icon:'🟦',rarity:'common',effect:'+4 Chips if 4 cards',apply:(s,h,cards)=>{if(cards.length===4)s.chips+=4;}},
+  {name:'Séance',icon:'🕯️',rarity:'rare',effect:'Spectral in shop',value:true},
+  {name:'Ramen',icon:'🍜',rarity:'uncommon',effect:'×2 if hand discarded',apply:s=>{s.mult*=2;}},
+  {name:'Seltzer',icon:'🫧',rarity:'uncommon',effect:'Retrigger 1 card',effect2:true},
+  {name:'Castle',icon:'🏰',rarity:'uncommon',effect:'+3 Chips per discard',apply:(s,h,cards,G)=>{s.chips+=(G.baseDiscards-G.discardsLeft)*3;}},
+  {name:'Smiley Face',icon:'😀',rarity:'common',effect:'+5 Mult per face',apply:(s,h,cards)=>{s.mult+=cards.filter(c=>['J','Q','K'].includes(c.r)).length*5;}},
+  {name:'Campfire',icon:'🏕️',rarity:'rare',effect:'×3 if hand lost',apply:s=>{s.mult*=3;}},
+  {name:'Golden Ticket',icon:'🎟️',rarity:'common',effect:'+$4 at round end',value:true},
+  {name:'Mr Bones',icon:'💀',rarity:'rare',effect:'Save from death once',effect2:true},
+  {name:'Acrobat',icon:'🤸',rarity:'uncommon',effect:'×3 if final hand',apply:(s,h,cards,G)=>{if(G.handsLeft===1)s.mult*=3;}},
+  {name:'Sock & Buskin',icon:'🎭',rarity:'uncommon',effect:'Retrigger face',effect2:true},
+  {name:'Swashbuckler',icon:'⚔️',rarity:'common',effect:'+Mult = Jokers sold',apply:(s,h,cards,G)=>{s.mult+=(G.jokersSold||0);}},
+  {name:'Troubadour',icon:'🎸',rarity:'uncommon',effect:'+2 hands this round',bonusHands:2},
+  {name:'Certificate',icon:'📜',rarity:'uncommon',effect:'Random gold card',effect2:true},
+  {name:'Smeared',icon:'🎨',rarity:'uncommon',effect:'♥=♦ and ♣=♠',effect2:true},
+  {name:'Throwback',icon:'⏪',rarity:'uncommon',effect:'×0.25 per blind skipped',apply:(s,h,cards,G)=>{s.mult*=Math.pow(0.25,G.skippedBlinds||0);}},
+  {name:'Hanging Chad',icon:'📄',rarity:'common',effect:'Retrigger 1st card ×2',effect2:true},
+  {name:'Rough Gem',icon:'💎',rarity:'uncommon',effect:'+$1 per ♦ card',value:true},
+  {name:'Bloodpact',icon:'🩸',rarity:'rare',effect:'×1.5 per Ace',apply:(s,h,cards)=>{const aces=cards.filter(c=>c.r==='A').length;if(aces>0)s.mult*=Math.pow(1.5,aces);}},
+  {name:'Oops! All 6s',icon:'6️⃣',rarity:'legendary',effect:'×4 if all 6s',apply:(s,h,cards)=>{if(cards.length>0&&cards.every(c=>c.r==='6'))s.mult*=4;}},
+  {name:'The Idol',icon:'🗿',rarity:'legendary',effect:'×2 per card rank',apply:(s,h,cards)=>{const ranks=new Set(cards.map(c=>c.r));ranks.forEach(()=>s.mult*=2);}},
+  {name:'Seeing Double',icon:'👀',rarity:'legendary',effect:'×2 if ♣ + other suit',apply:(s,h,cards)=>{const suits=new Set(cards.map(c=>c.s));if(suits.has('C')&&suits.size>1)s.mult*=2;}},
+  {name:'Matador',icon:'🐂',rarity:'legendary',effect:'+$10 if boss blind',value:true},
+  {name:'Hit the Road',icon:'🛣️',rarity:'rare',effect:'×0.5 per Jack',apply:(s,h,cards)=>{const jacks=cards.filter(c=>c.r==='J').length;s.mult*=Math.pow(0.5,jacks)||1;}},
+  {name:'The Duo',icon:'👥',rarity:'rare',effect:'×2 if Pair',apply:(s,h)=>{if(h==='Pair')s.mult*=2;}},
+  {name:'The Trio',icon:'👨‍👩‍👦',rarity:'rare',effect:'×3 if 3-Kind',apply:(s,h)=>{if(h==='Three of a Kind')s.mult*=3;}},
+  {name:'The Family',icon:'👨‍👩‍👧‍👦',rarity:'rare',effect:'×4 if 4-Kind',apply:(s,h)=>{if(h==='Four of a Kind')s.mult*=4;}},
+  {name:'The Order',icon:'⚜️',rarity:'rare',effect:'×3 if Straight',apply:(s,h)=>{if(h==='Straight')s.mult*=3;}},
+  {name:'The Tribe',icon:'🏕️',rarity:'rare',effect:'×2 if Flush',apply:(s,h)=>{if(h==='Flush')s.mult*=2;}},
+  {name:'Stuntman',icon:'🏍️',rarity:'uncommon',effect:'+250 Chips, -2 size',apply:s=>{s.chips+=250;}},
+  {name:'Invisible',icon:'👻',rarity:'rare',effect:'Duplicate random Joker',effect2:true},
+  {name:'Brainstorm',icon:'🌩️',rarity:'legendary',effect:'Copy left joker',copy:'left'},
+  {name:'Satellite',icon:'🛰️',rarity:'uncommon',effect:'+$1 per unique planet',value:true},
+  {name:'Shoot Moon',icon:'🌕',rarity:'common',effect:'+13 Mult per ♥ Queen',apply:(s,h,cards)=>{s.mult+=cards.filter(c=>c.r==='Q'&&c.s==='H').length*13;}},
+  {name:'Drivers',icon:'🚗',rarity:'rare',effect:'Enhanced cards give ×3',apply:(s,h,cards)=>{if(cards.some(c=>c.enhancement))s.mult*=3;}},
+  {name:'Bootstraps',icon:'🥾',rarity:'uncommon',effect:'+2 Mult per $5',apply:(s,h,cards,G)=>{s.mult+=Math.floor(G.money/5)*2;}},
+  {name:'Canio',icon:'🃏',rarity:'legendary',effect:'Destroy cards',effect2:true},
+  {name:'Yorick',icon:'💀',rarity:'uncommon',effect:'×Mult = discards×5',apply:(s,h,cards,G)=>{s.mult*=(1+(G.baseDiscards-G.discardsLeft)*5);}},
+  {name:'Chicot',icon:'🃏',rarity:'uncommon',effect:'Disable boss',effect2:true},
+  {name:'Perkeo',icon:'🃏',rarity:'legendary',effect:'Duplicate consumables',effect2:true},
+  {name:'Blueprint',icon:'📘',rarity:'legendary',effect:'Copy right joker',copy:'right'},
+];
 
-////////////////////
-// PCI (shrinks based on contact stat)
-////////////////////
-let contactStat = 70; // out of 100
-let pciSize = 1.5 - (contactStat/100);
-let pci = new THREE.Mesh(
-new THREE.RingGeometry(pciSize, pciSize+0.3, 32),
-new THREE.MeshBasicMaterial({color:0xffff00, side:THREE.DoubleSide})
-);
-pci.rotation.x = -Math.PI/2;
-pci.position.set(0,2,4);
-scene.add(pci);
+const PLANET_CARDS=[
+  {name:'Mercury',icon:'☿',hand:'Pair',chipBonus:15,multBonus:1},
+  {name:'Venus',icon:'♀',hand:'Two Pair',chipBonus:20,multBonus:1},
+  {name:'Earth',icon:'🌍',hand:'Three of a Kind',chipBonus:20,multBonus:2},
+  {name:'Mars',icon:'♂',hand:'Straight',chipBonus:25,multBonus:2},
+  {name:'Jupiter',icon:'♃',hand:'Flush',chipBonus:25,multBonus:2},
+  {name:'Saturn',icon:'♄',hand:'Full House',chipBonus:30,multBonus:2},
+  {name:'Uranus',icon:'♅',hand:'Four of a Kind',chipBonus:40,multBonus:3},
+  {name:'Neptune',icon:'♆',hand:'Straight Flush',chipBonus:50,multBonus:4},
+  {name:'Pluto',icon:'♇',hand:'Royal Flush',chipBonus:50,multBonus:5},
+];
 
-////////////////////
-// BAT
-////////////////////
-let bat = new THREE.Mesh(
-new THREE.CylinderGeometry(0.2,0.4,6,32),
-new THREE.MeshPhongMaterial({color:0x8b4513})
-);
-bat.rotation.z = Math.PI/2;
-bat.position.set(0,2,5);
-scene.add(bat);
+const TAROT_CARDS=[
+  {name:'Fool',icon:'🃏',desc:'Create 1 joker',type:'joker'},
+  {name:'Magician',icon:'🎩',desc:'2 cards → Foil',type:'enhance',enhancement:'foil',count:2},
+  {name:'Priestess',icon:'👸',desc:'Create 2 Planets',type:'planet',count:2},
+  {name:'Empress',icon:'👑',desc:'2 cards → Holo',type:'enhance',enhancement:'holo',count:2},
+  {name:'Emperor',icon:'🗡️',desc:'Create 3 Tarots',type:'tarot',count:3},
+  {name:'Hierophant',icon:'⛪',desc:'2 cards → Steel',type:'enhance',enhancement:'steel',count:2},
+  {name:'Lovers',icon:'💕',desc:'1 card → Holo',type:'enhance',enhancement:'holo',count:1},
+  {name:'Chariot',icon:'🏇',desc:'1 card → Steel',type:'enhance',enhancement:'steel',count:1},
+  {name:'Strength',icon:'💪',desc:'+1 hand',type:'hands'},
+  {name:'Hermit',icon:'🕯️',desc:'+$20',type:'money'},
+  {name:'Wheel',icon:'☸️',desc:'Upgrade hand',type:'upgrade'},
+  {name:'Justice',icon:'⚖️',desc:'1 card → Foil',type:'enhance',enhancement:'foil',count:1},
+];
 
-////////////////////
-// FIELDERS
-////////////////////
-let fielderGeo = new THREE.BoxGeometry(1,2,1);
-let fielderMat = new THREE.MeshPhongMaterial({color:0xff0000});
-let fielder = new THREE.Mesh(fielderGeo,fielderMat);
-fielder.position.set(0,1,-20);
-scene.add(fielder);
+const BOSS_BLINDS=[
+  {name:'The Hook',icon:'🪝',desc:'2 cards face down'},
+  {name:'The Ox',icon:'🐂',desc:'Lose all money'},
+  {name:'The House',icon:'🏠',desc:'1st hand = 0'},
+  {name:'The Wall',icon:'🧱',desc:'Target ×1.5'},
+  {name:'The Wheel',icon:'🎡',desc:'No Pairs'},
+  {name:'The Serpent',icon:'🐍',desc:'Play exactly 3'},
+];
 
-////////////////////
-// CAMERA
-////////////////////
-camera.position.set(0,6,15);
-camera.lookAt(0,2,0);
+/* ════ STATE ════ */
+let G={};
+function initState(){
+  G={round:1,ante:2,money:25,roundScore:0,targetScore:800,
+     handsLeft:4,discardsLeft:3,deck:[],hand:[],
+     selected:new Set(),jokers:[],busy:false,sortMode:null,
+     baseHands:4,baseDiscards:3,maxJokers:5,jokerDiscount:1,
+     tarots:[],planets:[],handUpgrades:{},selectedDeck:null,
+     bossBlind:null,firstHandPlayed:false,roundWon:false};
+}
 
-////////////////////
-// GAME VARIABLES
-////////////////////
-let pitching=false;
-let velocity = new THREE.Vector3();
-let pitchType="";
-let swingStart=0;
-let hits=0;
-let atBats=0;
+/* ════ DECK ════ */
+function makeDeck(){
+  const d=[];
+  SUITS.forEach(s=>RANKS.forEach(r=>d.push({s,r,enhancements:[]})));
+  return shuffle(d);
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-////////////////////
-// MOUSE AIM
-////////////////////
-window.addEventListener("mousemove",(e)=>{
-let x=(e.clientX/window.innerWidth)*2-1;
-let y=-(e.clientY/window.innerHeight)*2+1;
-pci.position.x=x*5;
-pci.position.y=2+y*3;
+/* ════ SORTING ════ */
+function sortHand(mode){
+  if(G.busy)return;
+  G.sortMode=mode;
+  if(mode==='rank'){
+    G.hand.sort((a,b)=>RV[b.r]-RV[a.r]);
+  }else if(mode==='suit'){
+    const suitOrder={S:0,H:1,D:2,C:3};
+    G.hand.sort((a,b)=>{
+      if(suitOrder[a.s]!==suitOrder[b.s])return suitOrder[a.s]-suitOrder[b.s];
+      return RV[b.r]-RV[a.r];
+    });
+  }
+  G.selected.clear();
+  dealHand();
+  updatePreview();
+  updateButtons();
+  updateSortButtons();
+}
+
+function updateSortButtons(){
+  document.getElementById('sortRank').classList.toggle('active',G.sortMode==='rank');
+  document.getElementById('sortSuit').classList.toggle('active',G.sortMode==='suit');
+}
+
+/* ════ EVALUATE ════ */
+function evaluate(cards){
+  if(!cards.length)return 'High Card';
+  const rc={},sc={};
+  cards.forEach(c=>{rc[c.r]=(rc[c.r]||0)+1;sc[c.s]=(sc[c.s]||0)+1;});
+  const counts=Object.values(rc).sort((a,b)=>b-a);
+  const flush=Object.values(sc).some(v=>v>=5);
+  const straight=hasStraight(cards);
+  const royal=straight&&cards.some(c=>c.r==='A')&&cards.length>=5;
+  if(royal&&flush)return 'Royal Flush';
+  if(straight&&flush)return 'Straight Flush';
+  if(counts[0]===4)return 'Four of a Kind';
+  if(counts[0]===3&&counts[1]>=2)return 'Full House';
+  if(flush)return 'Flush';
+  if(straight)return 'Straight';
+  if(counts[0]===3)return 'Three of a Kind';
+  if(counts[0]===2&&counts[1]===2)return 'Two Pair';
+  if(counts[0]===2)return 'Pair';
+  return 'High Card';
+}
+function hasStraight(cards){
+  if(cards.length<5)return false;
+  const vals=[...new Set(cards.map(c=>RV[c.r]))].sort((a,b)=>b-a);
+  if(vals.length<5)return false;
+  for(let i=0;i<=vals.length-5;i++){
+    let ok=true;
+    for(let j=0;j<4;j++)if(vals[i+j]-vals[i+j+1]!==1){ok=false;break;}
+    if(ok)return true;
+  }
+  return vals.includes(14)&&vals.includes(2)&&vals.includes(3)&&vals.includes(4)&&vals.includes(5);
+}
+
+/* ════ RENDER ════ */
+function cardInnerHTML(card){
+  return `<div class="c-top"><span class="c-rank">${card.r}</span><span class="c-suit">${SYM[card.s]}</span></div>
+          <div class="c-mid c-suit">${SYM[card.s]}</div>
+          <div class="c-bot"><span class="c-rank">${card.r}</span><span class="c-suit">${SYM[card.s]}</span></div>`;
+}
+
+function dealHand(){
+  if(G.sortMode==='rank'){
+    G.hand.sort((a,b)=>RV[b.r]-RV[a.r]);
+  }else if(G.sortMode==='suit'){
+    const suitOrder={S:0,H:1,D:2,C:3};
+    G.hand.sort((a,b)=>{
+      if(suitOrder[a.s]!==suitOrder[b.s])return suitOrder[a.s]-suitOrder[b.s];
+      return RV[b.r]-RV[a.r];
+    });
+  }
+  
+  const row=document.getElementById('handRow');
+  row.innerHTML='';
+  G.hand.forEach((card,i)=>{
+    const el=document.createElement('div');
+    let cls=`card ${card.s} deal`;
+    if(card.enhancements){
+      card.enhancements.forEach(e=>cls+=` ${e}`);
+    }
+    el.className=cls;
+    el.dataset.idx=i;
+    el.innerHTML=cardInnerHTML(card);
+    row.appendChild(el);
+  });
+}
+
+function syncSelection(){
+  document.getElementById('handRow').querySelectorAll('.card[data-idx]').forEach(el=>{
+    el.classList.toggle('selected', G.selected.has(Number(el.dataset.idx)));
+  });
+}
+
+function renderJokers(){
+  let h='';
+  for(let i=0;i<G.maxJokers;i++){
+    if(i<G.jokers.length){
+      const j=G.jokers[i];
+      h+=`<div class="joker-card ${j.rarity}" data-joker-idx="${i}"><div class="joker-inner">
+        <div class="j-name">${j.name}</div><div class="j-icon">${j.icon}</div>
+        <div class="j-desc">${j.effect}</div></div></div>`;
+    }else h+=`<div class="joker-card empty"></div>`;
+  }
+  document.getElementById('jokerRow').innerHTML=h;
+}
+
+function renderInventory(){
+  const inv=document.getElementById('invItems');
+  inv.innerHTML='';
+  G.tarots.forEach((t,i)=>{
+    const el=document.createElement('div');
+    el.className='inv-item tarot';
+    el.innerHTML=`${t.icon}<div class="inv-item-tooltip">${t.name}: ${t.desc}</div>`;
+    el.onclick=()=>useTarot(i);
+    inv.appendChild(el);
+  });
+  G.planets.forEach((p,i)=>{
+    const el=document.createElement('div');
+    el.className='inv-item planet';
+    el.innerHTML=`${p.icon}<div class="inv-item-tooltip">${p.name}: +${p.chipBonus} chips, +${p.multBonus} mult to ${p.hand}</div>`;
+    el.onclick=()=>usePlanet(i);
+    inv.appendChild(el);
+  });
+}
+
+function renderStats(){
+  document.getElementById('roundScore').textContent=fmt(G.roundScore);
+  document.getElementById('targetScore').textContent=fmt(G.targetScore);
+  document.getElementById('targetScoreSide').textContent=fmt(G.targetScore);
+  document.getElementById('handsLeft').textContent=G.handsLeft;
+  document.getElementById('discardsLeft').textContent=G.discardsLeft;
+  document.getElementById('money').textContent='$'+G.money;
+  document.getElementById('ante').textContent='$'+G.ante;
+  document.getElementById('roundNum').textContent=G.round;
+  
+  if(G.bossBlind){
+    document.getElementById('blindBox').classList.add('boss');
+    document.getElementById('blindName').textContent=G.bossBlind.name+' '+G.bossBlind.icon;
+    document.getElementById('blindDesc').textContent=G.bossBlind.desc;
+  }else{
+    document.getElementById('blindBox').classList.remove('boss');
+    document.getElementById('blindName').textContent='Big Blind';
+    document.getElementById('blindDesc').textContent='Beat the blind';
+  }
+}
+
+function updatePreview(){
+  if(!G.selected.size){
+    document.getElementById('handName').textContent='—';
+    document.getElementById('chipVal').textContent='—';
+    document.getElementById('multVal').textContent='—';
+  }else{
+    const selCards=[...G.selected].map(i=>G.hand[i]);
+    const name=evaluate(selCards);
+    let h=HANDS[name];
+    let chips=h.c+(G.handUpgrades[name]?.c||0);
+    let mult=h.m+(G.handUpgrades[name]?.m||0);
+    
+    // Add card chip bonuses
+    selCards.forEach(c=>{
+      if(c.enhancements&&c.enhancements.includes('foil'))chips+=50;
+      if(c.enhancements&&c.enhancements.includes('holo'))mult+=10;
+      if(c.enhancements&&c.enhancements.includes('steel'))mult*=1.5;
+    });
+    
+    document.getElementById('handName').textContent=name;
+    document.getElementById('chipVal').textContent=Math.floor(chips);
+    document.getElementById('multVal').textContent=Math.floor(mult);
+  }
+}
+
+function updateButtons(){
+  const ok=G.selected.size>0&&G.selected.size<=5&&!G.roundWon&&G.handsLeft>0;
+  document.getElementById('playBtn').disabled =!ok||G.busy;
+  document.getElementById('discBtn').disabled =!ok||!G.discardsLeft||G.busy||G.roundWon;
+}
+
+function fmt(n){return n.toLocaleString();}
+
+/* ════ EVENT DELEGATION ════ */
+document.getElementById('handRow').addEventListener('click',e=>{
+  const el=e.target.closest('.card[data-idx]');
+  if(!el||G.busy)return;
+  const idx=Number(el.dataset.idx);
+  if(G.selected.has(idx)) G.selected.delete(idx);
+  else if(G.selected.size<5) G.selected.add(idx);
+  syncSelection();
+  updatePreview();
+  updateButtons();
 });
 
-////////////////////
-// POWER SWING (hold)
-////////////////////
-window.addEventListener("mousedown",()=>{
-swingStart=Date.now();
+/* ════ PLAY HAND ════ */
+function playHand(){
+  if(G.busy||!G.selected.size||G.roundWon||G.handsLeft<=0)return;
+
+  // Boss blind: first hand zero
+  if(G.bossBlind&&G.bossBlind.name==='The House'&&!G.firstHandPlayed){
+    G.firstHandPlayed=true;
+    G.handsLeft--;
+    const row=document.getElementById('handRow');
+    [...G.selected].forEach(i=>{
+      const el=row.querySelector(`[data-idx="${i}"]`);
+      if(el)el.classList.add('fly');
+    });
+    setTimeout(()=>{
+      [...G.selected].sort((a,b)=>b-a).forEach(i=>G.hand.splice(i,1));
+      G.selected.clear();
+      const need=8-G.hand.length;
+      for(let i=0;i<need&&G.deck.length;i++)G.hand.push(G.deck.pop());
+      dealHand();
+      renderStats();updatePreview();updateButtons();
+      saveGame();
+      if(G.handsLeft<=0)setTimeout(endRound,700);
+    },800);
+    return;
+  }
+  
+  G.busy=true;
+
+  const selArr=[...G.selected];
+  const selCards=selArr.map(i=>G.hand[i]);
+  const name=evaluate(selCards);
+  const base=HANDS[name];
+  let chips=base.c+(G.handUpgrades[name]?.c||0);
+  let mult=base.m+(G.handUpgrades[name]?.m||0);
+  
+  // Card enhancements
+  selCards.forEach(c=>{
+    if(c.enhancements&&c.enhancements.includes('foil'))chips+=50;
+    if(c.enhancements&&c.enhancements.includes('holo'))mult+=10;
+    if(c.enhancements&&c.enhancements.includes('steel'))mult*=1.5;
+  });
+  
+  // Jokers
+  G.jokers.forEach((j,idx)=>{
+    if(j.copy){
+      const target=j.copy==='right'?G.jokers[G.jokers.length-2]:G.jokers[1];
+      if(target&&target.apply){
+        const prevC=chips,prevM=mult;
+        const s={chips,mult};
+        target.apply(s,name,selCards,G);
+        chips=s.chips;mult=s.mult;
+        if(chips!==prevC||mult!==prevM){
+          const el=document.querySelector(`[data-joker-idx="${idx}"]`);
+          if(el){el.classList.add('trigger');setTimeout(()=>el.classList.remove('trigger'),600);}
+        }
+      }
+    }else if(j.apply){
+      const prevC=chips,prevM=mult;
+      const s={chips,mult};
+      j.apply(s,name,selCards,G);
+      chips=s.chips;mult=s.mult;
+      if(chips!==prevC||mult!==prevM){
+        const el=document.querySelector(`[data-joker-idx="${idx}"]`);
+        if(el){el.classList.add('trigger');setTimeout(()=>el.classList.remove('trigger'),600);}
+      }
+    }
+    
+    // Green Joker grows
+    if(j.name==='Green Joker'){
+      j.mult=(j.mult||1)+1;
+    }
+  });
+  
+  const total=Math.floor(chips*mult);
+  const newScore = G.roundScore + total;
+  const willWin = newScore >= G.targetScore;
+  
+  G.roundScore = newScore;
+  G.handsLeft--;
+
+  const strip=document.getElementById('playedStrip');
+  strip.innerHTML=selCards.map(c=>{
+    let cls=`card ${c.s} played`;
+    if(c.enhancements){
+      c.enhancements.forEach(e=>cls+=` ${e}`);
+    }
+    return `<div class="${cls}">${cardInnerHTML(c)}</div>`;
+  }).join('');
+
+  const row=document.getElementById('handRow');
+  selArr.forEach(i=>{
+    const el=row.querySelector(`[data-idx="${i}"]`);
+    if(el)el.classList.add('fly');
+  });
+
+  setTimeout(()=>showBreakdown(name,base.c,chips,mult,total),450);
+
+  const rect=strip.getBoundingClientRect();
+  const particleColor=total>=300?'#ffd700':total>=150?'#ef5350':'#4fc3f7';
+  burst(rect.left+rect.width/2,rect.top+rect.height/2,particleColor,50);
+
+  
+   setTimeout(()=>{
+    hideBreakdown();
+    [...G.selected].sort((a,b)=>b-a).forEach(i=>G.hand.splice(i,1));
+    G.selected.clear();
+    
+    if(willWin){
+      G.roundWon = true;
+      G.busy = true;
+      strip.innerHTML='';
+      saveGame();
+      setTimeout(()=>{
+        G.money+=8;
+        // End of round money jokers
+        G.jokers.forEach(j=>{
+          if(j.name==='Egg')G.money+=5;
+          if(j.name==='Gift Card')G.money+=3;
+          if(j.name==='Golden Ticket')G.money+=4;
+          if(j.name==='To the Moon')G.money+=Math.floor(G.money/5);
+          if(j.name==='Satellite'){
+            const uniquePlanets=new Set(G.planets.map(p=>p.name));
+            G.money+=uniquePlanets.size;
+          }
+          if(j.name==='Rough Gem'){
+            // Count diamonds played this round - simplified, just give bonus
+            G.money+=2;
+          }
+          if(j.name==='Matador'&&G.bossBlind)G.money+=10;
+        });
+        renderStats();
+        showShop();
+      },700);
+    }else{
+      const need=8-G.hand.length;
+      for(let i=0;i<need&&G.deck.length;i++)G.hand.push(G.deck.pop());
+      strip.innerHTML='';
+      dealHand();
+      renderStats();updatePreview();updateButtons();renderJokers();
+      G.busy=false;
+      saveGame();
+      
+      if(G.handsLeft<=0){
+        setTimeout(endRound,700);
+      }
+    }
+  },2800);
+}
+
+/* ════ SCORE BREAKDOWN ════ */
+function showBreakdown(name,baseC,chips,mult,total){
+  const el=document.getElementById('scoreBreakdown');
+  let h=`<span class="sb-tag chips-tag">${name}</span>`;
+  h+=chips!==baseC
+    ?`<span class="sb-tag chips-tag">${baseC}→<strong>${Math.floor(chips)}</strong> chips</span>`
+    :`<span class="sb-tag chips-tag">${Math.floor(chips)} chips</span>`;
+  h+=`<span class="sb-tag mult-tag">×${Math.floor(mult)} mult</span>`;
+  h+=`<span class="sb-tag eq-tag">=</span>`;
+  h+=`<span class="sb-tag total-tag">+${fmt(total)}</span>`;
+  el.innerHTML=h;el.classList.add('visible');
+  const f=document.getElementById('scoreFlash');f.textContent=fmt(G.roundScore);f.classList.add('show');
+}
+function hideBreakdown(){
+  document.getElementById('scoreBreakdown').classList.remove('visible');
+  document.getElementById('scoreFlash').classList.remove('show');
+}
+
+/* ════ DISCARD ════ */
+function discardCards(){
+  if(G.busy||!G.selected.size||!G.discardsLeft||G.roundWon||G.handsLeft<=0)return;
+  G.busy=true;
+  const row=document.getElementById('handRow');
+  [...G.selected].forEach(i=>{
+    const el=row.querySelector(`[data-idx="${i}"]`);
+    if(el)el.classList.add('discard-anim');
+  });
+  setTimeout(()=>{
+    const count=G.selected.size;
+    [...G.selected].sort((a,b)=>b-a).forEach(i=>G.hand.splice(i,1));
+    G.selected.clear();G.discardsLeft--;
+    for(let i=0;i<count&&G.deck.length;i++)G.hand.push(G.deck.pop());
+    dealHand();
+    renderStats();updatePreview();updateButtons();
+    G.busy=false;
+  },550);
+}
+
+/* ════ USE TAROT ════ */
+let currentTarot=null,tarotSelected=new Set();
+function useTarot(idx){
+  if(G.busy)return;
+  const tarot=G.tarots[idx];
+  currentTarot={tarot,idx};
+  
+  if(tarot.type==='joker'){
+    // Create random joker
+    const commonJokers=JOKER_DB.filter(j=>j.rarity==='common');
+    const newJoker={...commonJokers[Math.floor(Math.random()*commonJokers.length)]};
+    if(G.jokers.length<G.maxJokers){
+      G.jokers.push(newJoker);
+      G.tarots.splice(idx,1);
+      renderJokers();renderInventory();
+      burst(innerWidth/2,innerHeight/2,'#9c27b0',40);
+    }
+  }else if(tarot.type==='planet'){
+    // Create planets
+    for(let i=0;i<tarot.count;i++){
+      const planet={...PLANET_CARDS[Math.floor(Math.random()*PLANET_CARDS.length)]};
+      G.planets.push(planet);
+    }
+    G.tarots.splice(idx,1);
+    renderInventory();
+    burst(innerWidth/2,innerHeight/2,'#9c27b0',40);
+  }else if(tarot.type==='tarot'){
+    // Create tarots
+    for(let i=0;i<tarot.count;i++){
+      const newTarot={...TAROT_CARDS[Math.floor(Math.random()*TAROT_CARDS.length)]};
+      G.tarots.push(newTarot);
+    }
+    G.tarots.splice(idx,1);
+    renderInventory();
+    burst(innerWidth/2,innerHeight/2,'#9c27b0',40);
+  }else if(tarot.type==='hands'){
+    G.handsLeft++;
+    G.tarots.splice(idx,1);
+    renderStats();renderInventory();
+    burst(innerWidth/2,innerHeight/2,'#4fc3f7',30);
+  }else if(tarot.type==='money'){
+    G.money+=20;
+    G.tarots.splice(idx,1);
+    renderStats();renderInventory();
+    burst(innerWidth/2,innerHeight/2,'#ffd700',30);
+  }else if(tarot.type==='upgrade'){
+    const handNames=Object.keys(HANDS);
+    const randomHand=handNames[Math.floor(Math.random()*handNames.length)];
+    if(!G.handUpgrades[randomHand])G.handUpgrades[randomHand]={c:0,m:0};
+    G.handUpgrades[randomHand].c+=15;
+    G.handUpgrades[randomHand].m+=1;
+    G.tarots.splice(idx,1);
+    renderInventory();
+    burst(innerWidth/2,innerHeight/2,'#9c27b0',40);
+  }else if(tarot.type==='enhance'){
+    // Show selection UI
+    tarotSelected.clear();
+    document.getElementById('tarotTitle').textContent=tarot.name;
+    document.getElementById('tarotMsg').textContent=`Select ${tarot.count} card(s) to enhance to ${tarot.enhancement}`;
+    const handSel=document.getElementById('tarotHandSelect');
+    handSel.innerHTML='';
+    G.hand.forEach((card,i)=>{
+      const el=document.createElement('div');
+      let cls=`card ${card.s}`;
+      if(card.enhancements){
+        card.enhancements.forEach(e=>cls+=` ${e}`);
+      }
+      el.className=cls;
+      el.dataset.idx=i;
+      el.innerHTML=cardInnerHTML(card);
+      el.onclick=()=>{
+        if(tarotSelected.has(i)){
+          tarotSelected.delete(i);
+          el.classList.remove('selected');
+        }else if(tarotSelected.size<tarot.count){
+          tarotSelected.add(i);
+          el.classList.add('selected');
+        }
+      };
+      handSel.appendChild(el);
+    });
+    document.getElementById('tarotOverlay').classList.add('open');
+  }
+}
+
+document.getElementById('tarotConfirm').onclick=()=>{
+  if(!currentTarot||tarotSelected.size!==currentTarot.tarot.count)return;
+  [...tarotSelected].forEach(i=>{
+    if(!G.hand[i].enhancements)G.hand[i].enhancements=[];
+    if(!G.hand[i].enhancements.includes(currentTarot.tarot.enhancement)){
+      G.hand[i].enhancements.push(currentTarot.tarot.enhancement);
+    }
+  });
+  G.tarots.splice(currentTarot.idx,1);
+  document.getElementById('tarotOverlay').classList.remove('open');
+  dealHand();
+  renderInventory();
+  burst(innerWidth/2,innerHeight/2,'#9c27b0',40);
+  currentTarot=null;
+  tarotSelected.clear();
+  saveGame();
+};
+
+document.getElementById('tarotCancel').onclick=()=>{
+  document.getElementById('tarotOverlay').classList.remove('open');
+  currentTarot=null;
+  tarotSelected.clear();
+};
+
+/* ════ USE PLANET ════ */
+function usePlanet(idx){
+  const planet=G.planets[idx];
+  if(!G.handUpgrades[planet.hand])G.handUpgrades[planet.hand]={c:0,m:0};
+  G.handUpgrades[planet.hand].c+=planet.chipBonus;
+  G.handUpgrades[planet.hand].m+=planet.multBonus;
+  G.planets.splice(idx,1);
+  renderInventory();
+  updatePreview();
+  burst(innerWidth/2,innerHeight/2,'#9c27b0',40);
+  saveGame();
+}
+
+/* ════ SHOP ════ */
+function endRound(){
+  if(G.roundScore>=G.targetScore){G.money+=8;renderStats();showShop();}
+  else showEnd(false);
+}
+
+function showShop(){
+  document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+  const content=document.getElementById('shopContent');
+  content.innerHTML='';
+  
+  // Sell Jokers Section
+  if(G.jokers.length>0){
+    const sellSec=document.createElement('div');
+    sellSec.className='joker-sell-section';
+    sellSec.innerHTML='<div class="shop-section-title">💸 Sell Your Jokers</div><div class="shop-sub" style="margin:4px 0 0 0;font-size:10px;">Click to sell for half price</div><div class="joker-sell-grid" id="jokerSellGrid"></div>';
+    content.appendChild(sellSec);
+    
+  const sellGrid=sellSec.querySelector('#jokerSellGrid');
+// Create a snapshot of jokers to avoid index issues
+const jokersSnapshot=[...G.jokers];
+jokersSnapshot.forEach((j,snapshotIdx)=>{
+  const baseCost={common:5,uncommon:8,rare:12,legendary:20}[j.rarity];
+  const sellPrice=Math.floor(baseCost*G.jokerDiscount/2);
+  const el=document.createElement('div');
+  el.className=`joker-sell-card ${j.rarity}`;
+  el.innerHTML=`<div class="joker-sell-price">+$${sellPrice}</div>
+    <div class="sc-name" style="font-size:10px;margin-bottom:3px;">${j.name}</div>
+    <div class="sc-icon" style="font-size:32px;margin:2px 0;">${j.icon}</div>
+    <div class="sc-desc" style="font-size:8px;min-height:20px;">${j.effect}</div>`;
+  el.onclick=()=>{
+    if(el.classList.contains('sold'))return;
+    // Find the actual current index of this joker
+    const currentIdx=G.jokers.findIndex(joker=>joker===j);
+    if(currentIdx===-1)return; // Already sold
+    
+    if(confirm(`Sell ${j.name} for $${sellPrice}?`)){
+      G.money+=sellPrice;
+      G.jokers.splice(currentIdx,1);
+      G.jokersSold=(G.jokersSold||0)+1;
+      el.classList.add('sold');
+      el.querySelector('.joker-sell-price').textContent='SOLD';
+      document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+      renderJokers();
+      renderStats();
+      burst(innerWidth/2,innerHeight/2,'#ffd700',30);
+      saveGame();
+    }
+  };
+ sellGrid.appendChild(el);
 });
-
-window.addEventListener("mouseup",()=>{
-if(!pitching) return;
-
-let holdTime=(Date.now()-swingStart)/1000;
-let power=Math.min(holdTime,1.5);
-
-checkContact(power);
-});
-
-////////////////////
-// PITCH
-////////////////////
-function pitch(){
-if(pitching) return;
-
-pitching=true;
-ball.position.set((Math.random()-0.5)*2,2+(Math.random()-0.5)*2,-25);
-
-pitchType=Math.random()<0.5?"fast":"curve";
-
-if(pitchType==="fast"){
-velocity.set(0,0,0.8);
-}else{
-velocity.set(0.05,0,0.7);
-}
-document.getElementById("feedback").innerText="";
-}
-
-////////////////////
-// CONTACT LOGIC
-////////////////////
-function checkContact(power){
-let distance=ball.position.distanceTo(pci.position);
-let timing=Math.abs(ball.position.z-3);
-
-atBats++;
-
-if(distance<pciSize+0.5 && timing<2){
-let timingLabel="";
-if(timing<0.5) timingLabel="Perfect";
-else if(ball.position.z<3) timingLabel="Early";
-else timingLabel="Late";
-
-document.getElementById("feedback").innerText="💥 "+timingLabel+" Contact";
-
-hits++;
-
-let angleX=(pci.position.x-ball.position.x)*2;
-let launch=4+power*6;
-velocity.set(angleX,launch,-10-power*8);
-
-}else{
-document.getElementById("feedback").innerText="❌ Miss";
-}
-
-updateAVG();
-pitching=false;
-}
-
-function updateAVG(){
-let avg=(hits/atBats)||0;
-document.getElementById("avg").innerText=avg.toFixed(3);
-}
-
-////////////////////
-// ANIMATION LOOP
-////////////////////
-function animate(){
-requestAnimationFrame(animate);
-
-if(pitching){
-ball.position.add(velocity);
-
-if(pitchType==="curve"){
-velocity.x+=0.002;
-}
-
-if(ball.position.z>6){
-pitching=false;
-}
-}
-else if(ball.position.z<10){
-ball.position.add(velocity);
-velocity.y-=0.2;
-
-fielderChase();
+  }
+  
+  // Jokers
+  const jokerSec=document.createElement('div');
+  jokerSec.className='shop-section';
+  jokerSec.innerHTML='<div class="shop-section-title">🃏 Buy Jokers</div><div class="shop-grid" id="jokerShop"></div>';
+  content.appendChild(jokerSec);
+  
+  const jokerGrid=jokerSec.querySelector('#jokerShop');
+  const pool=[...JOKER_DB];
+  shuffle(pool).slice(0,3).forEach(j=>{
+    const baseCost={common:5,uncommon:8,rare:12,legendary:20}[j.rarity];
+    const cost=Math.floor(baseCost*G.jokerDiscount);
+    const el=document.createElement('div');
+    el.className=`shop-card ${j.rarity}`;
+    el.innerHTML=`<div class="sc-name">${j.name}</div><div class="sc-icon">${j.icon}</div>
+      <div class="sc-desc">${j.effect}</div><div class="sc-price">$${cost}</div>`;
+    el.onclick=()=>buyJoker(j,cost,el);
+    jokerGrid.appendChild(el);
+  });
+  
+  // Tarots
+  const tarotSec=document.createElement('div');
+  tarotSec.className='shop-section';
+  tarotSec.innerHTML='<div class="shop-section-title">🔮 Tarots</div><div class="shop-grid" id="tarotShop"></div>';
+  content.appendChild(tarotSec);
+  
+  const tarotGrid=tarotSec.querySelector('#tarotShop');
+  shuffle([...TAROT_CARDS]).slice(0,2).forEach(t=>{
+    const cost=3;
+    const el=document.createElement('div');
+    el.className='shop-card';
+    el.innerHTML=`<div class="sc-name">${t.name}</div><div class="sc-icon">${t.icon}</div>
+      <div class="sc-desc">${t.desc}</div><div class="sc-price">$${cost}</div>`;
+    el.onclick=()=>{
+      if(G.money>=cost){
+        G.money-=cost;
+        G.tarots.push({...t});
+        el.classList.add('sold');
+        el.querySelector('.sc-price').textContent='Sold';
+        document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+        renderStats();renderInventory();
+        burst(innerWidth/2,innerHeight/2,'#9c27b0',24);
+        saveGame();
+      }
+    };
+    tarotGrid.appendChild(el);
+  });
+  
+  // Planets
+  const planetSec=document.createElement('div');
+  planetSec.className='shop-section';
+  planetSec.innerHTML='<div class="shop-section-title">🌍 Planets</div><div class="shop-grid" id="planetShop"></div>';
+  content.appendChild(planetSec);
+  
+  const planetGrid=planetSec.querySelector('#planetShop');
+  shuffle([...PLANET_CARDS]).slice(0,2).forEach(p=>{
+    const cost=3;
+    const el=document.createElement('div');
+    el.className='shop-card';
+    el.innerHTML=`<div class="sc-name">${p.name}</div><div class="sc-icon">${p.icon}</div>
+      <div class="sc-desc">+${p.chipBonus}c +${p.multBonus}m to ${p.hand}</div><div class="sc-price">$${cost}</div>`;
+    el.onclick=()=>{
+      if(G.money>=cost){
+        G.money-=cost;
+        G.planets.push({...p});
+        el.classList.add('sold');
+        el.querySelector('.sc-price').textContent='Sold';
+        document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+        renderStats();renderInventory();
+        burst(innerWidth/2,innerHeight/2,'#9c27b0',24);
+        saveGame();
+      }
+    };
+    planetGrid.appendChild(el);
+  });
+  
+  document.getElementById('shopOverlay').classList.add('open');
 }
 
-renderer.render(scene,camera);
+function buyJoker(j,cost,el){
+  if(G.money<cost||G.jokers.length>=G.maxJokers)return;
+  G.money-=cost;
+  G.jokers.push({...j});
+  el.classList.add('sold');
+  el.querySelector('.sc-price').textContent='Sold';
+  document.getElementById('shopMoney').textContent=`💰 $${G.money}`;
+  renderJokers();renderStats();
+  const r=document.getElementById('jokerRow').getBoundingClientRect();
+  burst(r.left+r.width/2,r.top+r.height/2,'#ffd700',24);
+  saveGame();
 }
-animate();
 
-////////////////////
-// FIELDER AI
-////////////////////
-function fielderChase(){
-let target=ball.position.clone();
-target.y=1;
-fielder.position.lerp(target,0.02);
+function startNewRound(){
+  document.getElementById('shopOverlay').classList.remove('open');
+  G.round++;
+  G.roundWon = false;
+  G.busy = false;
+  
+  // Base hands/discards + joker bonuses
+  let extraHands=0;
+  let extraHandSize=0;
+  G.jokers.forEach(j=>{
+    if(j.name==='Troubadour')extraHands+=2;
+    if(j.name==='Turtle Bean')extraHandSize+=5;
+  });
+  
+  G.handsLeft=G.baseHands+extraHands;
+  G.discardsLeft=G.baseDiscards;
+  G.roundScore=0;
+  G.targetScore=Math.floor(G.targetScore*1.35);
+  G.firstHandPlayed=false;
+  
+  // Boss blind every 3 rounds
+  if(G.round%3===0){
+    G.bossBlind={...BOSS_BLINDS[Math.floor(Math.random()*BOSS_BLINDS.length)]};
+    if(G.bossBlind.name==='The Ox')G.money=0;
+    else if(G.bossBlind.name==='The Wall')G.targetScore=Math.floor(G.targetScore*1.5);
+  }else{
+    G.bossBlind=null;
+  }
+  
+  G.deck=makeDeck();
+  let handSize=8;
+  G.jokers.forEach(j=>{
+    if(j.name==='Turtle Bean')handSize+=5;
+  });
+  G.hand=G.deck.splice(0,handSize);
+  G.selected.clear();
+  hideBreakdown();
+  document.getElementById('playedStrip').innerHTML='';
+  dealHand();renderJokers();renderStats();updatePreview();updateButtons();renderInventory();
+  saveGame();
 }
 
-window.addEventListener("resize",()=>{
-camera.aspect=window.innerWidth/window.innerHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(window.innerWidth,window.innerHeight);
-});
+/* ════ END ════ */
+function showEnd(win){
+  document.getElementById('endTitle').textContent=win?'You Win!':'Game Over';
+  document.getElementById('endTitle').className=win?'win':'lose';
+  document.getElementById('endMsg').textContent=win?'Incredible run!':`You scored ${fmt(G.roundScore)} but needed ${fmt(G.targetScore)}.`;
+  document.getElementById('endOverlay').classList.add('open');
+  if(win)burst(canvas.width/2,canvas.height/2,'#ffd700',100);
+}
 
+/* ════ DECK SELECTION ════ */
+function showDeckSelect(){
+  const grid=document.getElementById('deckGrid');
+  grid.innerHTML='';
+  DECK_TYPES.forEach(deck=>{
+    const el=document.createElement('div');
+    el.className='deck-card';
+    el.innerHTML=`<div class="deck-card-top">
+      <div class="deck-card-icon">${deck.icon}</div>
+      <div class="deck-card-name">${deck.name}</div>
+    </div><div class="deck-card-desc">${deck.desc}</div>`;
+    el.onclick=()=>selectDeck(deck);
+    grid.appendChild(el);
+  });
+  document.getElementById('deckOverlay').classList.add('open');
+}
+
+function selectDeck(deck){
+  document.getElementById('deckOverlay').classList.remove('open');
+  G.selectedDeck=deck;
+  if(deck.apply)deck.apply(G);
+  
+  // Magic deck: add tarots
+  if(deck.name==='Magic Deck'){
+    for(let i=0;i<2;i++){
+      const t={...TAROT_CARDS[Math.floor(Math.random()*TAROT_CARDS.length)]};
+      G.tarots.push(t);
+    }
+  }
+  
+  startGame();
+}
+
+/* ════ NAV ════ */
+function goHome(){
+  document.getElementById('gameWrap').classList.remove('visible');
+  document.getElementById('endOverlay').classList.remove('open');
+  document.getElementById('shopOverlay').classList.remove('open');
+  document.getElementById('home').classList.remove('hide');
+}
+
+function startGame(){
+  document.getElementById('home').classList.add('hide');
+  document.getElementById('gameWrap').classList.add('visible');
+  G.deck=makeDeck();
+  let handSize=8;
+  G.jokers.forEach(j=>{
+    if(j.name==='Turtle Bean')handSize+=5;
+  });
+  G.hand=G.deck.splice(0,handSize);
+  G.jokers=[
+    {...JOKER_DB[0]},
+    {...JOKER_DB[1]}
+  ];
+  dealHand();renderJokers();renderStats();updatePreview();updateButtons();updateSortButtons();renderInventory();
+  hideBreakdown();
+  document.getElementById('playedStrip').innerHTML='';
+  burst(innerWidth/2,innerHeight*.35,'#ffd700',60);
+  saveGame();
+}
+
+/* ════ SAVE/LOAD ════ */
+function saveGame(){
+  try{
+    const save={
+      round:G.round,
+      ante:G.ante,
+      money:G.money,
+      roundScore:G.roundScore,
+      targetScore:G.targetScore,
+      handsLeft:G.handsLeft,
+      discardsLeft:G.discardsLeft,
+      baseHands:G.baseHands,
+      baseDiscards:G.baseDiscards,
+      maxJokers:G.maxJokers,
+      jokerDiscount:G.jokerDiscount,
+      jokers:G.jokers,
+      tarots:G.tarots,
+      planets:G.planets,
+      handUpgrades:G.handUpgrades,
+      selectedDeck:G.selectedDeck,
+      sortMode:G.sortMode,
+      deck:G.deck,
+      hand:G.hand
+    };
+    localStorage.setItem('balatro_save',JSON.stringify(save));
+  }catch(e){console.error('Save failed',e);}
+}
+
+function loadGame(){
+  try{
+    const saved=localStorage.getItem('balatro_save');
+    if(!saved)return false;
+    const save=JSON.parse(saved);
+    
+    initState();
+    Object.assign(G,save);
+    
+    dealHand();
+    renderJokers();
+    renderStats();
+    updatePreview();
+    updateButtons();
+    updateSortButtons();
+    renderInventory();
+    
+    return true;
+  }catch(e){
+    console.error('Load failed',e);
+    return false;
+  }
+}
+
+function deleteSave(){
+  localStorage.removeItem('balatro_save');
+}
+
+/* ════ WIRING ════ */
+document.getElementById('startBtn').onclick=()=>{
+  // Check for saved game
+  if(localStorage.getItem('balatro_save')){
+    if(confirm('Continue saved game?')){
+      if(loadGame()){
+        document.getElementById('home').classList.add('hide');
+        document.getElementById('gameWrap').classList.add('visible');
+        burst(innerWidth/2,innerHeight*.35,'#4fc3f7',40);
+        return;
+      }
+    }else{
+      deleteSave();
+    }
+  }
+  initState();
+  showDeckSelect();
+};
+document.getElementById('playBtn').onclick=playHand;
+document.getElementById('discBtn').onclick=discardCards;
+document.getElementById('sortRank').onclick=()=>sortHand('rank');
+document.getElementById('sortSuit').onclick=()=>sortHand('suit');
+document.getElementById('shopClose').onclick=startNewRound;
+document.getElementById('rulesTab').onclick=()=>document.getElementById('rulesOverlay').classList.add('open');
+document.getElementById('rulesClose').onclick=()=>document.getElementById('rulesOverlay').classList.remove('open');
+document.getElementById('retryBtn').onclick=()=>{
+  deleteSave();
+  document.getElementById('endOverlay').classList.remove('open');
+  initState();
+  showDeckSelect();
+};
+document.getElementById('menuBtn').onclick=()=>{
+  saveGame();
+  goHome();
+};
+//need to fix the fact that once that rounds keep going even once you run out of turns and when you beat the ante.//
 </script>
 </body>
 </html>

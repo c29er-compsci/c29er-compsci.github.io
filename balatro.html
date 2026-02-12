@@ -309,7 +309,42 @@ body::before{
 .inv-item:hover{transform:translateY(-2px);border-color:var(--chip-blue);}
 .inv-item.planet{background:rgba(156,39,176,.2);border-color:rgba(156,39,176,.4);}
 .inv-item.planet:hover{border-color:var(--rare);}
-
+.inv-item{position:relative;}
+.inv-item-tooltip{
+  position:absolute;
+  bottom:calc(100% + 8px);
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(20,20,20,.98);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;
+  text-align:center;
+  line-height:1.4;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .25s ease-in-out;
+  z-index:2000;
+  border:2px solid #ffd700;
+  box-shadow:0 6px 20px rgba(0,0,0,.8), 0 0 20px rgba(255,215,0,.4);
+  min-width:120px;
+}
+.inv-item:hover .inv-item-tooltip{
+  opacity:1;
+  transition-delay:.3s;
+}
+.inventory-box{
+  background:rgba(0,0,0,.3);
+  border:2px solid #444;
+  border-radius:10px;
+  padding:8px;
+  position:relative;
+  overflow:visible;
+}
+.inv-item:hover .inv-item-tooltip{opacity:1;}
 .money-box{background:rgba(0,0,0,.3);border:2px solid #444;border-radius:10px;padding:8px;text-align:center;}
 .money-val{color:var(--gold);font-size:22px;font-weight:900;}
 
@@ -866,7 +901,7 @@ const JOKER_DB=[
   {name:'Luchador',icon:'🤼',rarity:'uncommon',effect:'Sell for $5',value:true},
   {name:'Photograph',icon:'📷',rarity:'common',effect:'+2 Mult per face',apply:(s,h,cards)=>{s.mult+=cards.filter(c=>['J','Q','K'].includes(c.r)).length*2;}},
   {name:'Gift Card',icon:'🎁',rarity:'uncommon',effect:'+$3 at round end',value:true},
-  {name:'Turtle Bean',icon:'🐢',rarity:'uncommon',effect:'+5 hand size',effect2:true},
+ {name:'Turtle Bean',icon:'🐢',rarity:'uncommon',effect:'+5 hand size',handSize:5},
   {name:'Erosion',icon:'🌊',rarity:'uncommon',effect:'+4 Mult per below full',apply:(s,h,cards,G)=>{s.mult+=(52-G.deck.length-G.hand.length)*4;}},
   {name:'Reserved',icon:'🎫',rarity:'uncommon',effect:'+10 Mult if no face',apply:(s,h,cards)=>{if(!cards.some(c=>['J','Q','K'].includes(c.r)))s.mult+=10;}},
   {name:'Mail In',icon:'📬',rarity:'common',effect:'+3 Mult per discard',apply:(s,h,cards,G)=>{s.mult+=(G.baseDiscards-G.discardsLeft)*3;}},
@@ -881,7 +916,7 @@ const JOKER_DB=[
   {name:'Constellation',icon:'✨',rarity:'uncommon',effect:'+0.1×Mult per planet',apply:(s,h,cards,G)=>{s.mult*=(1+G.planets.length*0.1);}},
   {name:'Hiker',icon:'🥾',rarity:'uncommon',effect:'Every card +5 Chips',apply:(s,h,cards)=>{s.chips+=cards.length*5;}},
   {name:'Faceless',icon:'😶',rarity:'common',effect:'+$5 if ≥3 face',value:true},
-  {name:'Green Joker',icon:'💚',rarity:'uncommon',effect:'+1 Mult per hand',grow:true,mult:1},
+  {name:'Green Joker',icon:'💚',rarity:'uncommon',effect:'+Mult (grows)',apply:(s,h,cards,G)=>{const j=G.jokers.find(jj=>jj.name==='Green Joker');s.mult+=(j.mult||1);},grow:true,mult:1},
   {name:'Red Card',icon:'🟥',rarity:'common',effect:'+3 Mult per skipped',apply:(s,h,cards,G)=>{s.mult+=G.skippedBlinds*3;}},
   {name:'Madness',icon:'🌪️',rarity:'uncommon',effect:'×0.5 if ≤1 left',apply:(s,h,cards,G)=>{if(G.handsLeft<=1)s.mult*=0.5;else s.mult*=2;}},
   {name:'Square',icon:'🟦',rarity:'common',effect:'+4 Chips if 4 cards',apply:(s,h,cards)=>{if(cards.length===4)s.chips+=4;}},
@@ -896,7 +931,7 @@ const JOKER_DB=[
   {name:'Acrobat',icon:'🤸',rarity:'uncommon',effect:'×3 if final hand',apply:(s,h,cards,G)=>{if(G.handsLeft===1)s.mult*=3;}},
   {name:'Sock & Buskin',icon:'🎭',rarity:'uncommon',effect:'Retrigger face',effect2:true},
   {name:'Swashbuckler',icon:'⚔️',rarity:'common',effect:'+Mult = Jokers sold',apply:(s,h,cards,G)=>{s.mult+=(G.jokersSold||0);}},
-  {name:'Troubadour',icon:'🎸',rarity:'uncommon',effect:'+2 hands, -1 hand/round',effect2:true},
+  {name:'Troubadour',icon:'🎸',rarity:'uncommon',effect:'+2 hands this round',bonusHands:2},
   {name:'Certificate',icon:'📜',rarity:'uncommon',effect:'Random gold card',effect2:true},
   {name:'Smeared',icon:'🎨',rarity:'uncommon',effect:'♥=♦ and ♣=♠',effect2:true},
   {name:'Throwback',icon:'⏪',rarity:'uncommon',effect:'×0.25 per blind skipped',apply:(s,h,cards,G)=>{s.mult*=Math.pow(0.25,G.skippedBlinds||0);}},
@@ -977,7 +1012,7 @@ function initState(){
 /* ════ DECK ════ */
 function makeDeck(){
   const d=[];
-  SUITS.forEach(s=>RANKS.forEach(r=>d.push({s,r,enhancement:null})));
+  SUITS.forEach(s=>RANKS.forEach(r=>d.push({s,r,enhancements:[]})));
   return shuffle(d);
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -1062,7 +1097,9 @@ function dealHand(){
   G.hand.forEach((card,i)=>{
     const el=document.createElement('div');
     let cls=`card ${card.s} deal`;
-    if(card.enhancement)cls+=` ${card.enhancement}`;
+    if(card.enhancements){
+      card.enhancements.forEach(e=>cls+=` ${e}`);
+    }
     el.className=cls;
     el.dataset.idx=i;
     el.innerHTML=cardInnerHTML(card);
@@ -1095,16 +1132,14 @@ function renderInventory(){
   G.tarots.forEach((t,i)=>{
     const el=document.createElement('div');
     el.className='inv-item tarot';
-    el.textContent=t.icon;
-    el.title=t.name;
+    el.innerHTML=`${t.icon}<div class="inv-item-tooltip">${t.name}: ${t.desc}</div>`;
     el.onclick=()=>useTarot(i);
     inv.appendChild(el);
   });
   G.planets.forEach((p,i)=>{
     const el=document.createElement('div');
     el.className='inv-item planet';
-    el.textContent=p.icon;
-    el.title=p.name;
+    el.innerHTML=`${p.icon}<div class="inv-item-tooltip">${p.name}: +${p.chipBonus} chips, +${p.multBonus} mult to ${p.hand}</div>`;
     el.onclick=()=>usePlanet(i);
     inv.appendChild(el);
   });
@@ -1145,9 +1180,9 @@ function updatePreview(){
     
     // Add card chip bonuses
     selCards.forEach(c=>{
-      if(c.enhancement==='foil')chips+=50;
-      else if(c.enhancement==='holo')mult+=10;
-      else if(c.enhancement==='steel')mult*=1.5;
+      if(c.enhancements&&c.enhancements.includes('foil'))chips+=50;
+      if(c.enhancements&&c.enhancements.includes('holo'))mult+=10;
+      if(c.enhancements&&c.enhancements.includes('steel'))mult*=1.5;
     });
     
     document.getElementById('handName').textContent=name;
@@ -1213,9 +1248,9 @@ function playHand(){
   
   // Card enhancements
   selCards.forEach(c=>{
-    if(c.enhancement==='foil')chips+=50;
-    else if(c.enhancement==='holo')mult+=10;
-    else if(c.enhancement==='steel')mult*=1.5;
+    if(c.enhancements&&c.enhancements.includes('foil'))chips+=50;
+    if(c.enhancements&&c.enhancements.includes('holo'))mult+=10;
+    if(c.enhancements&&c.enhancements.includes('steel'))mult*=1.5;
   });
   
   // Jokers
@@ -1242,6 +1277,11 @@ function playHand(){
         if(el){el.classList.add('trigger');setTimeout(()=>el.classList.remove('trigger'),600);}
       }
     }
+    
+    // Green Joker grows
+    if(j.name==='Green Joker'){
+      j.mult=(j.mult||1)+1;
+    }
   });
   
   const total=Math.floor(chips*mult);
@@ -1254,7 +1294,9 @@ function playHand(){
   const strip=document.getElementById('playedStrip');
   strip.innerHTML=selCards.map(c=>{
     let cls=`card ${c.s} played`;
-    if(c.enhancement)cls+=` ${c.enhancement}`;
+    if(c.enhancements){
+      c.enhancements.forEach(e=>cls+=` ${e}`);
+    }
     return `<div class="${cls}">${cardInnerHTML(c)}</div>`;
   }).join('');
 
@@ -1278,17 +1320,31 @@ function playHand(){
     
     if(willWin){
       G.roundWon = true;
-      G.busy = true;  // Keep busy state locked
-      // WON - go straight to shop, don't draw new cards
+      G.busy = true;
       strip.innerHTML='';
       saveGame();
       setTimeout(()=>{
         G.money+=8;
+        // End of round money jokers
+        G.jokers.forEach(j=>{
+          if(j.name==='Egg')G.money+=5;
+          if(j.name==='Gift Card')G.money+=3;
+          if(j.name==='Golden Ticket')G.money+=4;
+          if(j.name==='To the Moon')G.money+=Math.floor(G.money/5);
+          if(j.name==='Satellite'){
+            const uniquePlanets=new Set(G.planets.map(p=>p.name));
+            G.money+=uniquePlanets.size;
+          }
+          if(j.name==='Rough Gem'){
+            // Count diamonds played this round - simplified, just give bonus
+            G.money+=2;
+          }
+          if(j.name==='Matador'&&G.bossBlind)G.money+=10;
+        });
         renderStats();
         showShop();
       },700);
     }else{
-      // Didn't win yet - continue playing
       const need=8-G.hand.length;
       for(let i=0;i<need&&G.deck.length;i++)G.hand.push(G.deck.pop());
       strip.innerHTML='';
@@ -1406,7 +1462,9 @@ function useTarot(idx){
     G.hand.forEach((card,i)=>{
       const el=document.createElement('div');
       let cls=`card ${card.s}`;
-      if(card.enhancement)cls+=` ${card.enhancement}`;
+      if(card.enhancements){
+        card.enhancements.forEach(e=>cls+=` ${e}`);
+      }
       el.className=cls;
       el.dataset.idx=i;
       el.innerHTML=cardInnerHTML(card);
@@ -1428,7 +1486,10 @@ function useTarot(idx){
 document.getElementById('tarotConfirm').onclick=()=>{
   if(!currentTarot||tarotSelected.size!==currentTarot.tarot.count)return;
   [...tarotSelected].forEach(i=>{
-    G.hand[i].enhancement=currentTarot.tarot.enhancement;
+    if(!G.hand[i].enhancements)G.hand[i].enhancements=[];
+    if(!G.hand[i].enhancements.includes(currentTarot.tarot.enhancement)){
+      G.hand[i].enhancements.push(currentTarot.tarot.enhancement);
+    }
   });
   G.tarots.splice(currentTarot.idx,1);
   document.getElementById('tarotOverlay').classList.remove('open');
@@ -1607,8 +1668,17 @@ function startNewRound(){
   document.getElementById('shopOverlay').classList.remove('open');
   G.round++;
   G.roundWon = false;
-  G.busy = false;  // ADD THIS LINE - Reset busy state!
-  G.handsLeft=G.baseHands;
+  G.busy = false;
+  
+  // Base hands/discards + joker bonuses
+  let extraHands=0;
+  let extraHandSize=0;
+  G.jokers.forEach(j=>{
+    if(j.name==='Troubadour')extraHands+=2;
+    if(j.name==='Turtle Bean')extraHandSize+=5;
+  });
+  
+  G.handsLeft=G.baseHands+extraHands;
   G.discardsLeft=G.baseDiscards;
   G.roundScore=0;
   G.targetScore=Math.floor(G.targetScore*1.35);
@@ -1624,7 +1694,11 @@ function startNewRound(){
   }
   
   G.deck=makeDeck();
-  G.hand=G.deck.splice(0,8);
+  let handSize=8;
+  G.jokers.forEach(j=>{
+    if(j.name==='Turtle Bean')handSize+=5;
+  });
+  G.hand=G.deck.splice(0,handSize);
   G.selected.clear();
   hideBreakdown();
   document.getElementById('playedStrip').innerHTML='';
@@ -1686,7 +1760,11 @@ function startGame(){
   document.getElementById('home').classList.add('hide');
   document.getElementById('gameWrap').classList.add('visible');
   G.deck=makeDeck();
-  G.hand=G.deck.splice(0,8);
+  let handSize=8;
+  G.jokers.forEach(j=>{
+    if(j.name==='Turtle Bean')handSize+=5;
+  });
+  G.hand=G.deck.splice(0,handSize);
   G.jokers=[
     {...JOKER_DB[0]},
     {...JOKER_DB[1]}
