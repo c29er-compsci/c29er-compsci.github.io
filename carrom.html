@@ -1,367 +1,363 @@
 <!DOCTYPE html>
-<html lang="en">
+
+
+<!-- Ultimate Game Stash file--> 
+<!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
+
+
+
+<html lang="en-us">
+<base href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@main/STICKMAN%20GTA/">
 <head>
-<meta charset="UTF-8">
-<title>Carrom</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#1a1208;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Crimson Pro',serif;overflow:hidden;background-image:radial-gradient(ellipse at 20% 50%,rgba(100,60,10,.3) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(100,60,10,.3) 0%,transparent 60%)}
-#gc{display:flex;flex-direction:column;align-items:center;gap:12px}
-.sp{display:flex;align-items:center;gap:18px;padding:9px 24px;background:linear-gradient(135deg,rgba(61,43,14,.92),rgba(40,25,5,.96));border:1px solid #8b6230;border-radius:4px;width:600px;justify-content:space-between;box-shadow:0 4px 20px rgba(0,0,0,.5)}
-.pi{display:flex;align-items:center;gap:10px}
-.pd{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.3);flex-shrink:0}
-.p1d{background:#f5e6c8}.p2d{background:#2a1a0a;border-color:#8b6230}
-.pn{font-family:'Playfair Display',serif;font-size:13px;color:#f5ead8;letter-spacing:.05em;opacity:.6;transition:opacity .3s,color .3s}
-.pn.active{opacity:1;color:#d4a017}
-.sd{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:#f5ead8;min-width:28px;text-align:center}
-.pr{display:flex;gap:3px;align-items:center;flex-wrap:wrap;max-width:90px}
-.dot{width:6px;height:6px;border-radius:50%}
-.ti{font-family:'Crimson Pro',serif;font-style:italic;color:#d4a017;font-size:12px;opacity:0;transition:opacity .3s;text-align:center;flex:1}
-.ti.show{opacity:1}
-#bf{position:relative;width:640px;height:640px;background:linear-gradient(145deg,#7a5520,#4a2e0a,#6b3d12,#3d2008);border-radius:8px;box-shadow:0 0 0 3px #2a1a05,0 0 0 5px #8b6230,0 0 0 7px #2a1a05,0 20px 60px rgba(0,0,0,.8),inset 0 0 30px rgba(0,0,0,.4)}
-#bf:before{content:'';position:absolute;inset:0;border-radius:8px;background:repeating-linear-gradient(87deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);pointer-events:none}
-#bc{position:absolute;top:30px;left:30px;cursor:crosshair;display:block}
-#ac{position:absolute;top:30px;left:30px;pointer-events:none}
-.co{position:absolute;width:22px;height:22px;background:radial-gradient(circle,#d4a017,#8b6230);border-radius:50%;border:2px solid #2a1a05;box-shadow:0 2px 6px rgba(0,0,0,.5)}
-.co:nth-child(1){top:4px;left:4px}.co:nth-child(2){top:4px;right:4px}.co:nth-child(3){bottom:4px;left:4px}.co:nth-child(4){bottom:4px;right:4px}
-#pc{width:600px;display:flex;align-items:center;gap:14px}
-#pl{font-family:'Playfair Display',serif;font-size:10px;color:#8b6230;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
-#pt{flex:1;height:5px;background:rgba(61,43,14,.8);border-radius:3px;border:1px solid #3d2b0e;overflow:hidden}
-#pf{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,#4a9e4a,#d4a017,#c0392b);transition:width .05s}
-#pv{font-family:'Playfair Display',serif;font-size:10px;color:#f5ead8;width:30px;text-align:right}
-#mo{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .4s}
-#mo.show{opacity:1;pointer-events:all}
-#mb{background:linear-gradient(145deg,#3d2b0e,#1a1208);border:1px solid #d4a017;border-radius:6px;padding:44px 60px;text-align:center;box-shadow:0 20px 80px rgba(0,0,0,.8);max-width:420px}
-#mt{font-family:'Playfair Display',serif;font-size:38px;font-weight:900;color:#d4a017;margin-bottom:10px}
-#ms{font-family:'Crimson Pro',serif;font-style:italic;font-size:16px;color:#f5ead8;opacity:.8;margin-bottom:28px;line-height:1.6;white-space:pre-line}
-#mbtn{font-family:'Playfair Display',serif;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:#1a1208;background:linear-gradient(135deg,#d4a017,#a07010);border:none;padding:13px 36px;border-radius:3px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 15px rgba(212,160,23,.4)}
-#mbtn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(212,160,23,.5)}
-#toast{position:fixed;top:28px;left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(28,18,4,.95);border:1px solid #d4a017;color:#f5ead8;font-family:'Crimson Pro',serif;font-style:italic;font-size:14px;padding:8px 24px;border-radius:3px;transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:200;pointer-events:none;white-space:nowrap}
-#toast.show{transform:translateX(-50%) translateY(0)}
-#inst{font-family:'Crimson Pro',serif;font-style:italic;font-size:11px;color:rgba(200,170,110,.4);text-align:center;letter-spacing:.03em}
-</style>
-</head>
-<body>
-<div id="gc">
-  <div class="sp">
-    <div class="pi"><div class="pd p2d"></div><span class="pn" id="p2n">Player 2 &mdash; Black</span></div>
-    <div class="pr" id="p2pr"></div>
-    <div class="sd" id="p2s">0</div>
-    <span class="ti" id="t2">&#9650; Your Turn</span>
-  </div>
-  <div id="bf">
-    <div class="co"></div><div class="co"></div><div class="co"></div><div class="co"></div>
-    <canvas id="bc" width="580" height="580"></canvas>
-    <canvas id="ac" width="580" height="580"></canvas>
-  </div>
-  <div class="sp">
-    <div class="pi"><div class="pd p1d"></div><span class="pn active" id="p1n">Player 1 &mdash; White</span></div>
-    <div class="pr" id="p1pr"></div>
-    <div class="sd" id="p1s">0</div>
-    <span class="ti show" id="t1">&#9660; Your Turn</span>
-  </div>
-  <div id="pc">
-    <span id="pl">Power</span>
-    <div id="pt"><div id="pf"></div></div>
-    <span id="pv">0%</span>
-  </div>
-  <div id="inst">Move mouse to position striker &middot; Click &amp; drag away from target to aim &middot; Release to shoot</div>
-</div>
-<div id="mo"><div id="mb"><div id="mt">-</div><div id="ms">-</div><button id="mbtn" onclick="resetGame()">Play Again</button></div></div>
-<div id="toast"></div>
-<script>
-const bc=document.getElementById('bc'),ctx=bc.getContext('2d');
-const ac=document.getElementById('ac'),atx=ac.getContext('2d');
-const W=580,H=580,PR=15,SR=18,FR=0.9875,ST=0.07,MP=22;
-const BRD=52,FLD=W-2*BRD;
-const PKT=[{x:BRD,y:BRD},{x:W-BRD,y:BRD},{x:BRD,y:H-BRD},{x:W-BRD,y:H-BRD}];
-const PCR=19;
-let pieces=[],striker=null,phase='aiming',cp=1,scores=[0,0];
-let queenBoard=true,sX=W/2,placing=true;
-let dS=null,dC=null,mp={x:W/2,y:H-80},pocketed=[],sf=0,anim=false;
-
-function mkPiece(x,y,type){return{x,y,vx:0,vy:0,type,r:PR,active:true};}
-
-function initPieces(){
-  pieces=[];queenBoard=true;
-  const cx=W/2,cy=H/2,r2=PR*2.3,r3=PR*4.6;
-  pieces.push({x:cx,y:cy,vx:0,vy:0,type:'queen',r:PR,active:true});
-  for(let i=0;i<6;i++){
-    const a=(i/6)*Math.PI*2+Math.PI/6;
-    pieces.push(mkPiece(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2,i%2===0?'white':'black'));
-  }
-  for(let i=0;i<12;i++){
-    const a=(i/12)*Math.PI*2;
-    pieces.push(mkPiece(cx+Math.cos(a)*r3,cy+Math.sin(a)*r3,i%2===0?'white':'black'));
-  }
-}
-
-function initStriker(){
-  const y=cp===1?H-BRD+28:BRD-28;
-  striker={x:sX,y,vx:0,vy:0,type:'striker',r:SR,active:true};
-}
-
-function resetGame(){
-  scores=[0,0];cp=1;pocketed=[];sf=0;sX=W/2;phase='aiming';placing=true;dS=null;dC=null;
-  initPieces();initStriker();updateUI();hideMsg();
-  document.getElementById('pf').style.width='0%';
-  document.getElementById('pv').textContent='0%';
-  if(!anim){anim=true;loop();}
-}
-
-// DRAW
-function drawBoard(){
-  const sg=ctx.createLinearGradient(0,0,W,H);
-  sg.addColorStop(0,'#c88840');sg.addColorStop(.5,'#d4a55a');sg.addColorStop(1,'#c07030');
-  ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
-  for(let i=0;i<W;i+=5){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i+15,H);ctx.strokeStyle='rgba(0,0,0,.025)';ctx.lineWidth=1;ctx.stroke();}
-  ctx.fillStyle='#a06828';
-  ctx.fillRect(0,0,W,BRD);ctx.fillRect(0,H-BRD,W,BRD);ctx.fillRect(0,BRD,BRD,FLD);ctx.fillRect(W-BRD,BRD,BRD,FLD);
-  const fg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,FLD*.7);
-  fg.addColorStop(0,'rgba(220,170,80,.25)');fg.addColorStop(1,'rgba(0,0,0,.05)');
-  ctx.fillStyle=fg;ctx.fillRect(BRD,BRD,FLD,FLD);
-  ctx.strokeStyle='rgba(120,70,10,.7)';ctx.lineWidth=2;ctx.strokeRect(BRD,BRD,FLD,FLD);
-  ctx.strokeStyle='rgba(150,90,20,.35)';ctx.lineWidth=1;
-  const d=32;
-  [[BRD,BRD,BRD+d,BRD+d],[W-BRD,BRD,W-BRD-d,BRD+d],[BRD,H-BRD,BRD+d,H-BRD-d],[W-BRD,H-BRD,W-BRD-d,H-BRD-d]].forEach(([x1,y1,x2,y2])=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();});
-  ctx.strokeStyle='rgba(150,90,20,.4)';ctx.lineWidth=1.5;
-  [PR*6,PR*2].forEach(r=>{ctx.beginPath();ctx.arc(W/2,H/2,r,0,Math.PI*2);ctx.stroke();});
-  ctx.beginPath();ctx.moveTo(W/2-PR*6,H/2);ctx.lineTo(W/2+PR*6,H/2);ctx.moveTo(W/2,H/2-PR*6);ctx.lineTo(W/2,H/2+PR*6);ctx.stroke();
-  ctx.strokeStyle='rgba(180,120,40,.5)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(BRD+60,H-BRD+28);ctx.lineTo(W-BRD-60,H-BRD+28);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(BRD+60,BRD-28);ctx.lineTo(W-BRD-60,BRD-28);ctx.stroke();
-  ctx.save();ctx.globalAlpha=.7;ctx.fillStyle='#d4a017';
-  ctx.beginPath();
-  if(cp===1){ctx.moveTo(W/2,H-10);ctx.lineTo(W/2-7,H-3);ctx.lineTo(W/2+7,H-3);}
-  else{ctx.moveTo(W/2,10);ctx.lineTo(W/2-7,3);ctx.lineTo(W/2+7,3);}
-  ctx.closePath();ctx.fill();ctx.restore();
-  PKT.forEach(p=>{
-    const pg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,PCR+4);
-    pg.addColorStop(0,'rgba(5,3,0,1)');pg.addColorStop(.65,'rgba(10,8,0,.9)');pg.addColorStop(1,'rgba(26,18,8,0)');
-    ctx.beginPath();ctx.arc(p.x,p.y,PCR+4,0,Math.PI*2);ctx.fillStyle=pg;ctx.fill();
-    ctx.beginPath();ctx.arc(p.x,p.y,PCR,0,Math.PI*2);ctx.fillStyle='#050300';ctx.fill();
-    ctx.strokeStyle='rgba(212,160,23,.2)';ctx.lineWidth=1;ctx.stroke();
-  });
-}
-
-function drawPiece(p){
-  if(!p.active)return;
-  ctx.save();
-  if(p.type==='striker'){
-    const g=ctx.createRadialGradient(p.x-5,p.y-5,2,p.x,p.y,p.r);
-    g.addColorStop(0,'#fff');g.addColorStop(.4,'#ddd0b8');g.addColorStop(1,'#a09070');
-    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
-    ctx.strokeStyle='rgba(100,70,30,.4)';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fillStyle='rgba(140,100,50,.3)';ctx.fill();
-  }else if(p.type==='queen'){
-    const g=ctx.createRadialGradient(p.x-4,p.y-4,1,p.x,p.y,p.r);
-    g.addColorStop(0,'#f06050');g.addColorStop(.5,'#c0392b');g.addColorStop(1,'#6b1c18');
-    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
-    ctx.strokeStyle='rgba(255,150,130,.45)';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.beginPath();ctx.arc(p.x,p.y,p.r*.48,0,Math.PI*2);ctx.strokeStyle='rgba(255,210,200,.35)';ctx.lineWidth=1;ctx.stroke();
-    ctx.fillStyle='rgba(255,230,220,.85)';ctx.font='bold 8px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Q',p.x,p.y);
-  }else{
-    const w=p.type==='white';
-    const g=ctx.createRadialGradient(p.x-4,p.y-4,1,p.x,p.y,p.r);
-    if(w){g.addColorStop(0,'#fff');g.addColorStop(.35,'#f0e0c0');g.addColorStop(.8,'#c8b088');g.addColorStop(1,'#908060');}
-    else{g.addColorStop(0,'#5a3a18');g.addColorStop(.35,'#2a1a08');g.addColorStop(.8,'#150d04');g.addColorStop(1,'#080400');}
-    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
-    ctx.strokeStyle=w?'rgba(150,120,70,.4)':'rgba(200,150,70,.22)';ctx.lineWidth=1;ctx.stroke();
-    ctx.beginPath();ctx.arc(p.x,p.y,p.r*.5,0,Math.PI*2);ctx.strokeStyle=w?'rgba(150,120,70,.28)':'rgba(200,150,70,.15)';ctx.lineWidth=.8;ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawAim(){
-  atx.clearRect(0,0,W,H);
-  if(!striker||!striker.active)return;
-  if(phase!=='aiming'&&phase!=='dragging')return;
-  const sx=striker.x,sy=striker.y;
-  let angle=0,power=0;
-  if(phase==='dragging'&&dS&&dC){
-    const dx=dS.x-dC.x,dy=dS.y-dC.y;
-    power=Math.min(Math.sqrt(dx*dx+dy*dy)/120,1);
-    angle=Math.atan2(dy,dx);
-  }else{
-    const dx=mp.x-sx,dy=mp.y-sy;
-    angle=Math.atan2(dy,dx);
-  }
-  const len=170,ex=sx+Math.cos(angle)*len,ey=sy+Math.sin(angle)*len;
-  atx.save();atx.setLineDash([6,6]);
-  atx.strokeStyle=`rgba(212,160,23,${.28+power*.45})`;atx.lineWidth=1.5;
-  atx.beginPath();atx.moveTo(sx,sy);atx.lineTo(ex,ey);atx.stroke();
-  atx.setLineDash([]);
-  atx.save();atx.translate(ex,ey);atx.rotate(angle);
-  atx.fillStyle=`rgba(212,160,23,${.5+power*.5})`;
-  atx.beginPath();atx.moveTo(9,0);atx.lineTo(-5,-4);atx.lineTo(-5,4);atx.closePath();atx.fill();
-  atx.restore();
-  if(power>.01){
-    atx.beginPath();atx.arc(sx,sy,SR+7,0,Math.PI*2*power);
-    atx.strokeStyle=`rgba(192,57,43,${power})`;atx.lineWidth=3;atx.stroke();
-  }
-  atx.restore();
-  document.getElementById('pf').style.width=(power*100)+'%';
-  document.getElementById('pv').textContent=Math.round(power*100)+'%';
-}
-
-// PHYSICS
-function collide(a,b){
-  const dx=b.x-a.x,dy=b.y-a.y,dist=Math.sqrt(dx*dx+dy*dy),min=a.r+b.r;
-  if(dist<min&&dist>.001){
-    const nx=dx/dist,ny=dy/dist,dvx=a.vx-b.vx,dvy=a.vy-b.vy,dot=dvx*nx+dvy*ny;
-    if(dot>0){a.vx-=dot*nx;a.vy-=dot*ny;b.vx+=dot*nx;b.vy+=dot*ny;}
-    const ov=(min-dist)*.51;a.x-=nx*ov;a.y-=ny*ov;b.x+=nx*ov;b.y+=ny*ov;
-  }
-}
-
-function bounce(p){
-  const l=BRD+p.r,r=W-BRD-p.r,t=BRD+p.r,b=H-BRD-p.r;
-  if(p.x<l){p.x=l;p.vx=Math.abs(p.vx)*.82;}
-  if(p.x>r){p.x=r;p.vx=-Math.abs(p.vx)*.82;}
-  if(p.y<t){p.y=t;p.vy=Math.abs(p.vy)*.82;}
-  if(p.y>b){p.y=b;p.vy=-Math.abs(p.vy)*.82;}
-}
-
-function inPkt(p){
-  for(const pk of PKT){const dx=p.x-pk.x,dy=p.y-pk.y;if(Math.sqrt(dx*dx+dy*dy)<PCR)return pk;}
-  return null;
-}
-
-function step(){
-  const all=[...pieces.filter(p=>p.active)];
-  if(striker&&striker.active)all.push(striker);
-  all.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=FR;p.vy*=FR;if(Math.abs(p.vx)<ST)p.vx=0;if(Math.abs(p.vy)<ST)p.vy=0;});
-  all.forEach(bounce);
-  for(let i=0;i<3;i++)for(let a=0;a<all.length;a++)for(let b=a+1;b<all.length;b++)collide(all[a],all[b]);
-  pieces.filter(p=>p.active).forEach(p=>{if(inPkt(p)){p.active=false;p.vx=0;p.vy=0;pocketed.push(p);}});
-  if(striker&&striker.active&&inPkt(striker)){striker.active=false;striker.vx=0;striker.vy=0;}
-}
-
-function settled(){
-  const all=[...pieces.filter(p=>p.active)];if(striker&&striker.active)all.push(striker);
-  return all.every(p=>p.vx===0&&p.vy===0);
-}
-
-// TURN LOGIC
-function endTurn(){
-  phase='resolving';
-  const foul=striker&&!striker.active;
-  const mt=cp===1?'white':'black',ot=cp===1?'black':'white';
-  let mine=pocketed.filter(p=>p.type===mt),opp=pocketed.filter(p=>p.type===ot);
-  let queen=pocketed.find(p=>p.type==='queen');
-  let extra=false,msg='';
-
-  if(foul){
-    if(mine.length>0){
-      const r=mine.pop();r.active=true;r.x=W/2+(Math.random()-.5)*40;r.y=H/2+(Math.random()-.5)*40;
-      msg='Foul! Piece returned to board.';
-    }else{scores[cp-1]=Math.max(0,scores[cp-1]-1);msg='Foul! -1 point.';}
-    if(queen){queen.active=true;queen.x=W/2;queen.y=H/2;queenBoard=true;msg+=' Queen returns.';}
-    opp.forEach(()=>scores[cp-1]++);
-    if(opp.length)msg+=` +${opp.length} opp piece(s).`;
-    doSwitch(msg);
-  }else{
-    if(mine.length){scores[cp-1]+=mine.length;extra=true;msg+=`+${mine.length} piece(s). `;}
-    if(opp.length){scores[cp-1]+=opp.length;msg+=`+${opp.length} opp. `;}
-    if(queen){
-      const cov=mine.length>0||opp.length>0;
-      if(cov){queenBoard=false;scores[cp-1]+=5;extra=true;msg+='Queen covered! +5. ';}
-      else{queen.active=true;queen.x=W/2+(Math.random()-.5)*15;queen.y=H/2+(Math.random()-.5)*15;queenBoard=true;msg+='Queen returned — must cover. ';}
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Stickman Gta City</title>
+  <style>
+    html,
+    body {
+      background: #000;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      padding: 0;
+      margin: 0;
     }
-    if(extra||mine.length||opp.length){showToast(msg.trim()||'Extra turn!');prep();}
-    else doSwitch(msg||'');
-  }
-  pocketed=[];
-  checkWin();
-}
 
-function doSwitch(msg){if(msg)showToast(msg);cp=cp===1?2:1;prep();updateUI();}
+    div#gameContainer {
+      background: transparent !important;
+      position: absolute;
+    }
 
-function prep(){
-  sX=W/2;initStriker();phase='aiming';placing=true;
-  document.getElementById('pf').style.width='0%';
-  document.getElementById('pv').textContent='0%';
-  updateUI();
-}
+    div#gameContainer canvas {
+      position: absolute;
+    }
 
-function checkWin(){
-  const w=pieces.filter(p=>p.type==='white'&&p.active).length;
-  const b=pieces.filter(p=>p.type==='black'&&p.active).length;
-  if(w===0){setTimeout(()=>{showMsg('Player 1 Wins!',`All white pieces pocketed!\n\nFinal Score\nPlayer 1: ${scores[0]}  \u2014  Player 2: ${scores[1]}`);phase='over';},400);}
-  else if(b===0){setTimeout(()=>{showMsg('Player 2 Wins!',`All black pieces pocketed!\n\nFinal Score\nPlayer 1: ${scores[0]}  \u2014  Player 2: ${scores[1]}`);phase='over';},400);}
-}
+    div#gameContainer canvas[data-pixel-art="true"] {
+      position: absolute;
+      image-rendering: optimizeSpeed;
+      image-rendering: -webkit-crisp-edges;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -o-crisp-edges;
+      image-rendering: crisp-edges;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: optimize-contrast;
+      image-rendering: pixelated;
+      -ms-interpolation-mode: nearest-neighbor;
+    }
+  </style>
 
-// UI
-function updateUI(){
-  document.getElementById('p1s').textContent=scores[0];
-  document.getElementById('p2s').textContent=scores[1];
-  document.getElementById('p1n').classList.toggle('active',cp===1);
-  document.getElementById('p2n').classList.toggle('active',cp===2);
-  document.getElementById('t1').classList.toggle('show',cp===1);
-  document.getElementById('t2').classList.toggle('show',cp===2);
-  const ws=pieces.filter(p=>p.type==='white'&&p.active).length;
-  const bs=pieces.filter(p=>p.type==='black'&&p.active).length;
-  document.getElementById('p1pr').innerHTML=Array(ws).fill('<div class="dot" style="background:#f0e0c0;border:1px solid #8b6230"></div>').join('');
-  document.getElementById('p2pr').innerHTML=Array(bs).fill('<div class="dot" style="background:#2a1a0a;border:1px solid #8b6230"></div>').join('');
-}
+  <style type="text/css">
+    body {
+      overflow: hidden;
+    }
+  </style>
 
-let tt=null;
-function showToast(m){if(!m)return;const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2400);}
-function showMsg(t,s){document.getElementById('mt').textContent=t;document.getElementById('ms').textContent=s;document.getElementById('mo').classList.add('show');}
-function hideMsg(){document.getElementById('mo').classList.remove('show');}
+  <script>
+    function SubmitLeaderboardScore(newScore) {}
+    function GetLeaderboardEntries() {}
 
-// INPUT
-function gp(e){const r=ac.getBoundingClientRect();if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};return{x:e.clientX-r.left,y:e.clientY-r.top};}
+    function InitApi(_appId) {
+      var dateNow = new Date();
+      var secondsSinceEpoch = Math.round(dateNow.getTime() / 1000);
+      console.log('InitApi');
+      window.callTime = secondsSinceEpoch - 181;
+    }
 
-function onMv(e){
-  mp=gp(e);
-  if(placing&&phase==='aiming'){const cx=Math.max(BRD+80,Math.min(W-BRD-80,mp.x));sX=cx;if(striker)striker.x=cx;}
-  if(phase==='dragging'&&dS)dC={...mp};
-}
-function onDn(e){
-  if(phase!=='aiming')return;
-  const p=gp(e);if(placing)placing=false;
-  dS={...p};dC={...p};phase='dragging';
-}
-function onUp(e){
-  if(phase!=='dragging'||!dS)return;
-  const r=ac.getBoundingClientRect();
-  const pos=e.changedTouches?{x:e.changedTouches[0].clientX-r.left,y:e.changedTouches[0].clientY-r.top}:gp(e);
-  dC=pos;
-  const dx=dS.x-dC.x,dy=dS.y-dC.y,dist=Math.sqrt(dx*dx+dy*dy);
-  if(dist>6&&striker&&striker.active){
-    const pw=Math.min(dist/120,1),ang=Math.atan2(dy,dx);
-    striker.vx=Math.cos(ang)*pw*MP;striker.vy=Math.sin(ang)*pw*MP;
-    phase='shooting';
-  }else phase='aiming';
-  dS=null;dC=null;
-}
+    function InitExternEval(_appId) {
+      console.log("InitExternEval");
+      ExternEval();
+    }
 
-ac.addEventListener('mousemove',onMv);
-ac.addEventListener('mousedown',onDn);
-ac.addEventListener('mouseup',onUp);
-ac.addEventListener('touchstart',e=>{e.preventDefault();onDn(e);},{passive:false});
-ac.addEventListener('touchmove',e=>{e.preventDefault();onMv(e);},{passive:false});
-ac.addEventListener('touchend',e=>{e.preventDefault();onUp(e);},{passive:false});
+    function ExternEval() {
+      console.log("ExternEval");
+      var dateNow = new Date();
+      var secondsSinceEpoch = Math.round(dateNow.getTime() / 1000);
 
-// LOOP
-function loop(){
-  if(phase==='shooting'){
-    for(let i=0;i<2;i++)step();
-    if(settled()){sf++;if(sf>10){sf=0;endTurn();}}else sf=0;
-  }
-  ctx.clearRect(0,0,W,H);drawBoard();
-  pieces.filter(p=>p.active).forEach(drawPiece);
-  if(striker){
-    if(placing){ctx.save();ctx.globalAlpha=.5;drawPiece(striker);ctx.restore();}
-    else if(striker.active)drawPiece(striker);
-  }
-  drawAim();
-  if(phase!=='over')requestAnimationFrame(loop);else anim=false;
-}
+      if (window.callTime != undefined && secondsSinceEpoch - window.callTime > 180) {
+        console.log('ExternEval 2');
+        window.callTime = secondsSinceEpoch;
 
-resetGame();
-</script>
+        if (typeof preroll !== 'undefined') {
+          if (window[preroll.config.loaderObjectName] != undefined) {
+            gameInstance.SendMessage('FreezeNovaAPI', 'AdMessage', 'onOpen');
+            try {
+              window[preroll.config.loaderObjectName].refetchAd(ExternEvalResumeGame);
+            } catch (err) {
+              console.log(err.message);
+              gameInstance.SendMessage('FreezeNovaAPI', 'AdMessage', 'onClose');
+            }
+          }
+        }
+      }
+    }
+
+    function ExternEvalResumeGame() {
+      console.log("ExternEvalResumeGame");
+      gameInstance.SendMessage('FreezeNovaAPI', 'AdMessage', 'onClose');
+    }
+
+    function PreloadRewarded() {
+      console.log("PreloadRewarded");
+      if (window.rewardedCallbacks == undefined) {
+        window.rewardedCallbacks = true;
+        try {
+          window[window.preroll.config.loaderObjectName].registerRewardCallbacks({
+            onReady: RewardedReady,
+            onSuccess: RewardedSuccess,
+            onFail: RewardedFail,
+            onClose: RewardedClose
+          });
+        } catch (err) {
+          console.log(err.message);
+        }
+      }
+    }
+
+    function ShowRewarded() {
+      console.log("ShowRewarded");
+      if (typeof preroll !== 'undefined') {
+        if (window.rewardedCallbacks == undefined) {
+          PreloadRewarded();
+        }
+        if (window[preroll.config.loaderObjectName] != undefined) {
+          gameInstance.SendMessage('FreezeNovaAPI', 'AdMessage', 'onOpen');
+          try {
+            window[preroll.config.loaderObjectName].showRewardAd();
+          } catch (err) {
+            console.log(err.message);
+            gameInstance.SendMessage('FreezeNovaAPI', 'AdMessage', 'onClose');
+          }
+        }
+      }
+    }
+
+    function RewardedReady() {
+      console.log("RewardedReady");
+      if (window.rewardedCount == undefined) {
+        window.rewardedCount = 1;
+        window.gameInstance.SendMessage('FreezeNovaAPI', 'RewardedReady');
+      } else {
+        window.rewardedCount = window.rewardedCount + 1;
+        window.gameInstance.SendMessage('FreezeNovaAPI', 'RewardedReady');
+      }
+    }
+
+    function RewardedSuccess() {
+      console.log("RewardedSuccess");
+      gameInstance.SendMessage('FreezeNovaAPI', 'AdMessage', 'RewardedOnRewarded');
+    }
+
+    function RewardedFail() {
+      console.log("RewardedFail");
+      gameInstance.SendMessage('FreezeNovaAPI', 'AdMessage', 'RewardedOnFail');
+    }
+
+    function RewardedClose() {
+      console.log("RewardedClose");
+      gameInstance.SendMessage('FreezeNovaAPI', 'AdMessage', 'onClose');
+    }
+
+    InitApi(0);
+  </script>
+
+</head>
+
+<body>
+  <div id="gameContainer">
+    <canvas id="unity-canvas" data-pixel-art=""></canvas>
+    <script src="Build/game.loader.js"></script>
+    <script>
+      window.mergedBlobUrls = {};
+      window.assetsReady = false;
+
+      async function mergeSplitFile(fileUrlBase, numParts = 2) {
+        const partUrls = Array.from({ length: numParts }, (_, i) => 
+          `${fileUrlBase}.part${i + 1}`
+        );
+
+        try {
+          const responses = await Promise.all(
+            partUrls.map(url => fetch(url))
+          );
+
+          if (responses.some(r => !r.ok)) {
+            return null;
+          }
+
+          const parts = await Promise.all(
+            responses.map(r => r.arrayBuffer())
+          );
+
+          const combinedBlob = new Blob(parts, {
+            type: 'application/octet-stream'
+          });
+
+          return URL.createObjectURL(combinedBlob);
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function setupXHRInterceptor() {
+        if (window.xhrInterceptorInstalled) {
+          return;
+        }
+        
+        const originalOpen = XMLHttpRequest.prototype.open;
+        const originalSend = XMLHttpRequest.prototype.send;
+
+        XMLHttpRequest.prototype.open = function(method, url, ...args) {
+          this._url = url;
+          this._method = method;
+          this._args = args;
+          
+          let finalUrl = url;
+          
+          for (const [filename, blobUrl] of Object.entries(window.mergedBlobUrls)) {
+            if (url.includes(filename)) {
+              finalUrl = blobUrl;
+              break;
+            }
+          }
+          
+          return originalOpen.call(this, method, finalUrl, ...args);
+        };
+
+        XMLHttpRequest.prototype.send = function(...args) {
+          const xhr = this;
+          
+          if (!window.assetsReady) {
+            const checkReady = setInterval(() => {
+              if (window.assetsReady) {
+                clearInterval(checkReady);
+                originalSend.apply(xhr, args);
+              }
+            }, 50);
+            return;
+          }
+          
+          return originalSend.apply(this, args);
+        };
+        
+        window.xhrInterceptorInstalled = true;
+      }
+
+      function setupFetchInterceptor() {
+        if (window.fetchInterceptorInstalled) {
+          return;
+        }
+
+        const originalFetch = window.fetch;
+        window.fetch = function(url, ...args) {
+          let finalUrl = url;
+          
+          for (const [filename, blobUrl] of Object.entries(window.mergedBlobUrls)) {
+            if (typeof url === 'string' && url.includes(filename)) {
+              finalUrl = blobUrl;
+              break;
+            }
+          }
+          
+          return originalFetch.call(this, finalUrl, ...args);
+        };
+
+        window.fetchInterceptorInstalled = true;
+      }
+
+      async function prepareGameAssets() {
+        try {
+          window.assetsReady = false;
+          delete window.xhrInterceptorInstalled;
+          delete window.fetchInterceptorInstalled;
+          window.mergedBlobUrls = {};
+          
+          setupXHRInterceptor();
+          setupFetchInterceptor();
+          
+          const filesToMerge = [
+            { filename: 'Build/game.data.unityweb', parts: 3 }
+          ];
+          
+          for (const file of filesToMerge) {
+            const blobUrl = await mergeSplitFile(file.filename, file.parts);
+            if (blobUrl) {
+              window.mergedBlobUrls[file.filename] = blobUrl;
+            }
+          }
+          
+          window.assetsPrepared = true;
+          window.assetsReady = true;
+          
+        } catch (error) {
+          window.assetsPrepared = false;
+          window.assetsReady = true;
+        }
+      }
+
+      prepareGameAssets().then(() => {
+        initUnity();
+      });
+
+      function initUnity() {
+        var canvas = document.querySelector("#unity-canvas");
+        var config = {
+          dataUrl: "Build/game.data.unityweb",
+          frameworkUrl: "Build/game.framework.js.unityweb",
+          codeUrl: "Build/game.wasm.unityweb",
+          streamingAssetsUrl: "StreamingAssets",
+          companyName: "FreezeNova",
+          productName: "Crazy Drifter",
+          productVersion: "0.1",
+        };
+        var scaleToFit;
+        try {
+          scaleToFit = !!JSON.parse("true");
+        } catch (e) {
+          scaleToFit = true;
+        }
+
+        function progressHandler(progress) {
+          var percent = progress * 100 + '%';
+          canvas.style.background = 'linear-gradient(to right, white, white ' + percent + ', transparent ' + percent + ', transparent) no-repeat center';
+          canvas.style.backgroundSize = '100% 1rem';
+        }
+
+        function onResize() {
+          var container = canvas.parentElement;
+          var w;
+          var h;
+
+          if (scaleToFit) {
+            w = window.innerWidth;
+            h = window.innerHeight;
+
+            var r = 540 / 960;
+
+            if (w * r > window.innerHeight) {
+              w = Math.min(w, Math.ceil(h / r));
+            }
+            h = Math.floor(w * r);
+          } else {
+            w = 960;
+            h = 540;
+          }
+
+          container.style.width = canvas.style.width = w + "px";
+          container.style.height = canvas.style.height = h + "px";
+          container.style.top = Math.floor((window.innerHeight - h) / 2) + "px";
+          container.style.left = Math.floor((window.innerWidth - w) / 2) + "px";
+        }
+
+        createUnityInstance(canvas, config, progressHandler).then(function(instance) {
+          canvas = instance.Module.canvas;
+          onResize();
+          gameInstance = instance;
+        });
+        window.addEventListener('resize', onResize);
+        onResize();
+      }
+    </script>
+  </div>
 </body>
+
 </html>

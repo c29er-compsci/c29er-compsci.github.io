@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>document</title>
+	<style>
+		#badbutton{
+	position: absolute;
+
+		}
+		
+	</style>
+</head>
+<body>
+	<button id="badbutton">click me for 100 million dollars</button>
+	<script>
+		let badbutton = document.getElementById("badbutton")
+		// console.log(badbutton)
+
+
+
+badbutton.addEventListener("click",function() {
+	console.log("click!")
+}
+)
+badbutton.addEventListener("mouseover",function() {
+	console.log("over")
+	badbutton.style.top = Math.random() * window.innerHeight + "px"
+	badbutton.style.left = Math.random() * window.innerWidth + "px"
+	badbutton.style.transform = "scale (-1,1)"
+
+}
+)
+badbutton.addEventListener("mouseout",function() {
+	console.log("out")
+	badbutton.textContent = "you cant catch me you silly goof"
+
+})
+
+
+	</script>
+
+</body>
+</html>
