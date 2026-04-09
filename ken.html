@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cool Grid</title>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
+</head>
+<body>
+<script>
+
+let spacing = 80;
+let t = 0;
+
+function setup() {
+  createCanvas(400, 400);
+  noStroke();
+}
+
+function draw() {
+  background(10, 10, 30); // dark blue background
+
+  for (let i = 0; i < width; i += spacing) {
+    for (let j = 0; j < height; j += spacing) {
+
+      let d = dist(mouseX, mouseY, i, j);
+
+      // Animate size
+      let size = map(sin(t + d * 0.05), -1, 1, 20, 80);
+
+      // Blue color
+      let r = 0;
+      let g = 0;
+      let b = map(sin(t + i * 0.05), -1, 1, 120, 255);
+
+      // Glow effect
+      drawingContext.shadowBlur = 20;
+      drawingContext.shadowColor = `rgb(${r},${g},${b})`;
+
+      fill(r, g, b, 180);
+      circle(i, j, size);
+    }
+  }
+
+  t += 0.05;
+}
+
+</script>
+</body>
+</html>

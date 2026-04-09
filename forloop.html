@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title></title>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
+</head>
+<body>
+<script>
+
+
+
+let xCoordinates = [20, 40, 60, 80, 100];
+
+function setup() {
+  createCanvas(400, 400);
+
+  describe('Four white circles drawn in a horizontal line on a gray background.');
+}
+
+function draw() {
+  background(200);
+
+  // Access the element at index i and use it to draw a circle.
+  for (let i = 0; i < 5; i += 1) {
+    for(let j = 0; j < 5; j++) {
+      let x = i * 100
+      let y = j * 100
+
+      let d = dist(x, y, mouseX, mouseY)
+
+
+    
+       
+       if (d < 100) {
+          fill("#53E6F0")
+      circle(x, y, 100);
+      fill("white")
+      circle(x + 25, y - 5, 30)
+       circle(x -25, y - 5, 30)
+       fill("black")
+       circle(x + 25, y - 5, 15)
+       circle(x -25, y - 5, 15)
+
+fill("red")
+       ellipse(x,y+30,20,30)
+
+
+       }
+    }
+   
+  }
+}
+</script>
+</body>
+</html>
