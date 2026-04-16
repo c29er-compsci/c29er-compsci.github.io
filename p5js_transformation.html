@@ -1,42 +1,215 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title></title>
-	<script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
+<meta charset="utf-8">
+<title>Sahur Adventure</title>
+
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial;
+}
+
+/* BACKGROUND */
+#bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transition: 1s;
+}
+
+/* CHARACTER */
+#character {
+  position: absolute;
+  bottom: 0;
+  left: 50px;
+  width: 120px;
+  transition: 1s;
+  animation: idle 1s infinite alternate;
+}
+
+@keyframes idle {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-10px); }
+}
+
+.walk {
+  animation: walk 0.6s infinite;
+}
+
+@keyframes walk {
+  0% { transform: translateX(0) rotate(0deg); }
+  50% { transform: translateX(5px) rotate(2deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+.shake {
+  animation: shake 0.3s infinite;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(10px); }
+  100% { transform: translateX(0); }
+}
+
+/* UI */
+#game {
+  position: absolute;
+  bottom: 50px;
+  width: 100%;
+  text-align: center;
+  color: white;
+  text-shadow: 2px 2px 5px black;
+}
+
+button {
+  padding: 12px;
+  margin: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* SCENES */
+.room {
+  background: linear-gradient(#0a0a23, #1a1a40);
+}
+
+.street {
+  background: linear-gradient(#001d3d, #003566);
+}
+
+.sahurWorld {
+  background: linear-gradient(#240046, #5a189a);
+}
+
+/* MOON */
+#moon {
+  position: absolute;
+  top: 50px;
+  right: 100px;
+  width: 80px;
+  height: 80px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 30px white;
+  animation: float 4s infinite alternate;
+}
+
+@keyframes float {
+  from { transform: translateY(0); }
+  to { transform: translateY(20px); }
+}
+
+</style>
 </head>
+
 <body>
 
-	<script>
-		function setup() {
-			createCanvas(800,800)
-		}
+<div id="bg" class="room"></div>
+<div id="moon"></div>
 
-		function draw() {
-			background(200)
-			//shapes//
-			
-			push()
-			fill("yellow")
-			translate(400,400)
-			rotate(frameCount * 0.05)
-			circle(0,0,200,200)
-			pop()
+<img id="character" src="sahur.png">
 
-		
-			
-			
-			
-		}
+<div id="game">
+  <h1 id="text">You hear “TUNG TUNG TUNG…”</h1>
+  <div id="choices"></div>
+</div>
 
+<script>
 
+let char = document.getElementById("character");
+let text = document.getElementById("text");
+let choices = document.getElementById("choices");
+let bg = document.getElementById("bg");
 
+function setScene(t, opts, bgClass) {
+  text.innerHTML = t;
+  choices.innerHTML = "";
+  bg.className = bgClass;
 
+  opts.forEach(o => {
+    let btn = document.createElement("button");
+    btn.innerText = o.text;
+    btn.onclick = o.action;
+    choices.appendChild(btn);
+  });
+}
 
+function move(x) {
+  char.style.left = x + "px";
+  char.classList.add("walk");
+  setTimeout(()=>char.classList.remove("walk"),1000);
+}
 
+function scare() {
+  char.classList.add("shake");
+  setTimeout(()=>char.classList.remove("shake"),800);
+}
 
-	</script>
+/* START */
+setScene("You wake up at 3AM... TUNG TUNG TUNG echoes...", [
+  {text:"Look outside", action: scene1},
+  {text:"Hide", action: ending1}
+], "room");
+
+/* SCENES */
+function scene1() {
+  move(300);
+  setScene("You see him standing in the street...", [
+    {text:"Go outside", action: scene2},
+    {text:"Close window", action: ending2}
+  ], "street");
+}
+
+function scene2() {
+  scare();
+  setScene("He stares at you and taps the bat...", [
+    {text:"Follow him", action: scene3},
+    {text:"Run away", action: ending3}
+  ], "street");
+}
+
+function scene3() {
+  move(600);
+  setScene("You enter the glowing Sahur world...", [
+    {text:"Join", action: ending4},
+    {text:"Refuse", action: scene4}
+  ], "sahurWorld");
+}
+
+function scene4() {
+  scare();
+  setScene("The drumming becomes insane...", [
+    {text:"Scream", action: ending5},
+    {text:"Accept fate", action: ending6}
+  ], "sahurWorld");
+}
+
+/* ENDINGS */
+function ending1(){ end("You sleep... and miss Sahur 😭"); }
+function ending2(){ end("The sound stays forever..."); }
+function ending3(){ end("You escape... but never feel safe again."); }
+function ending4(){ end("You become a Sahur drummer 🥁"); }
+function ending5(){ end("You go insane from the sound."); }
+function ending6(){ end("You become one with the Sahur."); }
+
+function end(msg){
+  setScene("ENDING: " + msg, [
+    {text:"Restart", action: ()=>location.reload()}
+  ], "room");
+}
+
+/* RANDOM SECRET EVENTS */
+setInterval(()=>{
+  if(Math.random() < 0.02){
+    scare();
+    text.innerHTML = "SECRET: He noticed you...";
+  }
+}, 3000);
+
+</script>
 
 </body>
 </html>
