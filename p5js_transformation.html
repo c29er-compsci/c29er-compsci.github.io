@@ -2,214 +2,245 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Sahur Adventure</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escape</title>
 <style>
-body {
-  margin: 0;
-  overflow: hidden;
-  font-family: Arial;
-}
-
-/* BACKGROUND */
-#bg {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  transition: 1s;
-}
-
-/* CHARACTER */
-#character {
-  position: absolute;
-  bottom: 0;
-  left: 50px;
-  width: 120px;
-  transition: 1s;
-  animation: idle 1s infinite alternate;
-}
-
-@keyframes idle {
-  from { transform: translateY(0px); }
-  to { transform: translateY(-10px); }
-}
-
-.walk {
-  animation: walk 0.6s infinite;
-}
-
-@keyframes walk {
-  0% { transform: translateX(0) rotate(0deg); }
-  50% { transform: translateX(5px) rotate(2deg); }
-  100% { transform: translateX(0) rotate(0deg); }
-}
-
-.shake {
-  animation: shake 0.3s infinite;
-}
-
-@keyframes shake {
-  0% { transform: translateX(0); }
-  50% { transform: translateX(10px); }
-  100% { transform: translateX(0); }
-}
-
-/* UI */
-#game {
-  position: absolute;
-  bottom: 50px;
-  width: 100%;
-  text-align: center;
-  color: white;
-  text-shadow: 2px 2px 5px black;
-}
-
-button {
-  padding: 12px;
-  margin: 10px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-/* SCENES */
-.room {
-  background: linear-gradient(#0a0a23, #1a1a40);
-}
-
-.street {
-  background: linear-gradient(#001d3d, #003566);
-}
-
-.sahurWorld {
-  background: linear-gradient(#240046, #5a189a);
-}
-
-/* MOON */
-#moon {
-  position: absolute;
-  top: 50px;
-  right: 100px;
-  width: 80px;
-  height: 80px;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow: 0 0 30px white;
-  animation: float 4s infinite alternate;
-}
-
-@keyframes float {
-  from { transform: translateY(0); }
-  to { transform: translateY(20px); }
-}
-
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #000; overflow: hidden; font-family: monospace; }
+#root { width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; }
+#intro { color: red; text-align: center; }
+#intro h1 { font-size: clamp(16px, 4vw, 32px); text-shadow: 0 0 10px red; margin-bottom: 20px; }
+#intro p { font-size: 14px; color: #888; margin-bottom: 30px; }
+#startBtn { padding: 14px 36px; font-size: 20px; font-family: monospace; background: black; color: red; border: 2px solid red; cursor: pointer; letter-spacing: 2px; }
+#startBtn:hover { background: #1a0000; }
+#countdown { color: red; font-size: 80px; font-weight: bold; text-shadow: 0 0 20px red; display: none; }
+#scare { display: none; position: fixed; inset: 0; background: #000; align-items: center; justify-content: center; z-index: 10; }
+#scare img { max-width: 80%; max-height: 80%; object-fit: contain; }
+#gameWrap { display: none; flex-direction: column; align-items: center; }
+#hud { display: flex; gap: 20px; align-items: center; margin-bottom: 8px; color: #aaa; font-size: 13px; }
+#hud .label { color: #555; }
+canvas { border: 1px solid #222; display: block; }
+#minimap { position: absolute; top: 8px; right: 8px; border: 1px solid #333; }
+#overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px; z-index: 20; }
+#overlay h2 { font-size: 36px; font-family: monospace; }
+#overlay p { color: #888; font-family: monospace; font-size: 14px; }
+#overlay button { padding: 10px 28px; font-size: 16px; font-family: monospace; background: black; border: 1px solid currentColor; cursor: pointer; }
 </style>
 </head>
-
 <body>
-
-<div id="bg" class="room"></div>
-<div id="moon"></div>
-
-<img id="character" src="sahur.png">
-
-<div id="game">
-  <h1 id="text">You hear “TUNG TUNG TUNG…”</h1>
-  <div id="choices"></div>
+<div id="root">
+  <div id="intro">
+    <h1>KENDRICK...<br>YOU SHALL PAY.</h1>
+    <button id="startBtn" onclick="beginSequence()">CLICK HERE</button>
+  </div>
+  <div id="countdown"></div>
+  <div id="scare">
+    <img id="face" src="https://bbk12e1-cdn.myschoolcdn.com/ftpimages/98/user/large_user_4153853.jpg?resize=200,200" alt="">
+  </div>
+  <div id="gameWrap">
+    <div id="hud">
+      <span class="label">TIME:</span><span id="timer">0s</span>
+      <span class="label">DISTANCE:</span><span id="dist">—</span>
+    </div>
+    <div style="position:relative">
+      <canvas id="game"></canvas>
+      <canvas id="minimap" width="120" height="100"></canvas>
+    </div>
+  </div>
+  <div id="overlay">
+    <h2 id="overlayTitle" style="color:lime">YOU ESCAPED</h2>
+    <p id="overlayMsg"></p>
+    <button id="overlayBtn" onclick="restartGame()" style="color:lime">PLAY AGAIN</button>
+  </div>
 </div>
 
+<audio id="sound" src="https://actions.google.com/sounds/v1/horror/horror_scream.ogg"></audio>
+
 <script>
+const maze = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+  [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+  [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
+  [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+  [1,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
+  [1,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
+  [1,0,1,1,1,0,1,1,1,0,1,0,0,0,1],
+  [1,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
+  [1,1,1,0,1,1,1,0,1,1,1,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
+const ROWS = maze.length, COLS = maze[0].length;
+const TILE = 40;
+const W = COLS * TILE, H = ROWS * TILE;
 
-let char = document.getElementById("character");
-let text = document.getElementById("text");
-let choices = document.getElementById("choices");
-let bg = document.getElementById("bg");
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+canvas.width = W; canvas.height = H;
 
-function setScene(t, opts, bgClass) {
-  text.innerHTML = t;
-  choices.innerHTML = "";
-  bg.className = bgClass;
+const mm = document.getElementById('minimap');
+const mctx = mm.getContext('2d');
+mm.width = COLS * 8; mm.height = ROWS * 8;
 
-  opts.forEach(o => {
-    let btn = document.createElement("button");
-    btn.innerText = o.text;
-    btn.onclick = o.action;
-    choices.appendChild(btn);
-  });
+let player, enemy, keys, gameRunning, startTime, animId;
+
+function initGame() {
+  player = { x: TILE + 10, y: TILE + 10, size: 18, speed: 2.5 };
+  enemy = { x: (COLS-2)*TILE + 5, y: (ROWS-2)*TILE + 5, size: 36, speed: 1.2 };
+  keys = {};
+  gameRunning = true;
+  startTime = Date.now();
+  document.addEventListener('keydown', onKey);
+  document.addEventListener('keyup', offKey);
 }
 
-function move(x) {
-  char.style.left = x + "px";
-  char.classList.add("walk");
-  setTimeout(()=>char.classList.remove("walk"),1000);
-}
+function onKey(e) { keys[e.key] = true; e.preventDefault(); }
+function offKey(e) { keys[e.key] = false; }
 
-function scare() {
-  char.classList.add("shake");
-  setTimeout(()=>char.classList.remove("shake"),800);
-}
+const EXIT = { col: COLS - 2, row: 1 };
 
-/* START */
-setScene("You wake up at 3AM... TUNG TUNG TUNG echoes...", [
-  {text:"Look outside", action: scene1},
-  {text:"Hide", action: ending1}
-], "room");
-
-/* SCENES */
-function scene1() {
-  move(300);
-  setScene("You see him standing in the street...", [
-    {text:"Go outside", action: scene2},
-    {text:"Close window", action: ending2}
-  ], "street");
-}
-
-function scene2() {
-  scare();
-  setScene("He stares at you and taps the bat...", [
-    {text:"Follow him", action: scene3},
-    {text:"Run away", action: ending3}
-  ], "street");
-}
-
-function scene3() {
-  move(600);
-  setScene("You enter the glowing Sahur world...", [
-    {text:"Join", action: ending4},
-    {text:"Refuse", action: scene4}
-  ], "sahurWorld");
-}
-
-function scene4() {
-  scare();
-  setScene("The drumming becomes insane...", [
-    {text:"Scream", action: ending5},
-    {text:"Accept fate", action: ending6}
-  ], "sahurWorld");
-}
-
-/* ENDINGS */
-function ending1(){ end("You sleep... and miss Sahur 😭"); }
-function ending2(){ end("The sound stays forever..."); }
-function ending3(){ end("You escape... but never feel safe again."); }
-function ending4(){ end("You become a Sahur drummer 🥁"); }
-function ending5(){ end("You go insane from the sound."); }
-function ending6(){ end("You become one with the Sahur."); }
-
-function end(msg){
-  setScene("ENDING: " + msg, [
-    {text:"Restart", action: ()=>location.reload()}
-  ], "room");
-}
-
-/* RANDOM SECRET EVENTS */
-setInterval(()=>{
-  if(Math.random() < 0.02){
-    scare();
-    text.innerHTML = "SECRET: He noticed you...";
+function hitWall(x, y, size) {
+  const pts = [[x,y],[x+size,y],[x,y+size],[x+size,y+size]];
+  for (const [px,py] of pts) {
+    const c = Math.floor(px / TILE), r = Math.floor(py / TILE);
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return true;
+    if (maze[r][c] === 1) return true;
   }
-}, 3000);
+  return false;
+}
 
+function update() {
+  if (!gameRunning) return;
+  let nx = player.x, ny = player.y;
+  const s = player.speed;
+  if (keys['ArrowUp'] || keys['w'] || keys['W']) ny -= s;
+  if (keys['ArrowDown'] || keys['s'] || keys['S']) ny += s;
+  if (keys['ArrowLeft'] || keys['a'] || keys['A']) nx -= s;
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) nx += s;
+  if (!hitWall(nx, player.y, player.size)) player.x = nx;
+  if (!hitWall(player.x, ny, player.size)) player.y = ny;
+
+  const dx = player.x - enemy.x, dy = player.y - enemy.y;
+  const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+  const es = enemy.speed + Math.max(0, (20 - dist/TILE) * 0.05);
+  enemy.x += (dx/dist)*es;
+  enemy.y += (dy/dist)*es;
+
+  document.getElementById('timer').textContent = Math.floor((Date.now()-startTime)/1000) + 's';
+  document.getElementById('dist').textContent = Math.round(dist/TILE * 10)/10 + ' tiles';
+
+  const px = Math.floor((player.x + player.size/2)/TILE);
+  const py = Math.floor((player.y + player.size/2)/TILE);
+
+  if (px === EXIT.col && py === EXIT.row) { endGame(true); return; }
+  if (dist < 28) { endGame(false); return; }
+}
+
+function draw() {
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (maze[r][c] === 1) {
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(c*TILE, r*TILE, TILE, TILE);
+        ctx.strokeStyle = '#16213e';
+        ctx.strokeRect(c*TILE, r*TILE, TILE, TILE);
+      }
+    }
+  }
+  ctx.fillStyle = 'gold';
+  ctx.font = 'bold 24px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('★', EXIT.col*TILE + TILE/2, EXIT.row*TILE + TILE/2);
+  ctx.fillStyle = '#00ff88';
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur = 8;
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+  ctx.shadowBlur = 0;
+  const img = document.getElementById('face');
+  if (img.complete) {
+    ctx.save();
+    ctx.shadowColor = 'red';
+    ctx.shadowBlur = 12;
+    ctx.drawImage(img, enemy.x, enemy.y, enemy.size, enemy.size);
+    ctx.restore();
+  }
+  mctx.fillStyle = '#111';
+  mctx.fillRect(0, 0, mm.width, mm.height);
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (maze[r][c] === 1) { mctx.fillStyle = '#334'; mctx.fillRect(c*8,r*8,8,8); }
+      else if (c === EXIT.col && r === EXIT.row) { mctx.fillStyle = 'gold'; mctx.fillRect(c*8+1,r*8+1,6,6); }
+    }
+  }
+  const pc = (player.x + player.size/2)/TILE, pr = (player.y + player.size/2)/TILE;
+  mctx.fillStyle = '#00ff88';
+  mctx.fillRect(pc*8-3, pr*8-3, 6, 6);
+  const ec = (enemy.x + enemy.size/2)/TILE, er = (enemy.y + enemy.size/2)/TILE;
+  mctx.fillStyle = 'red';
+  mctx.fillRect(ec*8-3, er*8-3, 6, 6);
+}
+
+function endGame(won) {
+  gameRunning = false;
+  cancelAnimationFrame(animId);
+  document.removeEventListener('keydown', onKey);
+  document.removeEventListener('keyup', offKey);
+  const ov = document.getElementById('overlay');
+  document.getElementById('overlayTitle').textContent = won ? '★ YOU ESCAPED ★' : 'CAUGHT.';
+  document.getElementById('overlayTitle').style.color = won ? 'gold' : 'red';
+  document.getElementById('overlayMsg').textContent = won
+    ? `Escaped in ${Math.floor((Date.now()-startTime)/1000)}s`
+    : 'He got you.';
+  document.getElementById('overlayBtn').style.color = won ? 'gold' : 'red';
+  ov.style.display = 'flex';
+}
+
+function restartGame() {
+  document.getElementById('overlay').style.display = 'none';
+  initGame();
+  loop();
+}
+
+function loop() {
+  update();
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+function beginSequence() {
+  document.getElementById('intro').style.display = 'none';
+  const cd = document.getElementById('countdown');
+  cd.style.display = 'block';
+  let c = 3;
+  cd.textContent = c;
+  const iv = setInterval(() => {
+    c--;
+    if (c <= 0) {
+      clearInterval(iv);
+      cd.style.display = 'none';
+      const scare = document.getElementById('scare');
+      scare.style.display = 'flex';
+      const snd = document.getElementById('sound');
+      snd.volume = 0.7;
+      snd.play().catch(()=>{});
+      setTimeout(() => {
+        scare.style.display = 'none';
+        document.getElementById('gameWrap').style.display = 'flex';
+        initGame();
+        loop();
+      }, 1500);
+    } else {
+      cd.textContent = c;
+    }
+  }, 1000);
+}
 </script>
-
 </body>
 </html>
