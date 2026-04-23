@@ -1,265 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Deep Sea Surfer</title>
-<style>
-body {
-    margin: 0;
-    overflow: hidden;
-    background: radial-gradient(#001a2e, #000814);
-    font-family: system-ui, sans-serif;
-}
-#ui {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    color: #7ffcff;
-    text-shadow: 0 0 10px #00ffff;
-    z-index: 10;
-}
-#gameover {
-    position: absolute;
-    inset: 0;
-    display: none;
-    place-items: center;
-    background: rgba(0,0,0,0.75);
-    color: white;
-    text-align: center;
-}
-button {
-    margin-top: 20px;
-    padding: 12px 30px;
-    font-size: 18px;
-    background: #00ffff;
-    border: none;
-    cursor: pointer;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>KENDRICK_PROTOCOL_VOID</title>
+    <style>
+        :root { --gold: #f1c40f; --hp-green: #00ff88; --red: #ff0000; }
+        body { margin: 0; background: #000; overflow: hidden; color: #fff; font-family: 'Courier New', monospace; }
+        
+        /* BATTLE UI */
+        #battle-wrap { height: 100vh; display: flex; flex-direction: column; }
+        #arena { flex: 1; background: linear-gradient(to bottom, #0f0c29, #24243e); position: relative; display: flex; justify-content: center; align-items: center; border-bottom: 6px solid var(--gold); }
+        .entity { position: absolute; display: flex; flex-direction: column; align-items: center; }
+        #enemy-side { top: 8%; right: 10%; }
+        #player-side { bottom: 12%; left: 10%; }
+        .sprite-img { width: 200px; height: 200px; border: 4px solid #fff; border-radius: 10px; background: #000; object-fit: cover; }
+        .card { background: #fff; padding: 12px; color: #000; width: 300px; border: 4px solid #000; margin: 10px 0; font-weight: 900; box-shadow: 6px 6px 0px rgba(0,0,0,0.5); }
+        .hp-bg { height: 16px; background: #333; border: 2px solid #000; margin-top: 5px; }
+        .hp-fill { height: 100%; background: var(--hp-green); transition: width 0.4s; }
+        #controls { height: 35%; background: #efefef; display: flex; padding: 20px; gap: 20px; border-top: 8px solid #333; }
+        #msg-box { flex: 1.5; background: #fff; border: 4px solid #000; padding: 20px; font-size: 18px; color: #000; border-radius: 8px; }
+        #move-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { background: #fff; color: #000; border: 3px solid #000; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; }
+
+        /* MAZE UI */
+        #maze-wrap { display: none; position: fixed; inset: 0; z-index: 1000; }
+        canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
+        #ui { position: absolute; top: 20px; left: 20px; font-size: 18px; z-index: 1010; color: #fff; text-shadow: 2px 2px #000; }
+        #stamina-bar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 200px; height: 4px; background: rgba(255,255,255,0.1); border: 1px solid #333; z-index: 1010;}
+        #stamina-fill { width: 100%; height: 100%; background: #fff; }
+        #red-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 1005; }
+        
+        /* OVERLAYS */
+        #escape-msg { display: none; position: fixed; inset: 0; background: #000; z-index: 9997; color: #0f0; justify-content: center; align-items: center; font-size: 2rem; text-align: center; }
+        #jumpscare { display: none; position: fixed; inset: 0; background: #000; z-index: 9998; justify-content: center; align-items: center; }
+        #jumpscare img { width: 150%; height: 150%; object-fit: cover; animation: shake 0.04s infinite; filter: contrast(400%) invert(1); }
+        #final-meta { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; color: #fff; justify-content: center; align-items: center; font-size: 1.5rem; text-align: center; letter-spacing: 5px; }
+
+        @keyframes shake { 0% { transform: translate(15px, 15px); } 50% { transform: translate(-15px, -15px); } 100% { transform: translate(0); } }
+        .corrupt { animation: corrupt-anim 0.1s infinite; }
+        @keyframes corrupt-anim { 0% { filter: invert(0); } 50% { filter: invert(1) hue-rotate(90deg); } 100% { filter: invert(0); } }
+    </style>
 </head>
 <body>
 
-<div id="ui">
-    <div>Distance: <span id="score">0</span> m</div>
-    <div>Combo: x<span id="combo">1</span></div>
-</div>
-
-<div id="gameover">
-    <div>
-        <h1>CAUGHT IN THE DEPTHS</h1>
-        <p id="final"></p>
-        <button onclick="location.reload()">Swim Again</button>
+    <div id="battle-wrap">
+        <div id="arena">
+            <div id="enemy-side" class="entity">
+                <div class="card">KWAKU [LV 100] <div class="hp-bg"><div id="e-hp" class="hp-fill"></div></div></div>
+                <img class="sprite-img" src="https://bbk12e1-cdn.myschoolcdn.com/ftpimages/98/user/large_user_4153853.jpg?resize=200,200">
+            </div>
+            <div id="player-side" class="entity">
+                <img class="sprite-img" src="https://bbk12e1-cdn.myschoolcdn.com/ftpimages/98/user/large_user_4154175_47.jpg?crop=0,0,100%,85%&resize=200,200">
+                <div class="card">KENDRICK [LV 100] <div class="hp-bg"><div id="p-hp" class="hp-fill"></div></div></div>
+            </div>
+        </div>
+        <div id="controls">
+            <div id="msg-box">KWAKU is observing you...</div>
+            <div id="move-grid">
+                <button class="btn" onclick="battleTurn('OVERDRIVE', 30)">OVERDRIVE</button>
+                <button class="btn" onclick="battleTurn('PULSE', 10)">GHA-PULSE</button>
+                <button class="btn" onclick="battleTurn('COMET', 20)">COMET</button>
+            </div>
+        </div>
     </div>
-</div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-  }
-}
-</script>
+    <div id="maze-wrap">
+        <div id="red-vignette"></div>
+        <div id="ui">ORBS: <span id="count">0</span> / 5</div>
+        <div id="stamina-bar"><div id="stamina-fill"></div></div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
 
-<script type="module">
-import * as THREE from "three";
+    <div id="escape-msg"><h1>YOU GOT LUCKY AND ESCAPED...</h1></div>
+    <div id="jumpscare"><img src="https://bbk12e1-cdn.myschoolcdn.com/ftpimages/98/user/large_user_4153853.jpg?resize=800,800"></div>
+    <div id="final-meta"><h1>KENDRICK, WRITE YOUR OWN CODE...</h1></div>
 
-/* -------------------------------------------------- */
-/* CORE SETUP                                         */
-/* -------------------------------------------------- */
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x001322, 10, 80);
+<script>
+let pHP = 100, eHP = 100, busy = false, audioCtx;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+const orbImg = new Image(); orbImg.src = 'https://bbk12e1-cdn.myschoolcdn.com/ftpimages/98/user/large_user_4154175_47.jpg?resize=200,200';
+const monsterImg = new Image(); monsterImg.src = 'https://bbk12e1-cdn.myschoolcdn.com/ftpimages/98/user/large_user_4153853.jpg?resize=200,200';
 
-const camera = new THREE.PerspectiveCamera(65, innerWidth/innerHeight, 0.1, 200);
-camera.position.set(0, 3.5, 8);
-camera.lookAt(0, 2, -10);
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(devicePixelRatio);
-document.body.appendChild(renderer.domElement);
-
-/* -------------------------------------------------- */
-/* LIGHTING                                           */
-/* -------------------------------------------------- */
-scene.add(new THREE.AmbientLight(0x204060, 0.4));
-
-const keyLight = new THREE.DirectionalLight(0x88ffff, 2);
-keyLight.position.set(5, 10, 5);
-scene.add(keyLight);
-
-/* -------------------------------------------------- */
-/* PLAYER                                             */
-/* -------------------------------------------------- */
-const player = new THREE.Group();
-const pMat = new THREE.MeshStandardMaterial({
-    color: 0x00ffff,
-    emissive: 0x00aaff,
-    emissiveIntensity: 0.6
-});
-const pBody = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.4, 1.2, 4, 8),
-    pMat
-);
-pBody.position.y = 1.6;
-player.add(pBody);
-scene.add(player);
-
-/* -------------------------------------------------- */
-/* WORLD                                              */
-/* -------------------------------------------------- */
-const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 200),
-    new THREE.MeshStandardMaterial({ color: 0x02080f })
-);
-floor.rotation.x = -Math.PI / 2;
-scene.add(floor);
-
-/* -------------------------------------------------- */
-/* GAME STATE                                         */
-/* -------------------------------------------------- */
-const lanes = [-3, 0, 3];
-let lane = 1;
-
-let speed = 0.45;
-let distance = 0;
-let combo = 1;
-
-let jumping = false;
-let sliding = false;
-let yVel = 0;
-const GRAVITY = -0.03;
-
-let obstacles = [];
-let active = true;
-
-/* -------------------------------------------------- */
-/* INPUT                                              */
-/* -------------------------------------------------- */
-window.addEventListener("keydown", e => {
-    if (!active) return;
-    if (e.key === "a" || e.key === "ArrowLeft") lane = Math.max(0, lane-1);
-    if (e.key === "d" || e.key === "ArrowRight") lane = Math.min(2, lane+1);
-    if ((e.key === "w" || e.key === " ") && !jumping) {
-        jumping = true;
-        yVel = 0.55;
-        sliding = false;
-    }
-    if (e.key === "s" && !jumping) {
-        sliding = true;
-        setTimeout(()=>sliding=false, 600);
-    }
-});
-
-/* -------------------------------------------------- */
-/* OBSTACLES                                          */
-/* -------------------------------------------------- */
-function spawnObstacle() {
-    if (!active) return;
-
-    let type = Math.random();
-    let geo, mat, y;
-
-    if (type < 0.33) {
-        geo = new THREE.ConeGeometry(0.8, 3, 6);
-        mat = new THREE.MeshStandardMaterial({ color: 0xff5555, emissive: 0xff2222 });
-        y = 1.5;
-        type = "shark";
-    } else if (type < 0.66) {
-        geo = new THREE.SphereGeometry(1.2, 16, 12);
-        mat = new THREE.MeshStandardMaterial({ color: 0xcc66ff, emissive: 0xaa33ff, transparent:true, opacity:0.7 });
-        y = 4;
-        type = "jelly";
-    } else {
-        geo = new THREE.BoxGeometry(3, 1, 2);
-        mat = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0xff6600 });
-        y = 0.8;
-        type = "octopus";
-    }
-
-    const o = new THREE.Mesh(geo, mat);
-    o.position.set(lanes[Math.floor(Math.random()*3)], y, -70);
-    o.userData.type = type;
-    scene.add(o);
-    obstacles.push(o);
-
-    setTimeout(spawnObstacle, 900 - speed*300);
+function playSfx(freq, type, duration, vol=0.1) {
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
 }
 
-/* -------------------------------------------------- */
-/* MAIN LOOP                                          */
-/* -------------------------------------------------- */
-const clock = new THREE.Clock();
+async function battleTurn(move, dmg) {
+    initAudio(); if(busy) return; busy = true;
+    playSfx(440, 'sine', 0.1);
+    eHP = Math.max(0, eHP - dmg);
+    document.getElementById('e-hp').style.width = eHP + "%";
+    if (eHP <= 10) {
+        document.body.classList.add('corrupt');
+        setTimeout(startMazeMode, 1000);
+        return;
+    }
+    pHP = Math.max(0, pHP - 20);
+    document.getElementById('p-hp').style.width = pHP + "%";
+    playSfx(100, 'square', 0.3);
+    busy = false;
+}
+
+let player = { x: 1.5, y: 1.5, dir: 0, stamina: 100, bob: 0 };
+let monster = { x: 13.5, y: 13.5 };
+let orbs = [], keys = {}, gameActive = false, orbsCollected = 0, beatTimer = 0;
+
+const map = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+    [1,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1],
+    [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+    [1,0,1,0,1,1,1,0,1,0,1,1,1,1,1],
+    [1,3,1,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
+
+function startMazeMode() {
+    document.body.classList.remove('corrupt');
+    document.getElementById('battle-wrap').style.display = 'none';
+    document.getElementById('maze-wrap').style.display = 'block';
+    const orbPos = [[1.5, 12.5], [13.5, 1.5], [7.5, 7.5], [13.5, 11.5], [5.5, 1.5]];
+    orbs = orbPos.map(p => ({x: p[0], y: p[1], collected: false}));
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    canvas.requestPointerLock();
+    gameActive = true;
+    window.onkeydown = e => keys[e.code] = true;
+    window.onkeyup = e => keys[e.code] = false;
+    document.addEventListener('mousemove', e => { if (document.pointerLockElement === canvas) player.dir += e.movementX * 0.002; });
+    requestAnimationFrame(renderLoop);
+}
 
 function update() {
-    if (!active) return;
-    requestAnimationFrame(update);
+    if(!gameActive) return;
+    let run = keys['ShiftLeft'] && player.stamina > 0;
+    let speed = run ? 0.065 : 0.035;
+    if (run) player.stamina -= 0.8; else if (player.stamina < 100) player.stamina += 0.4;
+    document.getElementById('stamina-fill').style.width = player.stamina + '%';
 
-    const t = clock.getElapsedTime();
+    let mx = 0, my = 0;
+    if (keys['KeyW']) { mx += Math.cos(player.dir); my += Math.sin(player.dir); }
+    if (keys['KeyS']) { mx -= Math.cos(player.dir); my -= Math.sin(player.dir); }
+    if (keys['KeyA']) { mx += Math.cos(player.dir - 1.57); my += Math.sin(player.dir - 1.57); }
+    if (keys['KeyD']) { mx += Math.cos(player.dir + 1.57); my += Math.sin(player.dir + 1.57); }
 
-    /* Player movement */
-    const targetX = lanes[lane];
-    player.position.x += (targetX - player.position.x) * 0.3;
-    player.rotation.z = (player.position.x - targetX) * 0.15;
-
-    if (jumping) {
-        player.position.y += yVel;
-        yVel += GRAVITY;
-        if (player.position.y <= 0) {
-            player.position.y = 0;
-            jumping = false;
-        }
-    } else if (sliding) {
-        player.scale.y = 0.4;
-    } else {
-        player.scale.y = 1;
-        player.position.y = Math.sin(t*3)*0.15;
+    if (mx !== 0 || my !== 0) {
+        player.bob += 0.15;
+        let nx = player.x + mx * speed, ny = player.y + my * speed;
+        if (map[Math.floor(player.y)][Math.floor(nx)] !== 1) player.x = nx;
+        if (map[Math.floor(ny)][Math.floor(player.x)] !== 1) player.y = ny;
     }
 
-    /* World scroll */
-    distance += speed * 2;
-    floor.position.z += speed;
-    if (floor.position.z > 10) floor.position.z = 0;
+    let dist = Math.hypot(player.x - monster.x, player.y - monster.y);
+    let mSpeed = 0.018;
+    let mDx = ((player.x - monster.x) / dist) * mSpeed, mDy = ((player.y - monster.y) / dist) * mSpeed;
+    if(map[Math.floor(monster.y)][Math.floor(monster.x + mDx)] !== 1) monster.x += mDx;
+    if(map[Math.floor(monster.y + mDy)][Math.floor(monster.x)] !== 1) monster.y += mDy;
 
-    /* Obstacles */
-    for (let i = obstacles.length-1; i>=0; i--) {
-        const o = obstacles[i];
-        o.position.z += speed;
-
-        const dx = Math.abs(o.position.x - player.position.x);
-        const dz = Math.abs(o.position.z - player.position.z);
-
-        let hit = false;
-        if (dx < 1.3 && dz < 1.2) {
-            if (o.userData.type === "shark") hit = true;
-            if (o.userData.type === "jelly" && !sliding) hit = true;
-            if (o.userData.type === "octopus" && !jumping) hit = true;
-        }
-
-        if (hit) {
-            active = false;
-            document.getElementById("gameover").style.display = "grid";
-            document.getElementById("final").innerText =
-                `Distance: ${Math.floor(distance)} m\nMax Combo: x${combo}`;
-            return;
-        }
-
-        if (o.position.z > 10) {
-            scene.remove(o);
-            obstacles.splice(i,1);
-            combo++;
-        }
+    beatTimer++;
+    if(beatTimer > Math.max(8, dist * 14)) { playSfx(60, 'sine', 0.1, 0.25); beatTimer = 0; }
+    
+    // Death trigger
+    if (dist < 0.35) {
+        gameActive = false;
+        triggerJumpscare(true); // Treat death as final to show the message
     }
 
-    speed += 0.0006;
+    orbs.forEach(o => {
+        if(!o.collected && Math.hypot(player.x-o.x, player.y-o.y) < 0.5) {
+            o.collected = true; orbsCollected++;
+            document.getElementById('count').innerText = orbsCollected;
+            playSfx(880, 'sine', 0.1);
+        }
+    });
 
-    document.getElementById("score").innerText = Math.floor(distance);
-    document.getElementById("combo").innerText = combo;
-
-    renderer.render(scene, camera);
+    if (orbsCollected === 5 && map[Math.floor(player.y)][Math.floor(player.x)] === 3) {
+        gameActive = false;
+        triggerFakeEscape();
+    }
 }
 
-spawnObstacle();
-update();
+function triggerFakeEscape() {
+    document.exitPointerLock();
+    document.getElementById('escape-msg').style.display = 'flex';
+    setTimeout(() => {
+        triggerJumpscare(true);
+    }, 1500);
+}
+
+function triggerJumpscare(isFinal = false) {
+    gameActive = false;
+    document.exitPointerLock();
+    playSfx(40, 'sawtooth', 3, 0.6);
+    document.getElementById('jumpscare').style.display = 'flex';
+    
+    // After the jumpscare flash, show the final code message and stay there
+    setTimeout(() => {
+        document.getElementById('jumpscare').style.display = 'none';
+        document.getElementById('escape-msg').style.display = 'none';
+        document.getElementById('maze-wrap').style.display = 'none';
+        document.getElementById('final-meta').style.display = 'flex';
+        
+        // Final termination attempt
+        setTimeout(() => {
+            window.close();
+            // If window won't close, ensure the message stays and input is dead
+            document.onkeydown = null;
+            document.onmousemove = null;
+        }, 3000);
+    }, 1200);
+}
+
+function renderLoop() {
+    if(!gameActive) return;
+    update();
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const rays = 300, fov = 1.1;
+    let zBuffer = [], bY = Math.sin(player.bob) * 7;
+    for (let i = 0; i < rays; i++) {
+        let rayA = (player.dir - fov/2) + (i / rays) * fov;
+        let d = 0, rx = Math.cos(rayA), ry = Math.sin(rayA);
+        while (d < 12) {
+            d += 0.06;
+            let cx = Math.floor(player.x + rx * d), cy = Math.floor(player.y + ry * d);
+            if (map[cy][cx] === 1 || map[cy][cx] === 3) {
+                let corrD = d * Math.cos(rayA - player.dir);
+                zBuffer[i] = corrD;
+                let h = canvas.height / corrD;
+                let br = 180 / (d * 0.8);
+                ctx.fillStyle = (map[cy][cx] === 3 && orbsCollected === 5) ? `rgb(0, ${br}, 0)` : `rgb(${br}, 0, 0)`;
+                ctx.fillRect(i * (canvas.width/rays), (canvas.height-h)/2 + bY, (canvas.width/rays)+1, h);
+                break;
+            }
+        }
+    }
+    let sprites = [...orbs.filter(o => !o.collected), {...monster, isM: true}].sort((a,b) => Math.hypot(player.x-b.x, player.y-b.y) - Math.hypot(player.x-a.x, player.y-a.y));
+    sprites.forEach(s => {
+        let dx = s.x - player.x, dy = s.y - player.y, dist = Math.hypot(dx, dy);
+        let sA = Math.atan2(dy, dx) - player.dir;
+        while(sA < -Math.PI) sA += Math.PI*2; while(sA > Math.PI) sA -= Math.PI*2;
+        if (Math.abs(sA) < fov) {
+            let h = (canvas.height / dist) * (s.isM ? 1.2 : 0.4);
+            let x = (0.5 * (sA / (fov / 2)) + 0.5) * canvas.width;
+            if(zBuffer[Math.floor((x / canvas.width) * rays)] > dist) {
+                ctx.drawImage(s.isM ? monsterImg : orbImg, x - h/2, (canvas.height-h)/2 + bY, h, h);
+            }
+        }
+    });
+    requestAnimationFrame(renderLoop);
+}
 </script>
 </body>
 </html>

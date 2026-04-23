@@ -1,245 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Escape</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #000; overflow: hidden; font-family: monospace; }
-#root { width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; }
-#intro { color: red; text-align: center; }
-#intro h1 { font-size: clamp(16px, 4vw, 32px); text-shadow: 0 0 10px red; margin-bottom: 20px; }
-#intro p { font-size: 14px; color: #888; margin-bottom: 30px; }
-#startBtn { padding: 14px 36px; font-size: 20px; font-family: monospace; background: black; color: red; border: 2px solid red; cursor: pointer; letter-spacing: 2px; }
-#startBtn:hover { background: #1a0000; }
-#countdown { color: red; font-size: 80px; font-weight: bold; text-shadow: 0 0 20px red; display: none; }
-#scare { display: none; position: fixed; inset: 0; background: #000; align-items: center; justify-content: center; z-index: 10; }
-#scare img { max-width: 80%; max-height: 80%; object-fit: contain; }
-#gameWrap { display: none; flex-direction: column; align-items: center; }
-#hud { display: flex; gap: 20px; align-items: center; margin-bottom: 8px; color: #aaa; font-size: 13px; }
-#hud .label { color: #555; }
-canvas { border: 1px solid #222; display: block; }
-#minimap { position: absolute; top: 8px; right: 8px; border: 1px solid #333; }
-#overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px; z-index: 20; }
-#overlay h2 { font-size: 36px; font-family: monospace; }
-#overlay p { color: #888; font-family: monospace; font-size: 14px; }
-#overlay button { padding: 10px 28px; font-size: 16px; font-family: monospace; background: black; border: 1px solid currentColor; cursor: pointer; }
-</style>
+    <meta charset="UTF-8">
+    <title>The Shadow Corridor: Smooth Edition</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; color: #fff; font-family: 'Courier New', monospace; }
+        canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
+        
+        #ui { 
+            position: absolute; top: 20px; left: 20px; 
+            font-size: 18px; z-index: 10; letter-spacing: 2px;
+            color: #ffffff; text-shadow: 2px 2px #000; pointer-events: none;
+        }
+
+        #stamina-bar {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 200px; height: 4px; background: rgba(255,255,255,0.1); border: 1px solid #333;
+        }
+        #stamina-fill { width: 100%; height: 100%; background: #fff; transition: width 0.1s linear; }
+        
+        #tutorial {
+            position: absolute; width: 100%; height: 100%; background: #000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; transition: opacity 1s ease; cursor: pointer;
+        }
+
+        #red-vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 5;
+        }
+
+        .msg { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            display: none; text-align: center; z-index: 200; cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-<div id="root">
-  <div id="intro">
-    <h1>KENDRICK...<br>YOU SHALL PAY.</h1>
-    <button id="startBtn" onclick="beginSequence()">CLICK HERE</button>
-  </div>
-  <div id="countdown"></div>
-  <div id="scare">
-    <img id="face" src="https://bbk12e1-cdn.myschoolcdn.com/ftpimages/98/user/large_user_4153853.jpg?resize=200,200" alt="">
-  </div>
-  <div id="gameWrap">
-    <div id="hud">
-      <span class="label">TIME:</span><span id="timer">0s</span>
-      <span class="label">DISTANCE:</span><span id="dist">—</span>
-    </div>
-    <div style="position:relative">
-      <canvas id="game"></canvas>
-      <canvas id="minimap" width="120" height="100"></canvas>
-    </div>
-  </div>
-  <div id="overlay">
-    <h2 id="overlayTitle" style="color:lime">YOU ESCAPED</h2>
-    <p id="overlayMsg"></p>
-    <button id="overlayBtn" onclick="restartGame()" style="color:lime">PLAY AGAIN</button>
-  </div>
-</div>
 
-<audio id="sound" src="https://actions.google.com/sounds/v1/horror/horror_scream.ogg"></audio>
+    <div id="tutorial" onclick="startGame()">
+        <h1 style="color: #f00; letter-spacing: 10px;">THE DEPTHS</h1>
+        <p>WASD to Move | MOUSE to Look | SHIFT to Run</p>
+        <p style="color: #444; margin-top: 40px;">CLICK TO BEGIN</p>
+    </div>
+
+    <div id="red-vignette"></div>
+    <div id="ui">ORBS: <span id="count">0</span> / 5</div>
+    <div id="stamina-bar"><div id="stamina-fill"></div></div>
+
+    <div id="game-over" class="msg" onclick="location.reload()">
+        <h1 style="color: #f00;">CONSUMED</h1>
+        <p>CLICK TO RESTART</p>
+    </div>
+
+    <div id="win" class="msg" onclick="location.reload()">
+        <h1 style="color: #0f0;">ESCAPE SUCCESSFUL</h1>
+        <p>CLICK TO REPLAY</p>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
 
 <script>
-const maze = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
-  [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
-  [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
-  [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
-  [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
-  [1,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
-  [1,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
-  [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
-  [1,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
-  [1,0,1,1,1,0,1,1,1,0,1,0,0,0,1],
-  [1,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
-  [1,1,1,0,1,1,1,0,1,1,1,0,1,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+const vignette = document.getElementById('red-vignette');
+const staminaFill = document.getElementById('stamina-fill');
+
+const orbImg = new Image(); orbImg.src = 'https://bbk12e1-cdn.myschoolcdn.com/ftpimages/98/user/large_user_4154175_47.jpg?crop=0,0,100%,85%&resize=200,200';
+const monsterImg = new Image(); monsterImg.src = 'https://bbk12e1-cdn.myschoolcdn.com/ftpimages/98/user/large_user_4153853.jpg?resize=200,200';
+
+let player = { x: 1.5, y: 1.5, dir: 0, stamina: 100, bob: 0 };
+let monster = { x: 13.5, y: 13.5 };
+let orbs = [];
+let keys = {};
+let gameActive = false;
+let orbsCollected = 0;
+let zBuffer = [];
+
+const map = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+    [1,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1],
+    [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+    [1,0,1,0,1,1,1,0,1,0,1,1,1,1,1],
+    [1,3,1,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
-const ROWS = maze.length, COLS = maze[0].length;
-const TILE = 40;
-const W = COLS * TILE, H = ROWS * TILE;
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-canvas.width = W; canvas.height = H;
+const orbPos = [[1.5, 12.5], [13.5, 1.5], [7.5, 7.5], [13.5, 11.5], [5.5, 1.5]];
+orbPos.forEach(p => orbs.push({x: p[0], y: p[1], collected: false}));
 
-const mm = document.getElementById('minimap');
-const mctx = mm.getContext('2d');
-mm.width = COLS * 8; mm.height = ROWS * 8;
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.onresize = resize;
+resize();
 
-let player, enemy, keys, gameRunning, startTime, animId;
+window.onkeydown = e => keys[e.code] = true;
+window.onkeyup = e => keys[e.code] = false;
 
-function initGame() {
-  player = { x: TILE + 10, y: TILE + 10, size: 18, speed: 2.5 };
-  enemy = { x: (COLS-2)*TILE + 5, y: (ROWS-2)*TILE + 5, size: 36, speed: 1.2 };
-  keys = {};
-  gameRunning = true;
-  startTime = Date.now();
-  document.addEventListener('keydown', onKey);
-  document.addEventListener('keyup', offKey);
+function startGame() {
+    canvas.requestPointerLock();
+    gameActive = true;
+    document.getElementById('tutorial').style.opacity = '0';
+    requestAnimationFrame(render);
+    setInterval(update, 1000 / 60); // Fixed update rate for smoothness
 }
 
-function onKey(e) { keys[e.key] = true; e.preventDefault(); }
-function offKey(e) { keys[e.key] = false; }
-
-const EXIT = { col: COLS - 2, row: 1 };
-
-function hitWall(x, y, size) {
-  const pts = [[x,y],[x+size,y],[x,y+size],[x+size,y+size]];
-  for (const [px,py] of pts) {
-    const c = Math.floor(px / TILE), r = Math.floor(py / TILE);
-    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return true;
-    if (maze[r][c] === 1) return true;
-  }
-  return false;
-}
+document.addEventListener('mousemove', (e) => {
+    if (document.pointerLockElement === canvas) {
+        player.dir += e.movementX * 0.0012;
+    }
+});
 
 function update() {
-  if (!gameRunning) return;
-  let nx = player.x, ny = player.y;
-  const s = player.speed;
-  if (keys['ArrowUp'] || keys['w'] || keys['W']) ny -= s;
-  if (keys['ArrowDown'] || keys['s'] || keys['S']) ny += s;
-  if (keys['ArrowLeft'] || keys['a'] || keys['A']) nx -= s;
-  if (keys['ArrowRight'] || keys['d'] || keys['D']) nx += s;
-  if (!hitWall(nx, player.y, player.size)) player.x = nx;
-  if (!hitWall(player.x, ny, player.size)) player.y = ny;
+    if(!gameActive) return;
 
-  const dx = player.x - enemy.x, dy = player.y - enemy.y;
-  const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-  const es = enemy.speed + Math.max(0, (20 - dist/TILE) * 0.05);
-  enemy.x += (dx/dist)*es;
-  enemy.y += (dy/dist)*es;
+    // Movement logic
+    let run = keys['ShiftLeft'] && player.stamina > 0;
+    let speed = run ? 0.06 : 0.03;
+    if (run) player.stamina -= 0.6; else if (player.stamina < 100) player.stamina += 0.3;
+    staminaFill.style.width = player.stamina + '%';
 
-  document.getElementById('timer').textContent = Math.floor((Date.now()-startTime)/1000) + 's';
-  document.getElementById('dist').textContent = Math.round(dist/TILE * 10)/10 + ' tiles';
+    let mx = 0, my = 0;
+    if (keys['KeyW']) { mx += Math.cos(player.dir); my += Math.sin(player.dir); }
+    if (keys['KeyS']) { mx -= Math.cos(player.dir); my -= Math.sin(player.dir); }
+    if (keys['KeyA']) { mx += Math.cos(player.dir - Math.PI/2); my += Math.sin(player.dir - Math.PI/2); }
+    if (keys['KeyD']) { mx += Math.cos(player.dir + Math.PI/2); my += Math.sin(player.dir + Math.PI/2); }
 
-  const px = Math.floor((player.x + player.size/2)/TILE);
-  const py = Math.floor((player.y + player.size/2)/TILE);
-
-  if (px === EXIT.col && py === EXIT.row) { endGame(true); return; }
-  if (dist < 28) { endGame(false); return; }
-}
-
-function draw() {
-  ctx.fillStyle = '#0a0a0a';
-  ctx.fillRect(0, 0, W, H);
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (maze[r][c] === 1) {
-        ctx.fillStyle = '#1a1a2e';
-        ctx.fillRect(c*TILE, r*TILE, TILE, TILE);
-        ctx.strokeStyle = '#16213e';
-        ctx.strokeRect(c*TILE, r*TILE, TILE, TILE);
-      }
+    if (mx !== 0 || my !== 0) {
+        player.bob += run ? 0.25 : 0.12;
+        let nx = player.x + mx * speed;
+        let ny = player.y + my * speed;
+        if (map[Math.floor(player.y)][Math.floor(nx)] !== 1) player.x = nx;
+        if (map[Math.floor(ny)][Math.floor(player.x)] !== 1) player.y = ny;
     }
-  }
-  ctx.fillStyle = 'gold';
-  ctx.font = 'bold 24px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('★', EXIT.col*TILE + TILE/2, EXIT.row*TILE + TILE/2);
-  ctx.fillStyle = '#00ff88';
-  ctx.shadowColor = '#00ff88';
-  ctx.shadowBlur = 8;
-  ctx.fillRect(player.x, player.y, player.size, player.size);
-  ctx.shadowBlur = 0;
-  const img = document.getElementById('face');
-  if (img.complete) {
-    ctx.save();
-    ctx.shadowColor = 'red';
-    ctx.shadowBlur = 12;
-    ctx.drawImage(img, enemy.x, enemy.y, enemy.size, enemy.size);
-    ctx.restore();
-  }
-  mctx.fillStyle = '#111';
-  mctx.fillRect(0, 0, mm.width, mm.height);
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (maze[r][c] === 1) { mctx.fillStyle = '#334'; mctx.fillRect(c*8,r*8,8,8); }
-      else if (c === EXIT.col && r === EXIT.row) { mctx.fillStyle = 'gold'; mctx.fillRect(c*8+1,r*8+1,6,6); }
+
+    // Orb collision
+    orbs.forEach(o => {
+        if(!o.collected && Math.hypot(player.x-o.x, player.y-o.y) < 0.4) {
+            o.collected = true;
+            orbsCollected++;
+            document.getElementById('count').innerText = orbsCollected;
+        }
+    });
+
+    // Monster dynamic stalking
+    let dist = Math.hypot(player.x-monster.x, player.y-monster.y);
+    let mSpeed = Math.max(0.008, Math.min(0.035, dist * 0.005));
+    monster.x += ((player.x - monster.x) / dist) * mSpeed;
+    monster.y += ((player.y - monster.y) / dist) * mSpeed;
+
+    if (dist < 0.35) {
+        gameActive = false;
+        document.getElementById('game-over').style.display = 'block';
+        document.exitPointerLock();
     }
-  }
-  const pc = (player.x + player.size/2)/TILE, pr = (player.y + player.size/2)/TILE;
-  mctx.fillStyle = '#00ff88';
-  mctx.fillRect(pc*8-3, pr*8-3, 6, 6);
-  const ec = (enemy.x + enemy.size/2)/TILE, er = (enemy.y + enemy.size/2)/TILE;
-  mctx.fillStyle = 'red';
-  mctx.fillRect(ec*8-3, er*8-3, 6, 6);
-}
 
-function endGame(won) {
-  gameRunning = false;
-  cancelAnimationFrame(animId);
-  document.removeEventListener('keydown', onKey);
-  document.removeEventListener('keyup', offKey);
-  const ov = document.getElementById('overlay');
-  document.getElementById('overlayTitle').textContent = won ? '★ YOU ESCAPED ★' : 'CAUGHT.';
-  document.getElementById('overlayTitle').style.color = won ? 'gold' : 'red';
-  document.getElementById('overlayMsg').textContent = won
-    ? `Escaped in ${Math.floor((Date.now()-startTime)/1000)}s`
-    : 'He got you.';
-  document.getElementById('overlayBtn').style.color = won ? 'gold' : 'red';
-  ov.style.display = 'flex';
-}
-
-function restartGame() {
-  document.getElementById('overlay').style.display = 'none';
-  initGame();
-  loop();
-}
-
-function loop() {
-  update();
-  draw();
-  animId = requestAnimationFrame(loop);
-}
-
-function beginSequence() {
-  document.getElementById('intro').style.display = 'none';
-  const cd = document.getElementById('countdown');
-  cd.style.display = 'block';
-  let c = 3;
-  cd.textContent = c;
-  const iv = setInterval(() => {
-    c--;
-    if (c <= 0) {
-      clearInterval(iv);
-      cd.style.display = 'none';
-      const scare = document.getElementById('scare');
-      scare.style.display = 'flex';
-      const snd = document.getElementById('sound');
-      snd.volume = 0.7;
-      snd.play().catch(()=>{});
-      setTimeout(() => {
-        scare.style.display = 'none';
-        document.getElementById('gameWrap').style.display = 'flex';
-        initGame();
-        loop();
-      }, 1500);
-    } else {
-      cd.textContent = c;
+    // Check Win
+    if (orbsCollected === 5 && map[Math.floor(player.y)][Math.floor(player.x)] === 3) {
+        gameActive = false;
+        document.getElementById('win').style.display = 'block';
+        document.exitPointerLock();
     }
-  }, 1000);
+
+    // Heartbeat visual
+    let intensity = Math.min(0.8, (1.5 / dist) + (Math.sin(Date.now()/200) * 0.1));
+    vignette.style.background = `radial-gradient(circle, transparent 20%, rgba(200, 0, 0, ${intensity}) 100%)`;
+}
+
+function render() {
+    if(!gameActive) return;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const rays = 320;
+    const fov = Math.PI / 3;
+    zBuffer = [];
+
+    let bY = Math.sin(player.bob) * 6;
+
+    for (let i = 0; i < rays; i++) {
+        let rayA = (player.dir - fov/2) + (i / rays) * fov;
+        let d = 0, rx = Math.cos(rayA), ry = Math.sin(rayA);
+
+        while (d < 10) {
+            d += 0.05;
+            let cx = Math.floor(player.x + rx * d), cy = Math.floor(player.y + ry * d);
+            let cell = map[cy][cx];
+
+            if (cell === 1 || cell === 3) {
+                let correctedD = d * Math.cos(rayA - player.dir);
+                zBuffer[i] = correctedD;
+                let h = canvas.height / correctedD;
+                let flash = Math.max(0, 1 - (Math.abs(rayA - player.dir) / (fov/1.4)));
+                
+                // Color logic: Green for open gate, Red for walls/closed gate
+                let isGate = (cell === 3 && orbsCollected === 5);
+                let br = (180 / (d * 0.8)) * flash;
+                
+                ctx.fillStyle = isGate ? `rgb(0, ${br}, 0)` : `rgb(${br}, ${br*0.1}, ${br*0.1})`;
+                ctx.fillRect(i * (canvas.width/rays), (canvas.height-h)/2 + bY, (canvas.width/rays)+1, h);
+                break;
+            }
+        }
+    }
+
+    // Sprite Rendering
+    let sprites = [...orbs.filter(o => !o.collected), {...monster, isMonster: true}];
+    sprites.sort((a,b) => Math.hypot(player.x-b.x, player.y-b.y) - Math.hypot(player.x-a.x, player.y-a.y));
+
+    sprites.forEach(s => {
+        let dx = s.x - player.x, dy = s.y - player.y;
+        let dist = Math.hypot(dx, dy);
+        let sA = Math.atan2(dy, dx) - player.dir;
+        while(sA < -Math.PI) sA += Math.PI*2; while(sA > Math.PI) sA -= Math.PI*2;
+
+        if (Math.abs(sA) < fov) {
+            let h = (canvas.height / dist) * (s.isMonster ? 1 : 0.4);
+            let x = (0.5 * (sA / (fov / 2)) + 0.5) * canvas.width;
+            let rayIdx = Math.floor((x / canvas.width) * rays);
+            if(zBuffer[rayIdx] > dist || !zBuffer[rayIdx]) {
+                if (s.isMonster) { ctx.shadowBlur = 20; ctx.shadowColor = "red"; }
+                ctx.globalAlpha = Math.max(0, Math.min(1, 1 - (Math.abs(sA)/(fov/1.6))));
+                ctx.drawImage(s.isMonster ? monsterImg : orbImg, x - h/2, (canvas.height-h)/2 + bY, h, h);
+                ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+            }
+        }
+    });
+
+    requestAnimationFrame(render);
 }
 </script>
 </body>

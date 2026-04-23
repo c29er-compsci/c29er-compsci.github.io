@@ -1,50 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cool Grid</title>
-<script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
+    <meta charset="UTF-8">
+    <title>THE 50-PHASE ARCADE</title>
+    <style>
+        body { margin: 0; background: #050505; color: #fff; font-family: 'Orbitron', sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #canvas-wrap { position: relative; border: 5px solid #222; box-shadow: 0 0 50px #000; }
+        canvas { background: #000; display: block; }
+        .ui-panel { position: absolute; width: 100%; top: 20px; display: flex; justify-content: space-around; pointer-events: none; }
+        .btn { margin-top: 20px; padding: 15px 40px; background: none; border: 2px solid #fff; color: #fff; cursor: pointer; font-family: inherit; font-size: 1.2rem; transition: 0.3s; }
+        .btn:hover { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
+        #game-info { position: absolute; bottom: 20px; left: 20px; color: #555; font-size: 0.8rem; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
+    <div id="canvas-wrap">
+        <div class="ui-panel">
+            <div>PHASE: <span id="phase">1</span>/50</div>
+            <div>SCORE: <span id="score">0</span></div>
+        </div>
+        <canvas id="g"></canvas>
+    </div>
+
+    <button class="btn" onclick="nextPhase()">NEXT PHASE</button>
+    <div id="game-info">Controls: WASD / Arrows | Every phase changes the laws of physics.</div>
+
 <script>
+    const canvas = document.getElementById('g');
+    const ctx = canvas.getContext('2d');
+    const phaseEl = document.getElementById('phase');
+    const scoreEl = document.getElementById('score');
 
-let spacing = 80;
-let t = 0;
+    canvas.width = 800;
+    canvas.height = 500;
 
-function setup() {
-  createCanvas(400, 400);
-  noStroke();
-}
+    let phase = 1;
+    let score = 0;
+    let particles = [];
+    
+    // The Dynamic Game State
+    let state = {
+        player: { x: 400, y: 250, vx: 0, vy: 0, size: 20 },
+        entities: [],
+        config: {} 
+    };
 
-function draw() {
-  background(10, 10, 30); // dark blue background
-
-  for (let i = 0; i < width; i += spacing) {
-    for (let j = 0; j < height; j += spacing) {
-
-      let d = dist(mouseX, mouseY, i, j);
-
-      // Animate size
-      let size = map(sin(t + d * 0.05), -1, 1, 20, 80);
-
-      // Blue color
-      let r = 0;
-      let g = 0;
-      let b = map(sin(t + i * 0.05), -1, 1, 120, 255);
-
-      // Glow effect
-      drawingContext.shadowBlur = 20;
-      drawingContext.shadowColor = `rgb(${r},${g},${b})`;
-
-      fill(r, g, b, 180);
-      circle(i, j, size);
+    // 50 Variations of Physics/Rules
+    function generatePhase(p) {
+        return {
+            gravity: (p % 5 === 0) ? 0.5 : 0,
+            friction: 0.9 + (Math.random() * 0.08),
+            speed: 2 + (p * 0.1),
+            enemyCount: 5 + Math.floor(p/2),
+            theme: `hsl(${(p * 40) % 360}, 70%, 50%)`,
+            mode: p % 3 === 0 ? 'AVOID' : (p % 3 === 1 ? 'COLLECT' : 'SURVIVE'),
+            glitch: p > 10 && p % 7 === 0
+        };
     }
-  }
 
-  t += 0.05;
-}
+    function initPhase() {
+        state.config = generatePhase(phase);
+        state.entities = [];
+        state.player.x = 400;
+        state.player.y = 250;
+        
+        for(let i=0; i<state.config.enemyCount; i++) {
+            state.entities.push({
+                x: Math.random() * 800,
+                y: Math.random() * 500,
+                vx: (Math.random() - 0.5) * state.config.speed,
+                vy: (Math.random() - 0.5) * state.config.speed,
+                size: 10 + Math.random() * 20
+            });
+        }
+        phaseEl.innerText = phase;
+    }
 
+    const keys = {};
+    window.onkeydown = e => keys[e.code] = true;
+    window.onkeyup = e => keys[e.code] = false;
+
+    function nextPhase() {
+        phase = (phase % 50) + 1;
+        initPhase();
+    }
+
+    function update() {
+        let p = state.player;
+        let c = state.config;
+
+        // Movement
+        if(keys['ArrowUp'] || keys['KeyW']) p.vy -= 1;
+        if(keys['ArrowDown'] || keys['KeyS']) p.vy += 1;
+        if(keys['ArrowLeft'] || keys['KeyA']) p.vx -= 1;
+        if(keys['ArrowRight'] || keys['KeyD']) p.vx += 1;
+
+        p.vx *= c.friction;
+        p.vy *= c.friction;
+        p.vy += c.gravity;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // Screen Wrap
+        if(p.x > 800) p.x = 0; if(p.x < 0) p.x = 800;
+        if(p.y > 500) p.y = 0; if(p.y < 0) p.y = 500;
+
+        state.entities.forEach((en, i) => {
+            en.x += en.vx;
+            en.y += en.vy;
+            if(en.x > 800 || en.x < 0) en.vx *= -1;
+            if(en.y > 500 || en.y < 0) en.vy *= -1;
+
+            // Collision
+            let dist = Math.hypot(p.x - en.x, p.y - en.y);
+            if(dist < p.size/2 + en.size/2) {
+                if(c.mode === 'COLLECT') {
+                    state.entities.splice(i, 1);
+                    score += 10;
+                    scoreEl.innerText = score;
+                    if(state.entities.length === 0) nextPhase();
+                } else {
+                    // Game Over / Reset Phase
+                    p.x = 400; p.y = 250; p.vx = 0; p.vy = 0;
+                }
+            }
+        });
+    }
+
+    function draw() {
+        // Glitch effect
+        ctx.fillStyle = state.config.glitch ? `rgba(0,0,0,0.5)` : `rgba(0,0,0,0.2)`;
+        ctx.fillRect(0, 0, 800, 500);
+
+        // Draw Player
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = state.config.theme;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(state.player.x, state.player.y, state.player.size/2, 0, Math.PI*2);
+        ctx.fill();
+
+        // Draw Entities
+        ctx.fillStyle = state.config.theme;
+        state.entities.forEach(en => {
+            if(state.config.mode === 'COLLECT') {
+                ctx.fillRect(en.x, en.y, en.size, en.size);
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(en.x, en.y - en.size/2);
+                ctx.lineTo(en.x + en.size/2, en.y + en.size/2);
+                ctx.lineTo(en.x - en.size/2, en.y + en.size/2);
+                ctx.closePath();
+                ctx.fill();
+            }
+        });
+
+        requestAnimationFrame(() => { update(); draw(); });
+    }
+
+    initPhase();
+    draw();
 </script>
 </body>
 </html>
